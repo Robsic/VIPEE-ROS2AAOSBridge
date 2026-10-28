@@ -1,4 +1,4 @@
-# VIPEE ROSEVSBridge
+# VIPEE ROS2AAOSBridge
 
 Ponte ROS2 ➔ Android Automotive (AAOS). Lê tópicos, serviços e ações do ROS2 e os injeta no AAOS, para que o dashboard do veículo (AAOS) rode integrado a um simulador de modo transparente. A simulação é o ambiente de desenvolvimento de funções que depois vão para um veículo real, então o lado AAOS não pode saber que a fonte é simulada.
 
@@ -127,10 +127,6 @@ Ao fim de cada fase (Specify, Design, Tasks, cada lote de Execute), atualize o H
    cmake --preset default && cmake --build --preset default && ctest --preset default
    ```
 
-## 7\. Decisões em aberto (resolver no Specify da primeira feature, registrar como `AD-NNN`)
+## 7\. Decisões de arquitetura
 
-* Transporte host ➔ AAOS (socket/gRPC/`adb forward`/rede) e onde a ponte vive no lado Android (serviço nativo, módulo Soong, HAL).
-* Estratégia de injeção no VHAL (HAL VHAL própria com backend remoto vs. `FakeVehicleHardware`/proxy do emulador) e versão do AOSP-alvo.
-* Estratégia de injeção no EVS (HAL EVS virtual própria; reaproveita o caminho do emulador do CalibDroid).
-* Relógio e sincronização: `/clock` do simulador (`use_sim_time`) vs. monotônico do AAOS, e política de dado velho.
-* Linguagem do nó ROS2 do host (C++17 `rclcpp`, alinhado ao CalibDroid, vs. `rclpy`, alinhado ao SynthCamStream).
+Transporte, local no Android, VHAL, EVS, relógio e linguagem do host estão decididos em `.specs/STATE.md` (AD-001 a AD-010). O contrato com o simulador está em [`docs/sim-contract.md`](./docs/sim-contract.md).
