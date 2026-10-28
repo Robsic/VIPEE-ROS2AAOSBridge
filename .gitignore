@@ -1,0 +1,13 @@
+build/
+vcpkg_installed/
+.pytest_cache/
+__pycache__/
+.venv/
+*.backup
+# Rosbags and other large local data, never versioned.
+data/
+# Windows download marks and Office lock files.
+*:Zone.Identifier
+~$*
+# Secrets never versioned.
+.env
