@@ -17,6 +17,11 @@
 
 ## Handoff
 
+### Pivô em avaliação: ROS2 dentro do AAOS (2026-10-28)
+
+- O colega do simulador relata ter compilado e executado ROS2 como módulo no AAOS e vai gerar um handoff. Se confirmado, o nó do host e os canais WebSocket (AD-001 a AD-003, AD-006) são substituídos por assinatura direta nas HALs; AD-008 a AD-010 continuam com outro backend. Contraria a premissa herdada do CalibDroid AD-011, então só vira AD depois de reproduzido aqui.
+- Specify da `ct-speed-slice` pausado no meio da discussão. Achados que valem para qualquer arquitetura: `CarDrivingStateService` exige `PERF_VEHICLE_SPEED`, `GEAR_SELECTION` e `PARKING_BRAKE_ON` (falta freio de mão no contrato); o `CarService` precisa de propriedades de plataforma sem fonte no simulador (`AP_POWER_STATE_REQ`/`REPORT`).
+
 ### Marco: demo do simulador acoplado ao dashboard no RPi5 (prazo: 2026-11-28)
 
 - Pedido do stakeholder. Contrato com o simulador em rascunho (`docs/sim-contract.md` v0.1), aguardando o colega do simulador. Próximo passo: Specify da feature de MVP.
