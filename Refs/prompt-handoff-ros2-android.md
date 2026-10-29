@@ -1,6 +1,6 @@
 # Prompt: handoff da compilação do ROS2 no Android
 
-Enviado em 2026-10-28 ao colega do simulador, para o agente dele gerar o handoff da abordagem ROS2-no-AAOS (ver Handoff "Pivô em avaliação" em `.specs/STATE.md`). O handoff recebido vai para `Refs/HANDOFF-ros2-android.md`.
+Enviado em 2026-10-28 ao colega do simulador, para o agente dele gerar o handoff da abordagem ROS2-no-AAOS (ver Handoff "Pivô em avaliação" em `.specs/STATE.md`). O handoff recebido está em `Refs/handoff-ros2-jazzy-aaos.md` (PDF original ao lado).
 
 ```markdown
 Gere um handoff técnico, em Markdown, da compilação e execução do ROS2 como módulo no Android Automotive (AAOS) feita neste repositório. O leitor é outro time (projeto VIPEE-ROS2AAOSBridge) que vai reproduzir a abordagem do zero, numa máquina diferente, e embutir o ROS2 dentro de HALs de vendor (VHAL e EVS).
