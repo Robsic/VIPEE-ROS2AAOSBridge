@@ -16,8 +16,10 @@ if ! docker image inspect "$IMAGE" >/dev/null 2>&1; then
 fi
 
 # --network host: o emulador disca para a porta TCP do DDS no host (handoff §7).
+# --entrypoint '': o ros_entrypoint.sh da imagem faz source de /opt/ros/jazzy e o
+# find_package do build cruzado passa a achar libs x86_64/glibc do host.
 TTY=(-i); [ -t 0 ] && TTY=(-it)
-exec docker run --rm "${TTY[@]}" --network host \
+exec docker run --rm "${TTY[@]}" --network host --entrypoint '' \
   --user "$(id -u):$(id -g)" -e HOME=/ws \
   -v "$WS:/ws" -v "$REPO:/bridge" \
   "$IMAGE" "${@:-bash}"

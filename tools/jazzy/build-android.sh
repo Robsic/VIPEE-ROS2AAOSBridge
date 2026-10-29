@@ -30,6 +30,9 @@ colcon build --base-paths src --build-base build_host --install-base install \
 P=""; for pkg in $PKGS; do P="$P:$ROS2_SRC/install/$pkg"; done
 export CMAKE_PREFIX_PATH="${P#:}"
 export AMENT_PREFIX_PATH="$CMAKE_PREFIX_PATH"
+# Módulos Python das ferramentas (ament_package, rosidl_*), só do install nativo.
+PYTHONPATH="$(ls -d "$ROS2_SRC"/install/*/lib/python3*/site-packages | paste -sd:)"
+export PYTHONPATH
 
 SKIP="ament_lint ament_pycodestyle ament_flake8 ament_mypy ament_pep257 ament_cppcheck ament_cpplint \
 ament_copyright ament_xmllint ament_uncrustify uncrustify_vendor ament_cmake_uncrustify ament_cmake_cppcheck \

@@ -1,0 +1,8 @@
+<!-- Host: escuta TCP na 7400, sem multicast (handoff §7.3). -->
+<CycloneDDS xmlns="https://cdds.io/config">
+  <Domain id="any">
+    <General><Transport>tcp</Transport><AllowMulticast>false</AllowMulticast></General>
+    <Discovery><ParticipantIndex>none</ParticipantIndex></Discovery>
+    <TCP><Port>7400</Port></TCP>
+  </Domain>
+</CycloneDDS>

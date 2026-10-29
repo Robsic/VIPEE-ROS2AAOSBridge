@@ -24,7 +24,7 @@ Consulte antes de alterações de arquitetura, contratos de sinal ou fronteiras 
 
 ### 1.1 Restrições herdadas (não reabrir sem nova AD)
 
-* **ROS2 não compila para Android** (`rclcpp`/`signal_handler` sob NDK; CalibDroid AD-011). O nó ROS2 roda no **host** (Linux, ROS2 Humble) e o AAOS recebe os dados por um transporte atrás de interface própria. O núcleo da ponte não depende de ROS nem de Android.
+* **ROS2 no Android (revisa CalibDroid AD-011).** ROS2 Jazzy com CycloneDDS cross-compila com o NDK r27 e roda nativo no emulador AAOS 16 (AD-011; receita em `tools/jazzy/`, origem em `Refs/handoff-ros2-jazzy-aaos.md`). A arquitetura com um único processo ROS no Android (AD-012) segue proposta até validarmos processo vendor, SELinux e libc++. O núcleo da ponte continua sem depender de ROS nem de Android.
 * O `evsmanagerd` só aceita UIDs `AID_AUTOMOTIVE_EVS`/`SYSTEM`/`ROOT`/`GRAPHICS` (CalibDroid AD-027). Uma HAL EVS virtual precisa respeitar isso; app comum não injeta câmera.
 * Etapas de validação (CalibDroid AD-017): emulador AAOS ➔ mula RPi5 com AAOS ➔ veículo de engenharia (Qualcomm SA6155P). A ponte deve funcionar nas três sem mudar o contrato.
 * Frames sempre nomeados: em qualquer pose, ponto ou vetor, diga o frame e a direção da transformação (`a_from_b`) e as unidades (m, m/s, rad, px). Frame do veículo: origem na projeção no solo da interseção do eixo dianteiro com a linha central; X à frente, Y à esquerda, Z para cima (CalibDroid AD-004). Cuidado com a conversão para o frame do ROS (REP-103) e do Android sensors/VHAL.
@@ -32,7 +32,7 @@ Consulte antes de alterações de arquitetura, contratos de sinal ou fronteiras 
 
 ### 1.2 Documentação Externa (context7)
 
-Consulte obrigatoriamente o MCP **context7** para APIs e boas práticas (ROS2 Humble `rclcpp`/`rclpy`/`sensor_msgs`, C++17, CMake, vcpkg, Android NDK/Soong, Kotlin, AAOS `VehicleHal`/`CarPropertyManager`, EVS HAL AIDL, `CarEvsManager`). Valide assinaturas e breaking changes antes e depois de codificar. A API do VHAL e do EVS muda entre releases do Android: confirme a versão do AOSP em uso.
+Consulte obrigatoriamente o MCP **context7** para APIs e boas práticas (ROS2 Jazzy `rclcpp`/`rclpy`/`sensor_msgs`, CycloneDDS, C++17, CMake, vcpkg, Android NDK/Soong, Kotlin, AAOS `VehicleHal`/`CarPropertyManager`, EVS HAL AIDL, `CarEvsManager`). Valide assinaturas e breaking changes antes e depois de codificar. A API do VHAL e do EVS muda entre releases do Android: confirme a versão do AOSP em uso.
 
 ## 2\. Fluxo de trabalho: tlc-spec-driven
 
@@ -113,13 +113,14 @@ Ao fim de cada fase (Specify, Design, Tasks, cada lote de Execute), atualize o H
   export ROS_DOMAIN_ID=25                # mesmo domínio do SynthCamStream/simulador
   ```
 
-* **ROS2 Humble** em `/opt/ros/humble`. **Cuidado:** o shell atual sourceia um overlay do projeto `SIRV-Simulator` (`AMENT_PREFIX_PATH`/`PYTHONPATH`). Para builds desta ponte, use um shell limpo com só `source /opt/ros/humble/setup.bash`, para não misturar pacotes alheios.
-* **Android**: AOSP em `~/aosp`; `adb` vem do SDK do Windows (`/mnt/c/Users/wende/AppData/Local/Android/Sdk/platform-tools`, via WSL). O emulador AAOS roda no Windows, então confirme a conectividade WSL ➔ emulador (porta/`adb -H`) na primeira feature que precisar dele. Ver `../VIPEE-CalibDroid/tools/android_sync.sh`.
+* **ROS2 Jazzy** só no contêiner `vipee/ros2-jazzy-android` (Ubuntu 24.04 + NDK r27), via `tools/jazzy/run.sh`; workspace em `~/ros2_android_ws`, fora do repo. O host é Ubuntu 22.04 com Humble em `/opt/ros/humble`, que fica para outros projetos e não deve ser usado aqui. **Cuidado com contaminação de ambiente:** o build cruzado não pode enxergar nenhum ROS do host nem o `/opt/ros/jazzy` do contêiner (por isso o `--entrypoint ''`); o shell do host ainda sourceia um overlay do `SIRV-Simulator`. Confira com `llvm-readelf -d` que nenhum binário Android pede lib versionada (`.so.N`) de fora do install Android.
+* **Disco:** o VHDX do WSL fica no C:, com cerca de 60 GB livres (2026-10). Builds AOSP grandes podem encher o C: e travar o WSL; confira `df` do C: (`/mnt/c`), não o do `/`.
+* **Android**: AOSP em `~/aosp`. O emulador AAOS roda **dentro do WSL**, headless com KVM (`~/aosp-scripts/emu.sh`, `sdk_car_x86_64-bp4a-userdebug`); use o `adb` do AOSP (`~/aosp/out/host/linux-x86/bin/adb`). Do emulador, `10.0.2.2` é o loopback do WSL, então um contêiner com `--network host` é alcançável direto. Ver `../VIPEE-CalibDroid/tools/android_sync.sh`.
 * **Python** 3.10 (Ubuntu 22.04, o mesmo do ROS2 Humble) e `uv` para scripts/ferramentas auxiliares.
 
 ### 6.3 Setup rápido
 
-1. Requisitos: GCC/Clang (C++17), CMake ≥ 3.21, Ninja, Python 3.10, `uv`, vcpkg bootstrapado, ROS2 Humble, `clang-format`/`clang-tidy`, `adb`.
+1. Requisitos: GCC/Clang (C++17), CMake ≥ 3.21, Ninja, Python 3.10, `uv`, vcpkg bootstrapado, Docker (contêiner Jazzy), `clang-format`/`clang-tidy`, `adb`.
 2. Exportar as variáveis da seção 6.2.
 3. Build e testes (depois da task de scaffolding):
 

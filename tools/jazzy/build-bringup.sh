@@ -4,7 +4,12 @@
 set -euo pipefail
 I=/ws/ros2_src/install_android_x86_64
 P=""; for d in $I/*/; do P="$P:${d%/}"; done
+# Android primeiro; depois as ferramentas ament/rosidl nativas (handoff §4.2).
+H=/ws/ros2_src/install
+for d in $H/*/; do P="$P:${d%/}"; done
 export AMENT_PREFIX_PATH="${P#:}" CMAKE_PREFIX_PATH="${P#:}"
+PYTHONPATH="$(ls -d $H/*/lib/python3*/site-packages | paste -sd:)"
+export PYTHONPATH
 cmake -S /bridge/tools/jazzy/bringup -B /ws/bringup_build_x86_64 \
   --toolchain /bridge/tools/jazzy/android_x86_64.toolchain.cmake \
   -DRMW_IMPLEMENTATION=rmw_cyclonedds_cpp -DCMAKE_BUILD_TYPE=Release \

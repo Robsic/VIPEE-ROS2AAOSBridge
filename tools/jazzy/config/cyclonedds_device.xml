@@ -1,0 +1,11 @@
+<!-- Emulador: disca para o host (10.0.2.2 = loopback do WSL), sem porta de escuta (handoff §7.3). -->
+<CycloneDDS xmlns="https://cdds.io/config">
+  <Domain id="any">
+    <General><Transport>tcp</Transport><AllowMulticast>false</AllowMulticast></General>
+    <Discovery>
+      <Peers><Peer Address="10.0.2.2:7400"/></Peers>
+      <ParticipantIndex>none</ParticipantIndex>
+    </Discovery>
+    <TCP><Port>-1</Port></TCP>
+  </Domain>
+</CycloneDDS>
