@@ -1,5 +1,5 @@
-# Spike AD-012: assinante ROS 2 como serviço vendor, no domínio SELinux do VHAL
-# (o binário é rotulado hal_vehicle_default_exec por install-vendor.sh).
+# Spike AD-012: assinante ROS 2 como serviço vendor, no domínio próprio
+# vendor_vipee_ros2 (tools/jazzy/sepolicy).
 # Iniciar: adb shell start vipee_twist_listener. Saída no logcat (tag vipee_twist).
 service vipee_twist_listener /vendor/bin/vipee_twist_listener
     class hal

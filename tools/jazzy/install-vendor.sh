@@ -9,6 +9,7 @@ set -euo pipefail
 ADB="${ADB:-$HOME/aosp/out/host/linux-x86/bin/adb}"
 WS="${WS:-$HOME/ros2_android_ws}"
 HERE="$(cd "$(dirname "$0")" && pwd)"
+OUT_VENDOR="${OUT_VENDOR:-$HOME/aosp/out/target/product/emulator_car64_x86_64/vendor}"
 # Libs direto em /vendor/lib64: o exec com troca de domínio SELinux liga AT_SECURE
 # e o linker ignora LD_LIBRARY_PATH (sintoma: serviço sai com 1 antes do main).
 LIB=/vendor/lib64
@@ -44,8 +45,14 @@ else
   "$ADB" push "$HERE/config/cyclonedds_device.xml" /vendor/etc/vipee/
   "$ADB" push "$HERE/vendor/vipee_twist_listener.rc" /vendor/etc/init/
   "$ADB" shell chmod 755 /vendor/bin/vipee_twist_listener
-  "$ADB" shell chcon u:object_r:hal_vehicle_default_exec:s0 /vendor/bin/vipee_twist_listener
+  # Política com o domínio vendor_vipee_ros2 (sepolicy-sync.sh + m selinux_policy).
+  "$ADB" push "$OUT_VENDOR/etc/selinux/." /vendor/etc/selinux/ | tail -1
 fi
 "$ADB" reboot; sleep 10; boot
 "$ADB" root >/dev/null; sleep 2; "$ADB" wait-for-device
+if [ "${1:-}" != remove ]; then
+  # O tipo só existe depois do boot com a política nova; o overlay volta ro no boot.
+  "$ADB" remount >/dev/null
+  "$ADB" shell chcon u:object_r:vendor_vipee_ros2_exec:s0 /vendor/bin/vipee_twist_listener
+fi
 "$ADB" shell ls -Z /vendor/bin/vipee_twist_listener 2>/dev/null || echo "removido"

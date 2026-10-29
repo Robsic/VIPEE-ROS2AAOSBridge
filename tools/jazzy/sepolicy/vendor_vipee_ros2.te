@@ -1,0 +1,13 @@
+# Processo ROS 2 da ponte (AD-012): assina os tópicos do simulador via
+# CycloneDDS em TCP. Regras levantadas em permissivo (STATE, 2026-10-28).
+type vendor_vipee_ros2, domain;
+type vendor_vipee_ros2_exec, exec_type, vendor_file_type, file_type;
+
+init_daemon_domain(vendor_vipee_ros2)
+
+# Sockets TCP/UDP do DDS (dial-out para o host).
+net_domain(vendor_vipee_ros2)
+
+# Cyclone lista as interfaces (getifaddrs) via netlink. Sem nlmsg_readpriv,
+# que expõe MAC e dados privilegiados.
+allow vendor_vipee_ros2 self:netlink_route_socket { create_socket_perms_no_ioctl nlmsg_read };
