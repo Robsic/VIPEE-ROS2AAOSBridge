@@ -1,0 +1,30 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 36a7cbb..6d8b2bb 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -17,6 +17,8 @@ ament_vendor(libyaml_vendor
+   SATISFIED ${yaml_FOUND}
+   VCS_URL https://github.com/yaml/libyaml.git
+   VCS_VERSION 0.2.5
++  PATCHES
++    "${CMAKE_CURRENT_SOURCE_DIR}/patches/android_cmake_min_version.patch"
+   CMAKE_ARGS
+     "-DCMAKE_C_FLAGS:STRING=${CMAKE_C_FLAGS}$<$<BOOL:${MSVC}>: /wd4244 /wd4267 /wd4996>"
+ )
+diff --git a/patches/android_cmake_min_version.patch b/patches/android_cmake_min_version.patch
+new file mode 100644
+index 0000000..97a1625
+--- /dev/null
++++ b/patches/android_cmake_min_version.patch
+@@ -0,0 +1,11 @@
++--- a/CMakeLists.txt
+++++ b/CMakeLists.txt
++@@ -1,4 +1,7 @@
++ 
++-cmake_minimum_required(VERSION 3.0)
+++# Bumped from 3.0 for Android NDK cross-compiles: the NDK (r26+) toolchain's
+++# flags.cmake uses if(... IN_LIST ...), which needs policy CMP0057 (NEW since
+++# CMake 3.3); a project-requested version below that resets it to OLD.
+++cmake_minimum_required(VERSION 3.5)
++ project (yaml C)
++ 
