@@ -286,5 +286,92 @@ TEST_F(BridgeTest, InvalidMapKeepsAllFourUnavailableMapInvalid) {
   EXPECT_TRUE(sink_.updates.empty());
 }
 
+// CTS-04
+TEST_F(BridgeTest, LeverCodeDrivesGearSelection) {
+  Bridge& b = Start(Cat793fMap());
+  b.onLever({80}, kT0 + 3);  // 'P'
+  EXPECT_EQ(Last(prop::kGearSelection).status, Status::kAvailable);
+  EXPECT_EQ(Last(prop::kGearSelection).int_value, 0x0004);
+  EXPECT_EQ(Last(prop::kGearSelection).timestamp_ns, kT0 + 3);
+  b.onLever({68}, kT0 + kMs);  // 'D'
+  EXPECT_EQ(Last(prop::kGearSelection).int_value, 0x0008);
+}
+
+// CTS-04, CTS-08
+TEST_F(BridgeTest, RepeatedLeverCodeDoesNotRepeatEvent) {
+  Bridge& b = Start(Cat793fMap());
+  b.onLever({82}, kT0);
+  b.onLever({82}, kT0 + 15 * kMs);
+  ASSERT_EQ(sink_.of(prop::kGearSelection).size(), 1u);
+  EXPECT_EQ(Last(prop::kGearSelection).int_value, 0x0002);
+}
+
+// CTS-04: with a lever source the telemetry gear never drives the selection.
+TEST_F(BridgeTest, LeverSourceIgnoresTelemetryForSelection) {
+  Bridge& b = Start(Cat793fMap());
+  b.onLever({80}, kT0);
+  b.onTelemetry({10.0, 2}, kT0 + kMs);
+  ASSERT_EQ(sink_.of(prop::kGearSelection).size(), 1u);
+  EXPECT_EQ(Last(prop::kGearSelection).int_value, 0x0004);
+}
+
+// CTS-14
+TEST_F(BridgeTest, StaleLeverMakesSelectionUnavailableWithFreshTelemetry) {
+  Bridge& b = Start(Cat793fMap());
+  b.onLever({68}, kT0);
+  b.onTelemetry({36.0, 1}, kT0 + 400 * kMs);
+  b.tick(kT0 + 501 * kMs);
+  EXPECT_EQ(Last(prop::kGearSelection).status, Status::kUnavailable);
+  EXPECT_EQ(log_.of(prop::kGearSelection).back().reason, Reason::kStale);
+  EXPECT_EQ(Last(prop::kPerfVehicleSpeed).status, Status::kAvailable);
+  EXPECT_EQ(Last(prop::kCurrentGear).status, Status::kAvailable);
+  b.onLever({78}, kT0 + 600 * kMs);  // CTS-15: back with the new value
+  EXPECT_EQ(Last(prop::kGearSelection).status, Status::kAvailable);
+  EXPECT_EQ(Last(prop::kGearSelection).int_value, 0x0001);
+}
+
+// CTS-14: lever validity is its own, not the telemetry's.
+TEST_F(BridgeTest, StaleTelemetryDoesNotAffectLeverSelection) {
+  Bridge& b = Start(Cat793fMap());
+  b.onTelemetry({36.0, 1}, kT0);
+  b.onLever({68}, kT0 + 400 * kMs);
+  b.tick(kT0 + 501 * kMs);
+  EXPECT_EQ(Last(prop::kPerfVehicleSpeed).status, Status::kUnavailable);
+  EXPECT_EQ(Last(prop::kGearSelection).status, Status::kAvailable);
+  EXPECT_EQ(Last(prop::kGearSelection).int_value, 0x0008);
+}
+
+// CTS-17
+TEST_F(BridgeTest, UnknownLeverCodeIsUnavailableUnknownGear) {
+  Bridge& b = Start(Cat793fMap());
+  b.onLever({80}, kT0);
+  b.onLever({83}, kT0 + kMs);  // 'S' is not in the table
+  EXPECT_EQ(Last(prop::kGearSelection).status, Status::kUnavailable);
+  EXPECT_EQ(log_.of(prop::kGearSelection).back().reason, Reason::kUnknownGear);
+}
+
+// CTS-05: a derived map ignores the lever.
+TEST_F(BridgeTest, DerivedSourceIgnoresLever) {
+  Bridge& b = Start(CommanderMap());
+  b.onLever({80}, kT0);
+  EXPECT_TRUE(sink_.of(prop::kGearSelection).empty());
+  b.onTelemetry({0.0, 0}, kT0 + kMs);
+  b.onLever({80}, kT0 + 2 * kMs);
+  ASSERT_EQ(sink_.of(prop::kGearSelection).size(), 1u);
+  EXPECT_EQ(Last(prop::kGearSelection).int_value, 0x0001);
+}
+
+// CTS-22: same telemetry, two maps, no code change.
+TEST_F(BridgeTest, SameTelemetryParkOnCat793fNeutralOnCommander) {
+  Bridge& cat = Start(Cat793fMap());
+  cat.onTelemetry({0.0, 0}, kT0);
+  cat.onLever({80}, kT0);
+  EXPECT_EQ(Last(prop::kGearSelection).int_value, 0x0004);
+  Bridge& commander = Start(CommanderMap());
+  commander.onTelemetry({0.0, 0}, kT0);
+  commander.onLever({80}, kT0);
+  EXPECT_EQ(Last(prop::kGearSelection).int_value, 0x0001);
+}
+
 }  // namespace
 }  // namespace vipee

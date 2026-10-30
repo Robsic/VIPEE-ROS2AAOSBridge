@@ -28,17 +28,16 @@ void Bridge::onTelemetry(const TelemetryIn& in, int64_t now_ns) {
     set(speed_, Status::kError, speed.reason, 0, 0.0f, now_ns);
   }
 
-  auto apply = [&](Prop& p, const GearResult& g) {
-    if (g.reason == Reason::kNone) {
-      set(p, Status::kAvailable, Reason::kNone, g.gear, 0.0f, now_ns);
-    } else {
-      setUnavailable(p, g.reason, now_ns);
-    }
-  };
-  apply(current_gear_, currentGearFromEngaged(in.gear));
+  setGear(current_gear_, currentGearFromEngaged(in.gear), now_ns);
   if (derived_selection_) {
-    apply(selection_, derivedSelectionFromEngaged(in.gear));
+    setGear(selection_, derivedSelectionFromEngaged(in.gear), now_ns);
   }
+}
+
+void Bridge::onLever(const LeverIn& in, int64_t now_ns) {
+  if (!valid_ || derived_selection_) return;
+  lever_rx_ns_ = now_ns;
+  setGear(selection_, selectionFromLever(in.transmission, map_), now_ns);
 }
 
 void Bridge::tick(int64_t now_ns) {
@@ -48,10 +47,21 @@ void Bridge::tick(int64_t now_ns) {
     setUnavailable(current_gear_, Reason::kStale, now_ns);
     if (derived_selection_) setUnavailable(selection_, Reason::kStale, now_ns);
   }
+  if (isStale(lever_rx_ns_, now_ns)) {
+    setUnavailable(selection_, Reason::kStale, now_ns);
+  }
 }
 
 bool Bridge::isStale(int64_t rx_ns, int64_t now_ns) const {
   return rx_ns >= 0 && now_ns - rx_ns > map_.stale_ms * 1000000;
+}
+
+void Bridge::setGear(Prop& p, const GearResult& g, int64_t now_ns) {
+  if (g.reason == Reason::kNone) {
+    set(p, Status::kAvailable, Reason::kNone, g.gear, 0.0f, now_ns);
+  } else {
+    setUnavailable(p, g.reason, now_ns);
+  }
 }
 
 void Bridge::setUnavailable(Prop& p, Reason reason, int64_t now_ns) {

@@ -54,6 +54,11 @@ struct TelemetryIn {
   int32_t gear = 0;        ///< Engaged gear: < 0 reverse, 0 neutral, n > 0.
 };
 
+/// @brief Fields of CAT793FVehicleControl on /<ns>/vehicle_control.
+struct LeverIn {
+  int32_t transmission = 0;  ///< Lever ASCII code (int8), e.g. 80 'P'.
+};
+
 /**
  * @brief State machine of the four properties of this slice.
  *
@@ -84,6 +89,15 @@ class Bridge {
   void onTelemetry(const TelemetryIn& in, int64_t now_ns);
 
   /**
+   * @brief Handles one lever message. Drives GEAR_SELECTION, with its own
+   * staleness, only when the map's gear_selection_source is "lever";
+   * ignored otherwise.
+   * @param in Copied message fields.
+   * @param now_ns CLOCK_BOOTTIME ns at arrival.
+   */
+  void onLever(const LeverIn& in, int64_t now_ns);
+
+  /**
    * @brief Applies the staleness limit: a source silent for more than
    * map.stale_ms makes its properties UNAVAILABLE/STALE.
    * @param now_ns CLOCK_BOOTTIME ns.
@@ -102,6 +116,7 @@ class Bridge {
 
   void set(Prop& p, Status status, Reason reason, int32_t int_value,
            float float_value, int64_t now_ns);
+  void setGear(Prop& p, const GearResult& g, int64_t now_ns);
   void setUnavailable(Prop& p, Reason reason, int64_t now_ns);
   bool isStale(int64_t rx_ns, int64_t now_ns) const;
 
@@ -115,6 +130,7 @@ class Bridge {
   Prop selection_{prop::kGearSelection, false};
   Prop brake_{prop::kParkingBrakeOn, false};
   int64_t telemetry_rx_ns_ = -1;  ///< Last telemetry arrival, -1 if none.
+  int64_t lever_rx_ns_ = -1;      ///< Last lever arrival, -1 if none.
 };
 
 }  // namespace vipee

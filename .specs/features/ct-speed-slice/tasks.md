@@ -228,10 +228,10 @@ T17 → T18
 
 **Done when**:
 
-- [ ] `'P'` ➔ `GEAR_PARK`; alavanca velha ➔ `GEAR_SELECTION` `STALE` com telemetria fresca; código desconhecido ➔ `UNKNOWN_GEAR`
-- [ ] Mesma telemetria (`gear = 0`): mapa CAT793F com `'P'` dá `GEAR_PARK`, mapa Commander dá `GEAR_NEUTRAL`
-- [ ] Gate check passes: `cmake --build --preset default && ctest --preset default -L unit`
-- [ ] Test count: ≥ 6 tests pass (no silent deletions)
+- [x] `'P'` ➔ `GEAR_PARK`; alavanca velha ➔ `GEAR_SELECTION` `STALE` com telemetria fresca; código desconhecido ➔ `UNKNOWN_GEAR`
+- [x] Mesma telemetria (`gear = 0`): mapa CAT793F com `'P'` dá `GEAR_PARK`, mapa Commander dá `GEAR_NEUTRAL`
+- [x] Gate check passes: `cmake --build --preset default && ctest --preset default -L unit`
+- [x] Test count: ≥ 6 tests pass (no silent deletions)
 
 **Tests**: unit
 **Gate**: quick
