@@ -93,8 +93,8 @@ T17 → T18
 
 **Done when**:
 
-- [ ] `cmake --preset default && cmake --build --preset default && ctest --preset default` passa com 1 teste de fumaça
-- [ ] `build/compile_commands.json` gerado (pré-requisito do clang-tidy)
+- [x] `cmake --preset default && cmake --build --preset default && ctest --preset default` passa com 1 teste de fumaça
+- [x] `build/compile_commands.json` gerado (pré-requisito do clang-tidy)
 
 **Tests**: none
 **Gate**: build
