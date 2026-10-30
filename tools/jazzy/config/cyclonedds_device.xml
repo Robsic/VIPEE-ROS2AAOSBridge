@@ -1,9 +1,14 @@
-<!-- Emulador: disca para o host (10.0.2.2 = loopback do WSL), sem porta de escuta (handoff §7.3). -->
+<!-- Emulador: disca para o host (10.0.2.2 = loopback do WSL), sem porta de escuta (handoff §7.3).
+     Portas TCP: 7400 host genérico, 7500 UE5, 7501 vehiclesim (contrato do simulador v0.2.2 §2). -->
 <CycloneDDS xmlns="https://cdds.io/config">
   <Domain id="any">
     <General><Transport>tcp</Transport><AllowMulticast>false</AllowMulticast></General>
     <Discovery>
-      <Peers><Peer Address="10.0.2.2:7400"/></Peers>
+      <Peers>
+        <Peer Address="10.0.2.2:7400"/>
+        <Peer Address="10.0.2.2:7500"/>
+        <Peer Address="10.0.2.2:7501"/>
+      </Peers>
       <ParticipantIndex>none</ParticipantIndex>
     </Discovery>
     <TCP><Port>-1</Port></TCP>

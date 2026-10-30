@@ -307,7 +307,7 @@ T17 → T18
 
 **Done when**:
 
-- [ ] XML valida no Cyclone (o `vipee_twist_listener` sobe e recebe do host na 7400 como antes)
+- [x] XML valida no Cyclone (o `vipee_twist_listener` sobe e recebe do host na 7400 como antes)
 
 **Tests**: none
 **Gate**: build
