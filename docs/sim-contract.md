@@ -1,6 +1,6 @@
 # Contrato Simulador ➔ ROS2AAOSBridge
 
-**Versão:** 0.2 (rascunho para discussão) · **Data:** 2026-10-30 · **Escopo:** MVP do demo no RPi5 (prazo 2026-11-28)
+**Versão:** 0.2.1 (rascunho para discussão) · **Data:** 2026-10-30 · **Escopo:** MVP do demo no RPi5 (prazo 2026-11-28)
 
 Este documento define o que o simulador publica em ROS2 para que a ponte entregue os sinais ao Android Automotive (VHAL e EVS) sem que o dashboard perceba que a fonte é simulada. A v0.2 parte do que o simulador **já publica**, levantado do repositório `SIRV-Simulator`, branch `SIRV_UE5.5_ROS2_Jazzy` (2026-10-30), em vez dos tópicos `/vehicle/...` propostos na v0.1. O que falta foi solicitado ao time do simulador e aparece como **pedido** (§4). As decisões do lado da ponte estão em `.specs/STATE.md` (AD-011 e AD-012: o processo ROS da ponte roda dentro do Android).
 
@@ -25,6 +25,7 @@ Este documento define o que o simulador publica em ROS2 para que a ponte entregu
 | ------------ | ------ | ------------ | ------- | ---- | --- | --------------- |
 | Velocidade | `/<ns>/telemetry` | `sirv_msgs/SirvVehicleTelemetry.speed` (float32) | km/h | a medir | reliable, depth 5 | `PERF_VEHICLE_SPEED` (m/s) |
 | Marcha | `/<ns>/telemetry` | `SirvVehicleTelemetry.gear` (int8) | código (§3.2) | a medir | reliable, depth 5 | `GEAR_SELECTION`, `CURRENT_GEAR` |
+| Alavanca (CAT793F) | `/<ns>/vehicle_control` | `sirv_msgs/CAT793FVehicleControl.transmission` (int8) | ASCII `P R N D 1 2` | a cada leitura do cockpit | reliable, depth 1 | `GEAR_SELECTION` |
 | Freio de mão | `/apply_control_to_vehicle` | `sirv_msgs/SirvVehicleControl.handbrake` (bool) | — | a medir | reliable, depth 2 | `PARKING_BRAKE_ON` |
 | Câmeras (×4) | `/sirv/sensor/fisheye/<pos>/image/compressed` | `sensor_msgs/CompressedImage` | — | 10 Hz (`sensor_tick: 0.1`) | reliable, volatile, depth 1 | EVS (§3.3) |
 | Intrínsecos (×4) | `/sirv/sensor/fisheye/<pos>/image/camera_info` | `sensor_msgs/CameraInfo` | px | junto da imagem | reliable, volatile, depth 1 | calibração (CalibDroid) |
@@ -33,11 +34,16 @@ Este documento define o que o simulador publica em ROS2 para que a ponte entregu
 
 ### 3.1 Velocidade
 
-`SirvVehicleTelemetry.speed` em km/h. A ponte converte para m/s (`÷ 3,6`). O `PERF_VEHICLE_SPEED` é positivo para frente e **negativo em marcha a ré**. **A confirmar:** o `speed` do simulador já vem com sinal em ré ou é sempre o módulo? Se for módulo, a ponte aplica o sinal pela marcha, e isso fica registrado no mapa.
+`SirvVehicleTelemetry.speed` em km/h **com sinal**: o UE5 preenche `GetForwardSpeed() * 0.036` do Chaos (`SirvWheeledVehicle.cpp:258`), positivo para frente e negativo andando para trás, independente da marcha. É a mesma convenção do `PERF_VEHICLE_SPEED`, então a ponte só converte para m/s (`÷ 3,6`).
 
 ### 3.2 Marcha
 
-`SirvVehicleTelemetry.gear` é int8 sem codificação documentada na mensagem de telemetria. A de comando (`SirvVehicleControl.gear`) documenta: `-1` = ré, `0` = neutro, `1`, `2` = marchas 1 e 2, `3`, `4`, `5` = drive, e "P" para estacionamento, sem valor numérico claro. **A confirmar:** a telemetria usa a mesma tabela? Qual é o valor de P? Ela representa a alavanca (seleção) ou a marcha engatada? O AAOS separa as duas (`GEAR_SELECTION` e `CURRENT_GEAR`); se só houver uma, a ponte alimenta as duas com ela e registra isso no mapa. A câmera de ré obrigatória reage à seleção de ré.
+`SirvVehicleTelemetry.gear` é a marcha **engatada** da transmissão Chaos (`GetCurrentGear()`, `SirvWheeledVehicle.cpp:256`), com o mesmo esquema para todos os veículos: `< 0` ré, `0` neutro, `1..n` marcha à frente. A física não tem P. A alavanca do operador vem por outro tópico e varia por veículo:
+
+* **CAT793F:** `/cat793f/vehicle_control`, `CAT793FVehicleControl.transmission`, publicado pelo `cat793f_analogic_bridge` a partir do cockpit. Códigos em ASCII: `'P'` (80), `'R'` (82), `'N'` (78), `'D'` (68, marchas 3 a 6), `'1'` (49), `'2'` (50); código desconhecido é tratado como P pelo simulador. Em P o simulador também puxa o freio de mão (`cat793f_driving_logic.cpp:739-782`), característica do CAT793F.
+* **Veículos genéricos (Commander etc.):** o `generic_logic` recebe em `/<ns>/vehicle_control` só a marcha numérica (`SirvVehicleControl.gear`), sem P nem D. Todo automático tem P na alavanca, então isso fica no pedido P7. Freio de mão e marcha são independentes (D com freio de mão puxado é possível).
+
+Na ponte: `CURRENT_GEAR` vem da engatada. `GEAR_SELECTION` vem da alavanca no CAT793F; nos genéricos é derivada da engatada (ré, neutro ou `GEAR_DRIVE`), sem P até o P7. Código de alavanca desconhecido vira `UNAVAILABLE` na ponte, em vez de P.
 
 ### 3.3 Freio de mão
 
@@ -56,7 +62,7 @@ O rig fisheye 360° do CAT793F (`params/vehicles/CAT793F.yaml`, bloco `fisheye`)
 
 * **Resolução 480×480**, FOV 180° × 180°, modelo Kannala-Brandt. O `camera_info` traz `distortion_model: equidistant` e `D = [k0, k1, k2, k3]`, que o `cv::fisheye` usa direto. Os coeficientes são sintéticos, não de lente real. O MVP pedia 720p; ver §6.
 * Cada câmera publica também `<topic>` (`sensor_msgs/Image` cru) e `<topic>/compressed`. **A ponte assina só o `/compressed`**: o cru das 4 câmeras não cabe na rede até o RPi5. O `/compressed` é JPEG (TurboJPEG, qualidade 80).
-* **Poses no frame do Unreal**, em m e rad, relativas à origem do ator do veículo: X à frente, **Y à direita** (a câmera esquerda está em `y = -3.5`), Z para cima, yaw positivo girando para a direita e pitch negativo olhando para baixo. Isso difere do frame do veículo da ponte (origem no solo sob o eixo dianteiro, X à frente, Y à esquerda, Z para cima; CalibDroid AD-004). A ponte converte com `y ➔ -y`, `yaw ➔ -yaw` e a translação até o eixo dianteiro. **A confirmar:** onde fica a origem do ator do CAT793F em relação ao eixo dianteiro e ao solo, e a ordem de rotação.
+* **Poses no frame do Unreal**, em m e rad, relativas à origem do ator do veículo: X à frente, **Y à direita** (a câmera esquerda está em `y = -3.5`), Z para cima, yaw positivo girando para a direita e pitch negativo olhando para baixo. Isso difere do frame do veículo da ponte (origem no solo sob o eixo dianteiro, X à frente, Y à esquerda, Z para cima; CalibDroid AD-004). A ponte converte com `y ➔ -y`, `yaw ➔ -yaw` e a translação até o eixo dianteiro. O `Commander.yaml` documenta a convenção (as poses vão sem mudança, de m para cm e de rad para graus, para o frame local do ator no UE; GNSS e IMU são publicados em REP-103) e a origem da malha do Commander: no solo, no meio do entre-eixos (eixo traseiro em `x = -1.24`). **A confirmar:** a origem do ator do CAT793F e a ordem de rotação.
 * As poses de `left`, `right` e `rear` são estimativas iniciais (só a `front` está calibrada na cena). Para o demo isso basta; para calibração, o CalibDroid estima as extrínsecas.
 * **GPU:** o próprio YAML avisa que as 4 câmeras fisheye ligadas ao mesmo tempo causaram `VK_ERROR_DEVICE_LOST` na máquina do simulador. O demo depende de as 4 rodarem juntas (pedido P4).
 
@@ -71,6 +77,8 @@ Solicitados ao time do simulador em 2026-10-30. O formato abaixo é a proposta d
 | P3 | Freio de mão como estado | campo na telemetria ou tópico próprio em `/<ns>/` | `PARKING_BRAKE_ON` |
 | P4 | 4 câmeras fisheye simultâneas | as 4 ligadas no demo, com o mesmo `header.stamp` por quadro | EVS |
 | P5 | Config CycloneDDS TCP versionada | os XML de host do handoff (UE5 em 7500, `sirv_vehiclesim` em 7501) no repositório do simulador, com as portas fixas | descoberta (§2) |
+| P6 | Dados do veículo publicados | `/<ns>/vehicle_info`, transient_local: velocidade máxima, número de marchas, tipo de transmissão, se o freio de mão é ligado à alavanca em P. Até lá, esses dados ficam no mapa por veículo da ponte | validação e regra de P |
+| P7 | Alavanca de câmbio nos veículos genéricos | posição da alavanca, incluindo P (`P`, `R`, `N`, `D` e, no modo manual, a marcha), em `/<ns>/`, na mudança + 1 Hz. O CAT793F já publica (`CAT793FVehicleControl.transmission`); o `generic_logic` só recebe a marcha numérica | `GEAR_SELECTION` |
 
 "Na mudança + 1 Hz": publica imediatamente quando muda e repete o último valor a cada segundo como heartbeat. `transient_local` entrega o último valor a quem conecta depois (a ponte pode reiniciar com o simulador rodando).
 
@@ -99,5 +107,6 @@ Mudança de nome, tipo ou semântica sobe a versão deste documento, e mudança 
 
 ### Histórico
 
+* **0.2.1 (2026-10-30):** velocidade com sinal e marcha engatada genérica lidas do código do simulador (perguntas respondidas); alavanca do CAT793F em `/<ns>/vehicle_control`; origem do Commander; pedidos P6 e P7.
 * **0.2 (2026-10-30):** parte dos tópicos e de `sirv_msgs` do simulador (branch `SIRV_UE5.5_ROS2_Jazzy`). Abandona `/vehicle/...` e `vipee_vehicle_msgs`. Jazzy + CycloneDDS TCP. Portas, retrovisores e freio de mão como estado viram pedidos.
 * **0.1 (2026-10-28):** proposta inicial, com tópicos e mensagens próprios.

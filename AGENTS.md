@@ -24,7 +24,7 @@ Consulte antes de alterações de arquitetura, contratos de sinal ou fronteiras 
 
 ### 1.1 Restrições herdadas (não reabrir sem nova AD)
 
-* **ROS2 no Android (revisa CalibDroid AD-011).** ROS2 Jazzy com CycloneDDS cross-compila com o NDK r27 e roda nativo no emulador AAOS 16 (AD-011; receita em `tools/jazzy/`, origem em `Refs/handoff-ros2-jazzy-aaos.md`). A arquitetura com um único processo ROS no Android (AD-012) segue proposta até validarmos processo vendor, SELinux e libc++. O núcleo da ponte continua sem depender de ROS nem de Android.
+* **ROS2 no Android (revisa CalibDroid AD-011).** ROS2 Jazzy com CycloneDDS cross-compila com o NDK r27 e roda nativo no emulador AAOS 16 (AD-011; receita em `tools/jazzy/`, origem em `Refs/handoff-ros2-jazzy-aaos.md`). Um único processo ROS no Android, serviço vendor no domínio SELinux `vendor_vipee_ros2`, alimenta VHAL e EVS (AD-012, aceita no emulador; IPC até as HALs e RPi5 pendentes). O núcleo da ponte continua sem depender de ROS nem de Android.
 * O `evsmanagerd` só aceita UIDs `AID_AUTOMOTIVE_EVS`/`SYSTEM`/`ROOT`/`GRAPHICS` (CalibDroid AD-027). Uma HAL EVS virtual precisa respeitar isso; app comum não injeta câmera.
 * Etapas de validação (CalibDroid AD-017): emulador AAOS ➔ mula RPi5 com AAOS ➔ veículo de engenharia (Qualcomm SA6155P). A ponte deve funcionar nas três sem mudar o contrato.
 * Frames sempre nomeados: em qualquer pose, ponto ou vetor, diga o frame e a direção da transformação (`a_from_b`) e as unidades (m, m/s, rad, px). Frame do veículo: origem na projeção no solo da interseção do eixo dianteiro com a linha central; X à frente, Y à esquerda, Z para cima (CalibDroid AD-004). Cuidado com a conversão para o frame do ROS (REP-103) e do Android sensors/VHAL.
@@ -130,4 +130,4 @@ Ao fim de cada fase (Specify, Design, Tasks, cada lote de Execute), atualize o H
 
 ## 7\. Decisões de arquitetura
 
-Transporte, local no Android, VHAL, EVS, relógio e linguagem do host estão decididos em `.specs/STATE.md` (AD-001 a AD-010). O contrato com o simulador está em [`docs/sim-contract.md`](./docs/sim-contract.md).
+Transporte, local no Android, VHAL, EVS, relógio e ROS no Android estão decididos em `.specs/STATE.md` (AD-001 a AD-012; AD-011 e AD-012 substituem AD-001 a AD-003 e AD-006). O contrato com o simulador está em [`docs/sim-contract.md`](./docs/sim-contract.md).
