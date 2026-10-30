@@ -15,6 +15,12 @@ add_library(vipee_core core/src/vehicle_map.cpp core/src/translate.cpp
   core/src/bridge.cpp)
 target_include_directories(vipee_core PUBLIC ${CMAKE_SOURCE_DIR}/core/include)
 
+# Bridge sink: POSIX only, no ROS, so the unit test builds on the host.
+add_library(vipee_socket_sink ros/vipee_bridge/src/socket_sink.cpp)
+target_include_directories(vipee_socket_sink PUBLIC
+  ${CMAKE_SOURCE_DIR}/ros/vipee_bridge/include)
+target_link_libraries(vipee_socket_sink PUBLIC vipee_core)
+
 function(add_unit_test name source)
   add_executable(${name} ${source})
   target_link_libraries(${name} PRIVATE GTest::gtest_main vipee_core ${ARGN})
@@ -26,3 +32,5 @@ add_unit_test(wire_test core/test/wire_test.cpp)
 add_unit_test(vehicle_map_test core/test/vehicle_map_test.cpp)
 add_unit_test(translate_test core/test/translate_test.cpp)
 add_unit_test(bridge_test core/test/bridge_test.cpp)
+add_unit_test(socket_sink_test ros/vipee_bridge/test/socket_sink_test.cpp
+  vipee_socket_sink)

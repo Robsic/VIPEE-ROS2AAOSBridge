@@ -331,9 +331,9 @@ T17 → T18
 
 **Done when**:
 
-- [ ] Teste com servidor `SOCK_SEQPACKET` num diretório temporário: recebe updates, heartbeat, estado completo após reconexão; servidor ausente não trava nem perde o último estado
-- [ ] Gate check passes: `cmake --build --preset default && ctest --preset default -L unit`
-- [ ] Test count: ≥ 4 tests pass (no silent deletions)
+- [x] Teste com servidor `SOCK_SEQPACKET` num diretório temporário: recebe updates, heartbeat, estado completo após reconexão; servidor ausente não trava nem perde o último estado
+- [x] Gate check passes: `cmake --build --preset default && ctest --preset default -L unit`
+- [x] Test count: ≥ 4 tests pass (no silent deletions)
 
 **Tests**: unit
 **Gate**: quick
