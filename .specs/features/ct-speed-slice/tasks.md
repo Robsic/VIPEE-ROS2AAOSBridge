@@ -145,10 +145,10 @@ T17 → T18
 
 **Done when**:
 
-- [ ] Mapas equivalentes ao `cat793f` e ao `commander` do design validam
-- [ ] Cada motivo de recusa tem teste próprio (versão, `stale_ms ≤ 0`, `max_abs_kmh ≤ 0`, códigos e marchas da alavanca com tamanhos diferentes, código repetido, marcha desconhecida)
-- [ ] Gate check passes: `cmake --build --preset default && ctest --preset default -L unit`
-- [ ] Test count: ≥ 8 tests pass (no silent deletions)
+- [x] Mapas equivalentes ao `cat793f` e ao `commander` do design validam
+- [x] Cada motivo de recusa tem teste próprio (versão, `stale_ms ≤ 0`, `max_abs_kmh ≤ 0`, códigos e marchas da alavanca com tamanhos diferentes, código repetido, marcha desconhecida)
+- [x] Gate check passes: `cmake --build --preset default && ctest --preset default -L unit`
+- [x] Test count: ≥ 8 tests pass (no silent deletions)
 
 **Tests**: unit
 **Gate**: quick
