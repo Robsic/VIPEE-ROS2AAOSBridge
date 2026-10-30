@@ -373,5 +373,96 @@ TEST_F(BridgeTest, SameTelemetryParkOnCat793fNeutralOnCommander) {
   EXPECT_EQ(Last(prop::kGearSelection).int_value, 0x0001);
 }
 
+// CTS-07, CTS-09
+TEST_F(BridgeTest, ParkingBrakeFollowsHandbrake) {
+  Bridge& b = Start(CommanderMap());
+  b.onControl({7, true}, kT0 + 5);
+  EXPECT_EQ(Last(prop::kParkingBrakeOn).status, Status::kAvailable);
+  EXPECT_EQ(Last(prop::kParkingBrakeOn).int_value, 1);
+  EXPECT_EQ(Last(prop::kParkingBrakeOn).timestamp_ns, kT0 + 5);
+  b.onControl({7, false}, kT0 + 15 * kMs);
+  EXPECT_EQ(Last(prop::kParkingBrakeOn).status, Status::kAvailable);
+  EXPECT_EQ(Last(prop::kParkingBrakeOn).int_value, 0);
+}
+
+// CTS-08
+TEST_F(BridgeTest, RepeatedHandbrakeDoesNotRepeatEvent) {
+  Bridge& b = Start(CommanderMap());
+  b.onControl({7, true}, kT0);
+  b.onControl({7, true}, kT0 + 15 * kMs);
+  b.onControl({7, true}, kT0 + 30 * kMs);
+  EXPECT_EQ(sink_.of(prop::kParkingBrakeOn).size(), 1u);
+}
+
+// CTS-18
+TEST_F(BridgeTest, TwoIdsWithinLimitAreAmbiguousUntilAFullWindow) {
+  Bridge& b = Start(CommanderMap());
+  b.onControl({7, true}, kT0);
+  b.onControl({9, true}, kT0 + 15 * kMs);
+  EXPECT_EQ(Last(prop::kParkingBrakeOn).status, Status::kUnavailable);
+  EXPECT_EQ(log_.of(prop::kParkingBrakeOn).back().reason,
+            Reason::kAmbiguousSource);
+  b.onControl({7, true}, kT0 + 30 * kMs);  // alternating restarts the window
+  b.onControl({7, true}, kT0 + 300 * kMs);
+  b.onControl({7, true}, kT0 + 530 * kMs);  // exactly one window after 9➔7
+  EXPECT_EQ(Last(prop::kParkingBrakeOn).status, Status::kUnavailable);
+  b.onControl({7, false}, kT0 + 531 * kMs);
+  EXPECT_EQ(Last(prop::kParkingBrakeOn).status, Status::kAvailable);
+  EXPECT_EQ(Last(prop::kParkingBrakeOn).int_value, 0);
+}
+
+// CTS-18
+TEST_F(BridgeTest, IdChangeAfterPauseLongerThanLimitIsNotAmbiguous) {
+  Bridge& b = Start(CommanderMap());
+  b.onControl({7, true}, kT0);
+  b.onControl({200, true}, kT0 + 501 * kMs);
+  EXPECT_EQ(Last(prop::kParkingBrakeOn).status, Status::kAvailable);
+  EXPECT_EQ(Last(prop::kParkingBrakeOn).int_value, 1);
+  for (const auto& e : log_.of(prop::kParkingBrakeOn)) {
+    EXPECT_NE(e.reason, Reason::kAmbiguousSource);
+  }
+}
+
+// CTS-13, CTS-15
+TEST_F(BridgeTest, StaleControlIsUnavailableAndLeavesTelemetryAlone) {
+  Bridge& b = Start(Cat793fMap());
+  b.onControl({7, true}, kT0);
+  b.onTelemetry({36.0, 1}, kT0 + 400 * kMs);
+  b.onLever({68}, kT0 + 400 * kMs);
+  b.tick(kT0 + 500 * kMs);
+  EXPECT_EQ(Last(prop::kParkingBrakeOn).status, Status::kAvailable);
+  b.tick(kT0 + 501 * kMs);
+  EXPECT_EQ(Last(prop::kParkingBrakeOn).status, Status::kUnavailable);
+  EXPECT_EQ(log_.of(prop::kParkingBrakeOn).back().reason, Reason::kStale);
+  EXPECT_EQ(Last(prop::kPerfVehicleSpeed).status, Status::kAvailable);
+  EXPECT_EQ(Last(prop::kCurrentGear).status, Status::kAvailable);
+  EXPECT_EQ(Last(prop::kGearSelection).status, Status::kAvailable);
+  b.onControl({7, false}, kT0 + 600 * kMs);
+  EXPECT_EQ(Last(prop::kParkingBrakeOn).status, Status::kAvailable);
+  EXPECT_EQ(Last(prop::kParkingBrakeOn).int_value, 0);
+}
+
+// CTS-13: telemetry going stale does not touch the parking brake.
+TEST_F(BridgeTest, StaleTelemetryLeavesParkingBrakeAlone) {
+  Bridge& b = Start(CommanderMap());
+  b.onTelemetry({36.0, 1}, kT0);
+  b.onControl({7, true}, kT0 + 400 * kMs);
+  b.tick(kT0 + 501 * kMs);
+  EXPECT_EQ(Last(prop::kPerfVehicleSpeed).status, Status::kUnavailable);
+  ASSERT_EQ(sink_.of(prop::kParkingBrakeOn).size(), 1u);
+  EXPECT_EQ(Last(prop::kParkingBrakeOn).status, Status::kAvailable);
+}
+
+// CTS-23
+TEST_F(BridgeTest, InvalidMapIgnoresLeverAndControl) {
+  VehicleMap m = Cat793fMap();
+  m.stale_ms = 0;
+  bridge_.emplace(m, sink_, log_, kT0);
+  sink_.updates.clear();
+  bridge_->onLever({80}, kT0 + kMs);
+  bridge_->onControl({7, true}, kT0 + kMs);
+  EXPECT_TRUE(sink_.updates.empty());
+}
+
 }  // namespace
 }  // namespace vipee

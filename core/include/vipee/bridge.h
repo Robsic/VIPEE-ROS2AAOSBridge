@@ -59,6 +59,12 @@ struct LeverIn {
   int32_t transmission = 0;  ///< Lever ASCII code (int8), e.g. 80 'P'.
 };
 
+/// @brief Fields of SirvVehicleControl on /apply_control_to_vehicle.
+struct ControlIn {
+  int32_t id = 0;          ///< Simulator vehicle id (uint8, uid of the spawn).
+  bool handbrake = false;  ///< Parking brake applied.
+};
+
 /**
  * @brief State machine of the four properties of this slice.
  *
@@ -98,6 +104,15 @@ class Bridge {
   void onLever(const LeverIn& in, int64_t now_ns);
 
   /**
+   * @brief Handles one control message: PARKING_BRAKE_ON = handbrake, from
+   * any id. Two different ids within map.stale_ms make it
+   * UNAVAILABLE/AMBIGUOUS_SOURCE until a whole stale_ms passes with one id.
+   * @param in Copied message fields.
+   * @param now_ns CLOCK_BOOTTIME ns at arrival.
+   */
+  void onControl(const ControlIn& in, int64_t now_ns);
+
+  /**
    * @brief Applies the staleness limit: a source silent for more than
    * map.stale_ms makes its properties UNAVAILABLE/STALE.
    * @param now_ns CLOCK_BOOTTIME ns.
@@ -131,6 +146,9 @@ class Bridge {
   Prop brake_{prop::kParkingBrakeOn, false};
   int64_t telemetry_rx_ns_ = -1;  ///< Last telemetry arrival, -1 if none.
   int64_t lever_rx_ns_ = -1;      ///< Last lever arrival, -1 if none.
+  int64_t control_rx_ns_ = -1;    ///< Last control arrival, -1 if none.
+  int32_t control_id_ = 0;        ///< id of the last control message.
+  int64_t id_conflict_ns_ = -1;   ///< Last id change within stale_ms.
 };
 
 }  // namespace vipee

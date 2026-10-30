@@ -255,10 +255,10 @@ T17 → T18
 
 **Done when**:
 
-- [ ] `handbrake` true/false; mesmo valor repetido não gera evento; troca de `id` com pausa > `stale_ms` não é ambígua
-- [ ] Controle velho não afeta as propriedades da telemetria
-- [ ] Gate check passes: `cmake --build --preset default && ctest --preset default -L unit`
-- [ ] Test count: ≥ 6 tests pass (no silent deletions)
+- [x] `handbrake` true/false; mesmo valor repetido não gera evento; troca de `id` com pausa > `stale_ms` não é ambígua
+- [x] Controle velho não afeta as propriedades da telemetria
+- [x] Gate check passes: `cmake --build --preset default && ctest --preset default -L unit`
+- [x] Test count: ≥ 6 tests pass (no silent deletions)
 
 **Tests**: unit
 **Gate**: quick

@@ -40,6 +40,22 @@ void Bridge::onLever(const LeverIn& in, int64_t now_ns) {
   setGear(selection_, selectionFromLever(in.transmission, map_), now_ns);
 }
 
+void Bridge::onControl(const ControlIn& in, int64_t now_ns) {
+  if (!valid_) return;
+  if (control_rx_ns_ >= 0 && in.id != control_id_ &&
+      !isStale(control_rx_ns_, now_ns)) {
+    id_conflict_ns_ = now_ns;
+  }
+  control_rx_ns_ = now_ns;
+  control_id_ = in.id;
+  if (id_conflict_ns_ >= 0 && !isStale(id_conflict_ns_, now_ns)) {
+    setUnavailable(brake_, Reason::kAmbiguousSource, now_ns);
+  } else {
+    set(brake_, Status::kAvailable, Reason::kNone, in.handbrake ? 1 : 0, 0.0f,
+        now_ns);
+  }
+}
+
 void Bridge::tick(int64_t now_ns) {
   if (!valid_) return;
   if (isStale(telemetry_rx_ns_, now_ns)) {
@@ -49,6 +65,9 @@ void Bridge::tick(int64_t now_ns) {
   }
   if (isStale(lever_rx_ns_, now_ns)) {
     setUnavailable(selection_, Reason::kStale, now_ns);
+  }
+  if (isStale(control_rx_ns_, now_ns)) {
+    setUnavailable(brake_, Reason::kStale, now_ns);
   }
 }
 
