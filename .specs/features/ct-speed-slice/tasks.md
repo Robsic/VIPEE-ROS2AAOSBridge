@@ -383,7 +383,8 @@ T17 → T18
 
 **Done when**:
 
-- [ ] Binário NDK sem `.so.N` de fora; no emulador o serviço sobe em Enforcing e loga `NO_DATA` das 4 com o VHAL ainda ausente
+- [x] Binário NDK sem `.so.N` de fora (`build-bridge.sh`, LOAD `0x4000`)
+- [ ] No emulador o serviço sobe em Enforcing e loga `NO_DATA` das 4 com o VHAL ainda ausente (pendente: o emulador atual não tem `-writable-system`; `adb remount` recusa; reiniciar com `emu_rw.sh` exige aprovação. Provado só como `shell` em `/data/local/tmp`: 4x `UNAVAILABLE NO_DATA` no logcat)
 
 **Tests**: none
 **Gate**: build

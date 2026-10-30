@@ -1,0 +1,13 @@
+# Processo ROS 2 da ponte (AD-012): vipee_bridge no domínio vendor_vipee_ros2.
+# Sobe no boot; sem o VHAL (socket ausente) ele reconecta a cada 500 ms e loga
+# NO_DATA das 4 propriedades. Saída no logcat (tag vipee_bridge).
+# Veículo: propriedade de sistema vendor.vipee.vehicle (cat793f | commander),
+# padrão cat793f. Trocar: `setprop vendor.vipee.vehicle commander` e
+# `stop vipee_bridge; start vipee_bridge`.
+service vipee_bridge /vendor/bin/vipee_bridge --ros-args --params-file /vendor/etc/vipee/maps/${vendor.vipee.vehicle:-cat793f}.yaml
+    class hal
+    user vehicle_network
+    group system inet
+    setenv RMW_IMPLEMENTATION rmw_cyclonedds_cpp
+    setenv ROS_DOMAIN_ID 25
+    setenv CYCLONEDDS_URI file:///vendor/etc/vipee/cyclonedds_device.xml

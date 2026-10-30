@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
-# Spike AD-012: instala o twist_listener como serviço vendor no emulador.
-# Pré-requisitos: emulador iniciado com -writable-system (~/aosp-scripts/emu_rw.sh),
-# build-android.sh e build-bringup.sh já rodados. Reinicia o emulador no fim.
+# Instala o vipee_bridge como serviço vendor no emulador (AD-012), no lugar do
+# spike vipee_twist_listener. Pré-requisitos: emulador iniciado com
+# -writable-system (~/aosp-scripts/emu_rw.sh), build-android.sh e
+# build-bridge.sh já rodados. Reinicia o emulador no fim.
 #   tools/jazzy/install-vendor.sh          # instala
 #   tools/jazzy/install-vendor.sh remove   # remove tudo
 set -euo pipefail
@@ -9,6 +10,7 @@ set -euo pipefail
 ADB="${ADB:-$HOME/aosp/out/host/linux-x86/bin/adb}"
 WS="${WS:-$HOME/ros2_android_ws}"
 HERE="$(cd "$(dirname "$0")" && pwd)"
+MAPS="$HERE/../../maps"
 OUT_VENDOR="${OUT_VENDOR:-$HOME/aosp/out/target/product/emulator_car64_x86_64/vendor}"
 # Libs direto em /vendor/lib64: o exec com troca de domínio SELinux liga AT_SECURE
 # e o linker ignora LD_LIBRARY_PATH (sintoma: serviço sai com 1 antes do main).
@@ -35,16 +37,18 @@ fi
 
 if [ "${1:-}" = remove ]; then
   "$ADB" shell "cd $LIB && rm -f $(echo $LIBS)"
-  "$ADB" shell rm -rf /vendor/lib64/vipee_ros2 /vendor/bin/vipee_twist_listener /vendor/etc/vipee \
-    /vendor/etc/init/vipee_twist_listener.rc
+  "$ADB" shell rm -rf /vendor/lib64/vipee_ros2 /vendor/bin/vipee_bridge /vendor/bin/vipee_twist_listener \
+    /vendor/etc/vipee /vendor/etc/init/vipee_bridge.rc /vendor/etc/init/vipee_twist_listener.rc
 else
   "$ADB" shell rm -rf /vendor/lib64/vipee_ros2
-  "$ADB" shell mkdir -p /vendor/etc/vipee
+  "$ADB" shell rm -f /vendor/bin/vipee_twist_listener /vendor/etc/init/vipee_twist_listener.rc
+  "$ADB" shell mkdir -p /vendor/etc/vipee/maps
   "$ADB" push "$WS/push_x86_64/lib/." "$LIB/" | tail -1
-  "$ADB" push "$WS/bringup_build_x86_64/twist_listener" /vendor/bin/vipee_twist_listener
+  "$ADB" push "$WS/bridge_build_x86_64/vipee_bridge" /vendor/bin/vipee_bridge
   "$ADB" push "$HERE/config/cyclonedds_device.xml" /vendor/etc/vipee/
-  "$ADB" push "$HERE/vendor/vipee_twist_listener.rc" /vendor/etc/init/
-  "$ADB" shell chmod 755 /vendor/bin/vipee_twist_listener
+  "$ADB" push "$MAPS/." /vendor/etc/vipee/maps/
+  "$ADB" push "$HERE/vendor/vipee_bridge.rc" /vendor/etc/init/
+  "$ADB" shell chmod 755 /vendor/bin/vipee_bridge
   # Política com o domínio vendor_vipee_ros2 (sepolicy-sync.sh + m selinux_policy).
   "$ADB" push "$OUT_VENDOR/etc/selinux/." /vendor/etc/selinux/ | tail -1
 fi
@@ -53,6 +57,8 @@ fi
 if [ "${1:-}" != remove ]; then
   # O tipo só existe depois do boot com a política nova; o overlay volta ro no boot.
   "$ADB" remount >/dev/null
-  "$ADB" shell chcon u:object_r:vendor_vipee_ros2_exec:s0 /vendor/bin/vipee_twist_listener
+  "$ADB" shell chcon u:object_r:vendor_vipee_ros2_exec:s0 /vendor/bin/vipee_bridge
+  "$ADB" shell restorecon -R /vendor/etc/vipee
+  "$ADB" shell stop vipee_bridge; "$ADB" shell start vipee_bridge
 fi
-"$ADB" shell ls -Z /vendor/bin/vipee_twist_listener 2>/dev/null || echo "removido"
+"$ADB" shell ls -Z /vendor/bin/vipee_bridge 2>/dev/null || echo "removido"
