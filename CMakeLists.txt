@@ -21,3 +21,4 @@ function(add_unit_test name source)
 endfunction()
 
 add_unit_test(smoke_test core/test/smoke_test.cpp)
+add_unit_test(wire_test core/test/wire_test.cpp)

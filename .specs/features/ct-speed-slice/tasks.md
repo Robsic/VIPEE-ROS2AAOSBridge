@@ -118,10 +118,10 @@ T17 → T18
 
 **Done when**:
 
-- [ ] Ida e volta preserva todos os campos; versão diferente devolve erro nomeado
-- [ ] Doxygen com unidades (m/s, ns de `CLOCK_BOOTTIME`)
-- [ ] Gate check passes: `cmake --build --preset default && ctest --preset default -L unit`
-- [ ] Test count: ≥ 3 tests pass (no silent deletions)
+- [x] Ida e volta preserva todos os campos; versão diferente devolve erro nomeado
+- [x] Doxygen com unidades (m/s, ns de `CLOCK_BOOTTIME`)
+- [x] Gate check passes: `cmake --build --preset default && ctest --preset default -L unit`
+- [x] Test count: ≥ 3 tests pass (no silent deletions)
 
 **Tests**: unit
 **Gate**: quick
