@@ -6,6 +6,8 @@
 set -euo pipefail
 
 ROS2_SRC=/ws/ros2_src
+# Mensagens do simulador (sirv_msgs): run.sh monta SIRV_MSGS_HOST em /sirv_src/sirv_msgs.
+SIRV_BASE="${SIRV_MSGS_BASE:-/sirv_src}"
 TC="--toolchain /bridge/tools/jazzy/android_x86_64.toolchain.cmake"
 EH="--event-handlers console_cohesion+"
 
@@ -59,3 +61,7 @@ colcon build $OUT --packages-up-to libyaml_vendor --packages-ignore $SKIP \
 # 2) núcleo até rclcpp + mensagens do MVP.
 colcon build $OUT --packages-up-to rclcpp std_msgs geometry_msgs --packages-ignore $SKIP \
   --cmake-args $TC $CORE_ARGS $EH
+# 3) mensagens do simulador: sirv_msgs (puxa diagnostic_msgs). Sem Python/Rust (SKIP).
+colcon build --base-paths src "$SIRV_BASE" --build-base build_android_x86_64 \
+  --install-base install_android_x86_64 --packages-up-to sirv_msgs \
+  --packages-ignore $SKIP --cmake-args $TC $CORE_ARGS $EH

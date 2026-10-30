@@ -282,8 +282,8 @@ T17 → T18
 
 **Done when**:
 
-- [ ] Build no contêiner termina com `sirv_msgs` instalado
-- [ ] `llvm-readelf -d` sem `.so.N` de fora do install; `LOAD` alinhado a `0x4000`
+- [x] Build no contêiner termina com `sirv_msgs` instalado
+- [x] `llvm-readelf -d` sem `.so.N` de fora do install; `LOAD` alinhado a `0x4000`
 
 **Tests**: none
 **Gate**: build
