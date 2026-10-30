@@ -370,7 +370,7 @@ T17 → T18
 
 ### T12: Cross-build e serviço vendor do `vipee_bridge`
 
-**What**: `build-bridge.sh` (NDK, `c++_static`, `max-page-size=16384`), `vipee_bridge.rc` (domínio `vendor_vipee_ros2`, mapa por propriedade de sistema) e `install-vendor.sh` instalando binário, libs e mapas no emulador no lugar do `vipee_twist_listener`.
+**What**: `build-bridge.sh` (NDK, `c++_shared`, `max-page-size=16384`), `vipee_bridge.rc` (domínio `vendor_vipee_ros2`, mapa por propriedade de sistema) e `install-vendor.sh` instalando binário, libs e mapas no emulador no lugar do `vipee_twist_listener`.
 **Where**: `tools/jazzy/build-bridge.sh`
 **Depends on**: T11
 **Reuses**: `tools/jazzy/build-bringup.sh`, `install-vendor.sh`, `vendor/vipee_twist_listener.rc`

@@ -42,7 +42,7 @@ O dado velho é verificado no núcleo por `Bridge::tick(now)`, chamado por um ti
 | `EmulatedVehicleService.cpp` | `~/aosp/device/generic/car/emulator/vhal_aidl/` | Molde do `main()` do serviço (thread pool binder, `AServiceManager_addService("…IVehicle/default")`) e do `Android.bp` (defaults `VehicleHalDefaults`) |
 | `VehiclePropertyStore` | `…/impl/current/utils/common` (`VehicleHalUtils`) | Guarda valor e status por propriedade, thread-safe, com `EventMode::ON_VALUE_CHANGE` (não emite evento se nada mudou) |
 | `JsonConfigLoader` | `…/impl/current/default_config` | Lê as configs das 4 propriedades de um JSON no formato do `DefaultProperties.json`, em vez de tabela em código |
-| `twist_listener.cpp` + `CMakeLists.txt` | `tools/jazzy/bringup/` | Molde do nó NDK (toolchain, `c++_static`, `max-page-size=16384`) |
+| `twist_listener.cpp` + `CMakeLists.txt` | `tools/jazzy/bringup/` | Molde do nó NDK (toolchain, `c++_shared`, `max-page-size=16384`) |
 | `install-vendor.sh`, `sepolicy-sync.sh`, `sepolicy/` | `tools/jazzy/` | Mesmo caminho de instalação e de política; ganham o socket e o serviço VHAL |
 | Parâmetros ROS (`--params-file`) | `rclcpp` | O mapa do veículo é um YAML de parâmetros ROS: zero dependência nova (só `libyaml` C existe no install Android; não há `yaml-cpp`) |
 
