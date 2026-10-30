@@ -172,11 +172,11 @@ T17 → T18
 
 **Done when**:
 
-- [ ] 36 ➔ 10.0; -18 ➔ -5.0; -0.0 ➔ 0.0; 80.0 aceito e 80.1 recusado no limite 80; `NaN` e `inf` recusados
-- [ ] `gear` -2, -1, 0, 1..9 pela tabela genérica; -10 e 10 ➔ `UNKNOWN_GEAR`
-- [ ] Derivada nunca devolve `GEAR_PARK`; alavanca: os 6 códigos e um desconhecido
-- [ ] Gate check passes: `cmake --build --preset default && ctest --preset default -L unit`
-- [ ] Test count: ≥ 14 tests pass (no silent deletions)
+- [x] 36 ➔ 10.0; -18 ➔ -5.0; -0.0 ➔ 0.0; 80.0 aceito e 80.1 recusado no limite 80; `NaN` e `inf` recusados
+- [x] `gear` -2, -1, 0, 1..9 pela tabela genérica; -10 e 10 ➔ `UNKNOWN_GEAR`
+- [x] Derivada nunca devolve `GEAR_PARK`; alavanca: os 6 códigos e um desconhecido
+- [x] Gate check passes: `cmake --build --preset default && ctest --preset default -L unit`
+- [x] Test count: ≥ 14 tests pass (no silent deletions)
 
 **Tests**: unit
 **Gate**: quick

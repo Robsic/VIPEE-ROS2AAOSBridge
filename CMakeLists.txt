@@ -11,7 +11,7 @@ enable_testing()
 include(GoogleTest)
 
 # Bridge core: C++17 stdlib only, no ROS and no Android.
-add_library(vipee_core core/src/vehicle_map.cpp)
+add_library(vipee_core core/src/vehicle_map.cpp core/src/translate.cpp)
 target_include_directories(vipee_core PUBLIC ${CMAKE_SOURCE_DIR}/core/include)
 
 function(add_unit_test name source)
@@ -23,3 +23,4 @@ endfunction()
 add_unit_test(smoke_test core/test/smoke_test.cpp)
 add_unit_test(wire_test core/test/wire_test.cpp)
 add_unit_test(vehicle_map_test core/test/vehicle_map_test.cpp)
+add_unit_test(translate_test core/test/translate_test.cpp)
