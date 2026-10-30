@@ -200,11 +200,11 @@ T17 → T18
 
 **Done when**:
 
-- [ ] Testes com sink e logger fakes e relógio fake, um por AC listado
-- [ ] Velocidade `ERROR` não afeta as marchas; marcha `UNKNOWN_GEAR` não afeta a velocidade
-- [ ] Cada transição de status gera exatamente uma entrada de log com o motivo
-- [ ] Gate check passes: `cmake --build --preset default && ctest --preset default -L unit`
-- [ ] Test count: ≥ 16 tests pass (no silent deletions)
+- [x] Testes com sink e logger fakes e relógio fake, um por AC listado
+- [x] Velocidade `ERROR` não afeta as marchas; marcha `UNKNOWN_GEAR` não afeta a velocidade
+- [x] Cada transição de status gera exatamente uma entrada de log com o motivo
+- [x] Gate check passes: `cmake --build --preset default && ctest --preset default -L unit`
+- [x] Test count: ≥ 16 tests pass (no silent deletions)
 
 **Tests**: unit
 **Gate**: quick
