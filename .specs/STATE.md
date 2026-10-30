@@ -21,6 +21,13 @@
 
 ## Handoff
 
+### Spike EVS por v4l2loopback (2026-10-30), tasks da ct-speed-slice pausadas
+
+- A "porta de mock" do EVS (`ENABLE_MOCK_EVSHAL`, HAL `evs-aidl-default-service`) só tem câmera `mock` (padrão sintético) e `video` (MP4 em arquivo, aberto uma vez e em loop, `EvsVideoEmulatedCamera.cpp:101-115`): não recebe stream ao vivo sem alterar a HAL.
+- Alternativa testada: `v4l2loopback` + HAL `evs-v4l2` do AOSP (`packages/services/Car/cpp/evs/v4l2_hal`, a mesma do `aosp_rpi5_car`). O módulo já vem no emulador (`vendor/lib/modules/modules.load`). Escritor/leitor NDK (`~/ros2_android_ws/spike_v4l2/v4l2_spike.cpp`, leitor com mmap + `DQBUF` como o `VideoCapture.cpp` da HAL): 480×480 YUYV a 10 Hz em 4 dispositivos (`insmod … devices=4`), sem frame repetido; escritor parado = leitor sem frames (nunca congela); escritor volta = leitor retoma sem reabrir.
+- Pendências: (1) a HAL `evs-v4l2` faz `DQBUF` bloqueante (`VideoCapture.cpp:345`) e não avisa o cliente quando os frames param; (2) `/dev/video*` é `root 0600` no emulador e a HAL roda como `graphics`/`camera`: precisa de regra no `ueventd`; (3) IDs de câmera são caminhos de dispositivo: fixar com `video_nr`; (4) `vendor_vipee_ros2` precisa de `video_device` rw (o `hal_evs_default` já tem, `hal_evs_default.te:31`); (5) `v4l2loopback` no kernel do RPi5 não verificado; (6) trocar a `evs-hal-cf` pela `evs-v4l2` no emulador exige build de módulo AOSP.
+- Efeito: a feature de câmeras pode dispensar HAL EVS própria e IPC de vídeo (revisaria AD-008/AD-012 numa AD nova). A `ct-speed-slice` (VHAL, AD-013) não muda.
+
 ### ct-speed-slice: Specify e Design aprovados (2026-10-30)
 
 - Spec em `.specs/features/ct-speed-slice/spec.md` (CTS-01..CTS-23), design em `design.md` (aprovado). AD-013 (IPC por socket, VHAL fino) e AD-014 (sem propriedades de plataforma).
@@ -28,7 +35,7 @@
 - Spike: `sirv_msgs` (+ `diagnostic_msgs`) cross-compila com o NDK (script e log em `~/ros2_android_ws/spike_sirv.*`, fonte copiado em `~/ros2_android_ws/sirv_src/`).
 - RPi5: `aosp_rpi5_car` (raspberry-vanilla `android-16.0`) traz `V4-default-service` (fake) e `evs-v4l2`; a imagem será compilada em outra máquina ou em VM na AWS, porque não cabe no C: (51 GB livres).
 - Contrato v0.2.2 (`docs/sim-contract.md`) e página pública (https://claude.ai/artifact/QFuTEK8NcS2CoZSk4kFqe4, versão `1793394488-ca32`) sincronizados.
-- Próximo passo: Tasks da `ct-speed-slice`.
+- Tasks aprovadas (2026-10-30, `tasks.md`, 18 tasks). Execute: lote 1 (fase 1) e lote 2 (fase 2) por sub-agentes; fases 3-4 inline. Fase 3 e o passo 2 do spike EVS (build `evs-v4l2`) esperam o ajuste de disco do C:.
 
 ### Pivô em avaliação: ROS2 dentro do AAOS (2026-10-28, handoff recebido)
 
