@@ -30,7 +30,7 @@ O dashboard AAOS precisa de velocidade, marcha e freio de mão do simulador para
 | Assumption / decision | Chosen default | Rationale | Confirmed? |
 | --------------------- | -------------- | --------- | ---------- |
 | Fonte de velocidade e marcha engatada | `/<ns>/telemetry` (`SirvVehicleTelemetry.speed`, `.gear`), `ns` vindo do mapa do veículo (`cat793f` no demo) | Contrato v0.2 §3 | y |
-| Fonte do freio de mão | `/apply_control_to_vehicle` (`SirvVehicleControl.handbrake`), filtrado pelo `id` do mapa | Único sinal existente (contrato v0.2 §3.3); estado real pedido (P3) | y |
+| Fonte do freio de mão | `/apply_control_to_vehicle` (`SirvVehicleControl.handbrake`), aceito de qualquer `id`; dois `id` diferentes dentro do limite de dado velho tornam a fonte ambígua | Único sinal existente (contrato v0.2 §3.3). O `id` é o uid que o UE5 atribui ao spawnar (`LV_identifier`, `SirvVehicleSimulator.cpp:1363`), não um valor fixo, e não aparece em outro tópico; o único publicador é o vehiclesim do ego (`SirvVehicleSimulator.cpp:151`). Substituído pelo estado em `/<ns>/` quando o P3 chegar | y |
 | Velocidade | `PERF_VEHICLE_SPEED = speed / 3,6`, com o sinal do simulador, independente da marcha | `speed` é `GetForwardSpeed() * 0.036` do Chaos (`SirvWheeledVehicle.cpp:258`): km/h com sinal, negativo andando para trás; mesma convenção do `PERF_VEHICLE_SPEED` no `VehicleProperty.aidl` | y |
 | Marcha engatada | `telemetry.gear` é a marcha engatada da transmissão Chaos (`GetCurrentGear()`, `SirvWheeledVehicle.cpp:256`), igual para todos os veículos: `< 0` ré, `0` neutro, `1..n` à frente; não existe P na física | Lido do código do simulador | y |
 | `GEAR_SELECTION` no CAT793F | Vem da alavanca: `/<ns>/vehicle_control`, `CAT793FVehicleControl.transmission` (int8 em ASCII): `'P'` (80) ➔ `GEAR_PARK`, `'R'` (82) ➔ `GEAR_REVERSE`, `'N'` (78) ➔ `GEAR_NEUTRAL`, `'D'` (68) ➔ `GEAR_DRIVE`, `'1'` (49) ➔ `GEAR_1`, `'2'` (50) ➔ `GEAR_2` | Lido do `cat793f_driving_logic.cpp:739-782`; publicado pelo `cat793f_analogic_bridge` (`SirvAnalogicBridge.cpp:74`) a partir do cockpit | y |
@@ -67,7 +67,7 @@ O dashboard AAOS precisa de velocidade, marcha e freio de mão do simulador para
 4. WHERE o mapa do veículo define a alavanca do CAT793F, WHEN uma `CAT793FVehicleControl` chega em `/<ns>/vehicle_control` com `transmission` na tabela THEN a ponte SHALL publicar `GEAR_SELECTION` pela tabela (ex.: `80` (`'P'`) ➔ `GEAR_PARK` = `0x0004`, `68` (`'D'`) ➔ `GEAR_DRIVE` = `0x0008`).
 5. WHERE o mapa do veículo deriva a seleção da marcha engatada, WHEN `CURRENT_GEAR` é traduzida THEN a ponte SHALL publicar `GEAR_SELECTION` = `GEAR_REVERSE` para ré, `GEAR_NEUTRAL` para neutro e `GEAR_DRIVE` para qualquer marcha à frente.
 6. WHERE o mapa do veículo deriva a seleção da marcha engatada, the ponte SHALL nunca publicar `GEAR_SELECTION = GEAR_PARK`.
-7. WHEN uma `SirvVehicleControl` com o `id` do mapa chega em `/apply_control_to_vehicle` THEN a ponte SHALL publicar `PARKING_BRAKE_ON` igual a `handbrake`.
+7. WHEN uma `SirvVehicleControl` chega em `/apply_control_to_vehicle` THEN a ponte SHALL publicar `PARKING_BRAKE_ON` igual a `handbrake`.
 8. WHEN o valor traduzido de uma propriedade ON_CHANGE (`GEAR_SELECTION`, `CURRENT_GEAR`, `PARKING_BRAKE_ON`) não muda entre duas mensagens THEN a ponte SHALL não gerar novo evento de mudança para os assinantes do VHAL.
 9. The ponte SHALL carimbar cada valor entregue ao VHAL com `elapsedRealtimeNano()` no instante da chegada da mensagem ROS.
 10. WHEN a mensagem é publicada no host THEN o valor novo SHALL estar legível no VHAL do emulador em até 200 ms.
@@ -86,15 +86,15 @@ O dashboard AAOS precisa de velocidade, marcha e freio de mão do simulador para
 
 1. WHILE nenhuma mensagem válida de um tópico de origem chegou desde o início do processo a ponte SHALL reportar as propriedades daquele tópico com status `UNAVAILABLE`.
 2. IF passa o limite de dado velho do mapa (500 ms nos mapas do demo) sem mensagem válida em `/<ns>/telemetry` THEN a ponte SHALL reportar `PERF_VEHICLE_SPEED`, `GEAR_SELECTION` e `CURRENT_GEAR` com status `UNAVAILABLE`.
-3. IF passa o limite de dado velho sem `SirvVehicleControl` com o `id` do mapa THEN a ponte SHALL reportar `PARKING_BRAKE_ON` com status `UNAVAILABLE`.
+3. IF passa o limite de dado velho sem `SirvVehicleControl` THEN a ponte SHALL reportar `PARKING_BRAKE_ON` com status `UNAVAILABLE`.
 4. WHERE o mapa do veículo define a alavanca do CAT793F, IF passa o limite de dado velho sem mensagem válida em `/<ns>/vehicle_control` THEN a ponte SHALL reportar `GEAR_SELECTION` com status `UNAVAILABLE`, independente da telemetria.
 5. WHEN uma mensagem válida volta a chegar depois de um período `UNAVAILABLE` THEN a ponte SHALL reportar o novo valor com status `AVAILABLE`.
 6. IF `speed` é `NaN`, infinito ou tem módulo acima da velocidade máxima do mapa (ex.: `80.1` no CAT793F, limite 80 km/h inclusivo) THEN a ponte SHALL reportar `PERF_VEHICLE_SPEED` com status `ERROR`.
 7. IF `gear` da telemetria está fora de `-9..9`, ou `transmission` da alavanca do CAT793F está fora da tabela, THEN a ponte SHALL reportar a propriedade traduzida daquele campo (`CURRENT_GEAR`, e `GEAR_SELECTION` quando derivada dele, ou `GEAR_SELECTION` da alavanca) com status `UNAVAILABLE` e motivo `UNKNOWN_GEAR`.
-8. IF uma `SirvVehicleControl` chega com `id` diferente do mapa THEN a ponte SHALL descartar a mensagem sem alterar `PARKING_BRAKE_ON` nem renovar seu prazo de validade.
-9. WHEN uma propriedade muda de status (`AVAILABLE`, `UNAVAILABLE`, `ERROR`) THEN a ponte SHALL registrar no logcat (tag `vipee_bridge`) a propriedade, o status novo e o motivo nomeado (`STALE`, `NO_DATA`, `OUT_OF_RANGE`, `UNKNOWN_GEAR`, `MAP_INVALID`).
+8. IF chegam `SirvVehicleControl` com dois `id` diferentes dentro do limite de dado velho THEN a ponte SHALL reportar `PARKING_BRAKE_ON` com status `UNAVAILABLE` e motivo `AMBIGUOUS_SOURCE` até passar um limite de dado velho inteiro com um só `id`.
+9. WHEN uma propriedade muda de status (`AVAILABLE`, `UNAVAILABLE`, `ERROR`) THEN a ponte SHALL registrar no logcat (tag `vipee_bridge`) a propriedade, o status novo e o motivo nomeado (`STALE`, `NO_DATA`, `OUT_OF_RANGE`, `UNKNOWN_GEAR`, `AMBIGUOUS_SOURCE`, `MAP_INVALID`).
 
-**Independent Test**: No núcleo, com relógio fake: sem mensagens, com mensagem e avanço de 501 ms, com `NaN`, com `gear = 10`, com `id` errado, com alavanca velha no mapa do CAT793F. No emulador: parar o publicador fake e ver as propriedades ficarem `UNAVAILABLE`.
+**Independent Test**: No núcleo, com relógio fake: sem mensagens, com mensagem e avanço de 501 ms, com `NaN`, com `gear = 10`, com dois `id` alternando, com alavanca velha no mapa do CAT793F. No emulador: parar o publicador fake e ver as propriedades ficarem `UNAVAILABLE`.
 
 ---
 
@@ -106,7 +106,7 @@ O dashboard AAOS precisa de velocidade, marcha e freio de mão do simulador para
 
 **Acceptance Criteria**:
 
-1. The ponte SHALL ler de um mapa versionado por veículo: versão do mapa, namespace do veículo, `id` do controle, tópico e campo de origem de cada propriedade, escala de unidade, velocidade máxima, limite de dado velho e fonte de `GEAR_SELECTION` (alavanca com tabela, ou derivada da engatada).
+1. The ponte SHALL ler de um mapa versionado por veículo: versão do mapa, namespace do veículo, tópico e campo de origem de cada propriedade, escala de unidade, velocidade máxima, limite de dado velho e fonte de `GEAR_SELECTION` (alavanca com tabela, ou derivada da engatada).
 2. WHEN a ponte inicia configurada para um veículo (ex.: `commander`) THEN a ponte SHALL carregar o mapa daquele veículo e assinar `/<namespace do mapa>/telemetry`.
 3. The repositório SHALL trazer os mapas `cat793f` (alavanca `CAT793FVehicleControl.transmission`, máxima 80 km/h) e `commander` (seleção derivada da engatada, máxima 220 km/h), ambos com limite de 500 ms.
 4. IF o mapa é ilegível, tem versão desconhecida, falta campo obrigatório ou referencia propriedade VHAL fora das 4 desta fatia THEN a ponte SHALL recusar o mapa, registrar `MAP_INVALID` no logcat e manter as 4 propriedades `UNAVAILABLE`.
@@ -162,7 +162,7 @@ O dashboard AAOS precisa de velocidade, marcha e freio de mão do simulador para
 | CTS-15 | P1: Fail-loud (AC5, volta a AVAILABLE) | Design | Pending |
 | CTS-16 | P1: Fail-loud (AC6, velocidade inválida) | Design | Pending |
 | CTS-17 | P1: Fail-loud (AC7, marcha ou alavanca desconhecida) | Design | Pending |
-| CTS-18 | P1: Fail-loud (AC8, `id` diferente) | Design | Pending |
+| CTS-18 | P1: Fail-loud (AC8, `id` ambíguo) | Design | Pending |
 | CTS-19 | P1: Fail-loud (AC9, log de transição) | Design | Pending |
 | CTS-20 | P1: Mapa (AC1, campos do mapa) | Design | Pending |
 | CTS-21 | P1: Mapa (AC2, mapa escolhido pelo veículo) | Design | Pending |

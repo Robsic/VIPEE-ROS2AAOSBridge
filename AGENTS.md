@@ -130,4 +130,4 @@ Ao fim de cada fase (Specify, Design, Tasks, cada lote de Execute), atualize o H
 
 ## 7\. Decisões de arquitetura
 
-Transporte, local no Android, VHAL, EVS, relógio e ROS no Android estão decididos em `.specs/STATE.md` (AD-001 a AD-012; AD-011 e AD-012 substituem AD-001 a AD-003 e AD-006). O contrato com o simulador está em [`docs/sim-contract.md`](./docs/sim-contract.md).
+Transporte, local no Android, VHAL, EVS, relógio e ROS no Android estão decididos em `.specs/STATE.md` (AD-001 a AD-014; AD-011 e AD-012 substituem AD-001 a AD-003 e AD-006). O contrato com o simulador está em [`docs/sim-contract.md`](./docs/sim-contract.md).

@@ -26,7 +26,7 @@ flowchart LR
 
 Estado validado (emulador, AOSP `android-16.0.0_r4`): `geometry_msgs/TwistStamped` do host chega ao serviço vendor em Enforcing, primeira mensagem em ~0,4 s. Ainda pendente: IPC até VHAL/EVS, vídeo 720p e build arm64 no RPi5.
 
-As decisões e suas razões estão em [`.specs/STATE.md`](.specs/STATE.md) (AD-001 a AD-012).
+As decisões e suas razões estão em [`.specs/STATE.md`](.specs/STATE.md) (AD-001 a AD-014).
 
 ## Sinais do MVP
 
@@ -38,7 +38,7 @@ As decisões e suas razões estão em [`.specs/STATE.md`](.specs/STATE.md) (AD-0
 | Retrovisores | `MIRROR_FOLD` | Corte do sinal do BEV |
 | 4 câmeras 720p | EVS | Dashboard, AVM e calibração (CalibDroid) |
 
-O que o simulador publica está em [`docs/sim-contract.md`](docs/sim-contract.md) (rascunho v0.1, em negociação com o time do simulador). A v0.2 vai partir das mensagens `sirv_msgs` e dos tópicos do handoff (ex.: `/sirv/sensor/fisheye/<pos>/image/compressed`).
+O que o simulador publica está em [`docs/sim-contract.md`](docs/sim-contract.md) (rascunho v0.2.2, em negociação com o time do simulador), a partir das mensagens `sirv_msgs` da branch `SIRV_UE5.5_ROS2_Jazzy`.
 
 ## Etapas de validação
 

@@ -1,6 +1,6 @@
 # Contrato Simulador ➔ ROS2AAOSBridge
 
-**Versão:** 0.2.1 (rascunho para discussão) · **Data:** 2026-10-30 · **Escopo:** MVP do demo no RPi5 (prazo 2026-11-28)
+**Versão:** 0.2.2 (rascunho para discussão) · **Data:** 2026-10-30 · **Escopo:** MVP do demo no RPi5 (prazo 2026-11-28)
 
 Este documento define o que o simulador publica em ROS2 para que a ponte entregue os sinais ao Android Automotive (VHAL e EVS) sem que o dashboard perceba que a fonte é simulada. A v0.2 parte do que o simulador **já publica**, levantado do repositório `SIRV-Simulator`, branch `SIRV_UE5.5_ROS2_Jazzy` (2026-10-30), em vez dos tópicos `/vehicle/...` propostos na v0.1. O que falta foi solicitado ao time do simulador e aparece como **pedido** (§4). As decisões do lado da ponte estão em `.specs/STATE.md` (AD-011 e AD-012: o processo ROS da ponte roda dentro do Android).
 
@@ -47,7 +47,7 @@ Na ponte: `CURRENT_GEAR` vem da engatada. `GEAR_SELECTION` vem da alavanca no CA
 
 ### 3.3 Freio de mão
 
-`/apply_control_to_vehicle` está fora do namespace do veículo e é o **comando** enviado ao UE5 (campo `id` identifica o veículo), não o estado lido do veículo. Serve para o MVP: a ponte filtra pelo `id` configurado. O `CarDrivingStateService` do AAOS exige `PARKING_BRAKE_ON` junto de `PERF_VEHICLE_SPEED` e `GEAR_SELECTION`. Um estado de freio de mão na telemetria seria o certo a médio prazo (pedido P3).
+`/apply_control_to_vehicle` está fora do namespace do veículo e é o **comando** enviado ao UE5 (campo `id` identifica o veículo), não o estado lido do veículo. Serve para o MVP. O `id` é o uid que o UE5 atribui ao spawnar (`LV_identifier`), não um valor fixo, e não sai em outro tópico; a ponte aceita qualquer `id` e marca o freio de mão indisponível se dois `id` diferentes aparecem dentro do limite de dado velho. O `CarDrivingStateService` do AAOS exige `PARKING_BRAKE_ON` junto de `PERF_VEHICLE_SPEED` e `GEAR_SELECTION`. Um estado de freio de mão na telemetria seria o certo a médio prazo (pedido P3).
 
 ### 3.4 Câmeras
 
@@ -107,6 +107,7 @@ Mudança de nome, tipo ou semântica sobe a versão deste documento, e mudança 
 
 ### Histórico
 
+* **0.2.2 (2026-10-30):** `id` do `SirvVehicleControl` é o uid do spawn; a ponte aceita qualquer `id` e marca fonte ambígua com dois `id`. Reforça o P3.
 * **0.2.1 (2026-10-30):** velocidade com sinal e marcha engatada genérica lidas do código do simulador (perguntas respondidas); alavanca do CAT793F em `/<ns>/vehicle_control`; origem do Commander; pedidos P6 e P7.
 * **0.2 (2026-10-30):** parte dos tópicos e de `sirv_msgs` do simulador (branch `SIRV_UE5.5_ROS2_Jazzy`). Abandona `/vehicle/...` e `vipee_vehicle_msgs`. Jazzy + CycloneDDS TCP. Portas, retrovisores e freio de mão como estado viram pedidos.
 * **0.1 (2026-10-28):** proposta inicial, com tópicos e mensagens próprios.
