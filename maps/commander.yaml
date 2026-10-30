@@ -1,0 +1,18 @@
+# Mapa do Commander (version 1): GEAR_SELECTION derivada da marcha engatada.
+# Unidades: km/h (speed), ms (stale_ms).
+vipee_bridge:
+  ros__parameters:
+    map_version: 1
+    vehicle: commander
+    namespace: commander
+    stale_ms: 500
+    speed:
+      source: telemetry.speed
+      scale: 0.277777778  # km/h -> m/s
+      max_abs_kmh: 220.0  # inclusivo
+    current_gear:
+      source: telemetry.gear
+    gear_selection:
+      source: derived
+    parking_brake:
+      source: apply_control_to_vehicle.handbrake

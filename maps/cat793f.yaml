@@ -1,0 +1,20 @@
+# Mapa do CAT793F (version 1). Frame: sinais do simulador, sem transformação.
+# Unidades: km/h (speed), ms (stale_ms), ASCII int8 (lever_codes).
+vipee_bridge:
+  ros__parameters:
+    map_version: 1
+    vehicle: cat793f
+    namespace: cat793f
+    stale_ms: 500
+    speed:
+      source: telemetry.speed
+      scale: 0.277777778  # km/h -> m/s
+      max_abs_kmh: 80.0   # inclusivo
+    current_gear:
+      source: telemetry.gear
+    gear_selection:
+      source: lever
+      lever_codes: [80, 82, 78, 68, 49, 50]  # P R N D 1 2
+      lever_gears: [PARK, REVERSE, NEUTRAL, DRIVE, GEAR_1, GEAR_2]
+    parking_brake:
+      source: apply_control_to_vehicle.handbrake

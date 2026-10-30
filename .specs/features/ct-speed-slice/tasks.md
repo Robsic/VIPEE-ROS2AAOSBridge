@@ -357,9 +357,9 @@ T17 → T18
 
 **Done when**:
 
-- [ ] Teste de integração no contêiner: com cada mapa, publica `SirvVehicleTelemetry`, `CAT793FVehicleControl` e `SirvVehicleControl` reais e confere os registros no socket do teste; mapa com parâmetro faltando ➔ 4 `UNAVAILABLE` e `MAP_INVALID`, processo vivo
-- [ ] Gate check passes: Quick + `tools/jazzy/run.sh /bridge/tools/jazzy/test-ros.sh`
-- [ ] Test count: ≥ 4 tests pass (no silent deletions)
+- [x] Teste de integração no contêiner: com cada mapa, publica `SirvVehicleTelemetry`, `CAT793FVehicleControl` e `SirvVehicleControl` reais e confere os registros no socket do teste; mapa com parâmetro faltando ➔ 4 `UNAVAILABLE` e `MAP_INVALID`, processo vivo
+- [x] Gate check passes: Quick + `tools/jazzy/run.sh /bridge/tools/jazzy/test-ros.sh`
+- [x] Test count: ≥ 4 tests pass (no silent deletions)
 
 **Tests**: integration
 **Gate**: full
