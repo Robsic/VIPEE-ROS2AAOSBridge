@@ -384,7 +384,7 @@ T17 → T18
 **Done when**:
 
 - [x] Binário NDK sem `.so.N` de fora (`build-bridge.sh`, LOAD `0x4000`)
-- [ ] No emulador o serviço sobe em Enforcing e loga `NO_DATA` das 4 com o VHAL ainda ausente (pendente: o emulador atual não tem `-writable-system`; `adb remount` recusa; reiniciar com `emu_rw.sh` exige aprovação. Provado só como `shell` em `/data/local/tmp`: 4x `UNAVAILABLE NO_DATA` no logcat)
+- [x] No emulador o serviço sobe em Enforcing e loga `NO_DATA` das 4 com o VHAL ainda ausente (2026-10-31: `emu_rw.sh` + `install-vendor.sh`, domínio `vendor_vipee_ros2`, uid `vehicle_network`; `vendor.vipee.vehicle=commander` sobe, nome inexistente falha alto com `Error opening YAML file`; única negação é a conhecida `{ read } proc_net:file`, `dontaudit` na T16)
 
 **Tests**: none
 **Gate**: build
