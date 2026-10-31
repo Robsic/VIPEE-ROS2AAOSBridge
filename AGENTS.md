@@ -10,6 +10,12 @@ Mapeamento de sinais (alvo):
 
 Diretrizes normativas para agentes de IA e desenvolvedores:
 
+## Memória compartilhada VIPEE
+
+@../vipee-shared/SHARED.md
+
+Leia [`../vipee-shared/SHARED.md`](../vipee-shared/SHARED.md) antes de mexer na árvore AOSP, no emulador, na VM de build `vipee` ou na AWS. Fatos comuns aos projetos irmãos ficam lá, não neste arquivo; quando um deles mudar, atualize lá.
+
 ## 1\. Arquivos de Contexto
 
 Consulte antes de alterações de arquitetura, contratos de sinal ou fronteiras de middleware:
