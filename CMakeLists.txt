@@ -34,3 +34,8 @@ add_unit_test(translate_test core/test/translate_test.cpp)
 add_unit_test(bridge_test core/test/bridge_test.cpp)
 add_unit_test(socket_sink_test ros/vipee_bridge/test/socket_sink_test.cpp
   vipee_socket_sink)
+
+# VHAL ingest logic: header-only, no AOSP, unit-tested on the host.
+add_unit_test(vhal_ingest_test android/vhal/test/vhal_ingest_test.cpp)
+target_include_directories(vhal_ingest_test PRIVATE
+  ${CMAKE_SOURCE_DIR}/android/vhal/include)
