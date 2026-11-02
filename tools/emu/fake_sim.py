@@ -4,10 +4,19 @@ Runs in the Jazzy container on the host network. The state comes from a JSON
 file the test rewrites; the publisher rereads it when its mtime changes:
     {"speed": km/h, "gear": int8, "lever": ASCII int8, "handbrake": bool,
      "telemetry": bool, "publish": bool}
+     "telemetry": bool, "publish": bool,
+     "cameras": {"front"|"rear"|"left"|"right": "ok"|"small"|"png"|"trunc"|"off"}}
 `telemetry: false` stops the telemetry stream; `publish: false` stops all
-three (the simulator goes silent).
+streams (the simulator goes silent).
 Telemetry at 66 Hz on /<ns>/telemetry, the CAT793F lever at 20 Hz on
 /<ns>/vehicle_control and the control at 20 Hz on /apply_control_to_vehicle.
+
+Cameras (cam-evs-slice), only with a frames dir (third argument): 10 Hz
+CompressedImage on /sirv/sensor/fisheye/<pos>/image/compressed, per mode:
+ok = <frames>/<pos>.jpg (from extract_frames.py, 1280x720), small =
+<frames>/small.jpg (a 480x480 JPEG), png = <frames>/frame.png with format
+'png', trunc = the first half of <pos>.jpg, off = nothing. A camera missing
+from "cameras" is off.
 """
 
 import json
@@ -16,6 +25,8 @@ import sys
 import time
 
 import rclpy
+from rclpy.qos import qos_profile_sensor_data
+from sensor_msgs.msg import CompressedImage
 from sirv_msgs.msg import (
     CAT793FVehicleControl,
     SirvVehicleControl,
@@ -25,6 +36,7 @@ from sirv_msgs.msg import (
 
 def main() -> None:
     ns, state_path = sys.argv[1], sys.argv[2]
+    frames = sys.argv[3] if len(sys.argv) > 3 else None
     rclpy.init()
     node = rclpy.create_node("vipee_fake_sim")
     tel_pub = node.create_publisher(SirvVehicleTelemetry, f"/{ns}/telemetry", 5)
@@ -67,6 +79,45 @@ def main() -> None:
             ctl_pub.publish(ctl)
 
     node.create_timer(1.0 / 66.0, step)
+    if frames:
+        cams = {
+            p: node.create_publisher(
+                CompressedImage,
+                f"/sirv/sensor/fisheye/{p}/image/compressed",
+                qos_profile_sensor_data,
+            )
+            for p in ("front", "rear", "left", "right")
+        }
+
+        def read(name: str) -> bytes:
+            with open(os.path.join(frames, name), "rb") as f:
+                return f.read()
+
+        def frame(pos: str, mode: str) -> tuple[str, bytes]:
+            if mode == "ok":
+                return "jpeg", read(f"{pos}.jpg")
+            if mode == "small":
+                return "jpeg", read("small.jpg")
+            if mode == "png":
+                return "png", read("frame.png")
+            if mode == "trunc":
+                jpg = read(f"{pos}.jpg")
+                return "jpeg", jpg[: len(jpg) // 2]
+            raise ValueError(f"camera {pos}: unknown mode {mode}")
+
+        def cameras() -> None:
+            if not state.get("publish", True):
+                return
+            for pos, mode in state.get("cameras", {}).items():
+                if mode == "off":
+                    continue
+                msg = CompressedImage()
+                msg.header.stamp = node.get_clock().now().to_msg()
+                msg.format, data = frame(pos, mode)
+                msg.data = data
+                cams[pos].publish(msg)
+
+        node.create_timer(0.1, cameras)
     rclpy.spin(node)
 
 

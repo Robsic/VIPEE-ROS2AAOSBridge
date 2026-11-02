@@ -400,8 +400,8 @@ T13 → T14 → T15 → T16
 
 **Done when**:
 
-- [ ] No contêiner, `ros2 topic hz` mostra ~10 Hz nas 4 câmeras com `ok` e nada com `off`
-- [ ] `ruff check tools/emu` limpo
+- [x] No contêiner, `ros2 topic hz` mostra ~10 Hz nas 4 câmeras com `ok` e nada com `off`
+- [x] `ruff check tools/emu` limpo
 
 **Tests**: none
 **Gate**: build
