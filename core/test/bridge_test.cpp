@@ -464,5 +464,16 @@ TEST_F(BridgeTest, InvalidMapIgnoresLeverAndControl) {
   EXPECT_TRUE(sink_.updates.empty());
 }
 
+// CTS-19: a reason change with the same status is a transition too.
+TEST_F(BridgeTest, ReasonOnlyChangeIsLogged) {
+  Bridge& b = Start(Cat793fMap());
+  b.onTelemetry({0.0, 20}, kT0);  // gear out of -9..9
+  ASSERT_EQ(log_.of(prop::kCurrentGear).back().reason, Reason::kUnknownGear);
+  b.tick(kT0 + 501 * kMs);  // telemetry stale, status stays UNAVAILABLE
+  const LogEntry e = log_.of(prop::kCurrentGear).back();
+  EXPECT_EQ(e.status, Status::kUnavailable);
+  EXPECT_EQ(e.reason, Reason::kStale);
+}
+
 }  // namespace
 }  // namespace vipee

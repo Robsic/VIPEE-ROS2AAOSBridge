@@ -92,7 +92,7 @@ O dashboard AAOS precisa de velocidade, marcha e freio de mão do simulador para
 6. IF `speed` é `NaN`, infinito ou tem módulo acima da velocidade máxima do mapa (ex.: `80.1` no CAT793F, limite 80 km/h inclusivo) THEN a ponte SHALL reportar `PERF_VEHICLE_SPEED` com status `ERROR`.
 7. IF `gear` da telemetria está fora de `-9..9`, ou `transmission` da alavanca do CAT793F está fora da tabela, THEN a ponte SHALL reportar a propriedade traduzida daquele campo (`CURRENT_GEAR`, e `GEAR_SELECTION` quando derivada dele, ou `GEAR_SELECTION` da alavanca) com status `UNAVAILABLE` e motivo `UNKNOWN_GEAR`.
 8. IF chegam `SirvVehicleControl` com dois `id` diferentes dentro do limite de dado velho THEN a ponte SHALL reportar `PARKING_BRAKE_ON` com status `UNAVAILABLE` e motivo `AMBIGUOUS_SOURCE` até passar um limite de dado velho inteiro com um só `id`.
-9. WHEN uma propriedade muda de status (`AVAILABLE`, `UNAVAILABLE`, `ERROR`) THEN a ponte SHALL registrar no logcat (tag `vipee_bridge`) a propriedade, o status novo e o motivo nomeado (`STALE`, `NO_DATA`, `OUT_OF_RANGE`, `UNKNOWN_GEAR`, `AMBIGUOUS_SOURCE`, `MAP_INVALID`).
+9. WHEN uma propriedade muda de status (`AVAILABLE`, `UNAVAILABLE`, `ERROR`) ou, com o mesmo status, de motivo THEN a ponte SHALL registrar no logcat (tag `vipee_bridge`) a propriedade, o status novo e o motivo nomeado (`STALE`, `NO_DATA`, `OUT_OF_RANGE`, `UNKNOWN_GEAR`, `AMBIGUOUS_SOURCE`, `MAP_INVALID`).
 
 **Independent Test**: No núcleo, com relógio fake: sem mensagens, com mensagem e avanço de 501 ms, com `NaN`, com `gear = 10`, com dois `id` alternando, com alavanca velha no mapa do CAT793F. No emulador: parar o publicador fake e ver as propriedades ficarem `UNAVAILABLE`.
 
