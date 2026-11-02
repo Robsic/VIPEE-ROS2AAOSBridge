@@ -143,33 +143,33 @@ O dashboard AAOS precisa de velocidade, marcha e freio de mão do simulador para
 
 ## Requirement Traceability
 
-| Requirement ID | Story | Phase | Status |
+| Requirement ID | Story | Tasks | Status |
 | -------------- | ----- | ----- | ------ |
-| CTS-01 | P1: Sinais no VHAL (AC1, velocidade em m/s) | Design | Pending |
-| CTS-02 | P1: Sinais no VHAL (AC2, velocidade com sinal) | Design | Pending |
-| CTS-03 | P1: Sinais no VHAL (AC3, `CURRENT_GEAR` genérica) | Design | Pending |
-| CTS-04 | P1: Sinais no VHAL (AC4, `GEAR_SELECTION` da alavanca do CAT793F) | Design | Pending |
-| CTS-05 | P1: Sinais no VHAL (AC5, `GEAR_SELECTION` derivada) | Design | Pending |
-| CTS-06 | P1: Sinais no VHAL (AC6, sem P na seleção derivada) | Design | Pending |
-| CTS-07 | P1: Sinais no VHAL (AC7, freio de mão) | Design | Pending |
-| CTS-08 | P1: Sinais no VHAL (AC8, sem evento repetido) | Design | Pending |
-| CTS-09 | P1: Sinais no VHAL (AC9, carimbo na chegada) | Design | Pending |
-| CTS-10 | P1: Sinais no VHAL (AC10, latência ≤ 200 ms) | Design | Pending |
-| CTS-11 | P1: Fail-loud (AC1, sem dado desde o início) | Design | Pending |
-| CTS-12 | P1: Fail-loud (AC2, telemetria velha) | Design | Pending |
-| CTS-13 | P1: Fail-loud (AC3, controle velho) | Design | Pending |
-| CTS-14 | P1: Fail-loud (AC4, alavanca velha no CAT793F) | Design | Pending |
-| CTS-15 | P1: Fail-loud (AC5, volta a AVAILABLE) | Design | Pending |
-| CTS-16 | P1: Fail-loud (AC6, velocidade inválida) | Design | Pending |
-| CTS-17 | P1: Fail-loud (AC7, marcha ou alavanca desconhecida) | Design | Pending |
-| CTS-18 | P1: Fail-loud (AC8, `id` ambíguo) | Design | Pending |
-| CTS-19 | P1: Fail-loud (AC9, log de transição) | Design | Pending |
-| CTS-20 | P1: Mapa (AC1, campos do mapa) | Design | Pending |
-| CTS-21 | P1: Mapa (AC2, mapa escolhido pelo veículo) | Design | Pending |
-| CTS-22 | P1: Mapa (AC3, mapas CAT793F e Commander) | Design | Pending |
-| CTS-23 | P1: Mapa (AC4, mapa inválido) | Design | Pending |
+| CTS-01 | P1: Sinais no VHAL (AC1, velocidade em m/s) | T4, T5, T8 | Implemented |
+| CTS-02 | P1: Sinais no VHAL (AC2, velocidade com sinal) | T4, T5 | Implemented |
+| CTS-03 | P1: Sinais no VHAL (AC3, `CURRENT_GEAR` genérica) | T4, T5 | Implemented |
+| CTS-04 | P1: Sinais no VHAL (AC4, `GEAR_SELECTION` da alavanca do CAT793F) | T4, T6 | Implemented |
+| CTS-05 | P1: Sinais no VHAL (AC5, `GEAR_SELECTION` derivada) | T4, T5 | Implemented |
+| CTS-06 | P1: Sinais no VHAL (AC6, sem P na seleção derivada) | T4, T5 | Implemented |
+| CTS-07 | P1: Sinais no VHAL (AC7, freio de mão) | T7 | Implemented |
+| CTS-08 | P1: Sinais no VHAL (AC8, sem evento repetido) | T5, T7, T14 | Implemented |
+| CTS-09 | P1: Sinais no VHAL (AC9, carimbo na chegada) | T2, T5, T10, T14 | Implemented |
+| CTS-10 | P1: Sinais no VHAL (AC10, latência ≤ 200 ms) | T9, T10, T15, T17 | Implemented |
+| CTS-11 | P1: Fail-loud (AC1, sem dado desde o início) | T5, T13, T14, T16 | Implemented |
+| CTS-12 | P1: Fail-loud (AC2, telemetria velha) | T5, T17 | Implemented |
+| CTS-13 | P1: Fail-loud (AC3, controle velho) | T7 | Implemented |
+| CTS-14 | P1: Fail-loud (AC4, alavanca velha no CAT793F) | T6 | Implemented |
+| CTS-15 | P1: Fail-loud (AC5, volta a AVAILABLE) | T5, T14 | Implemented |
+| CTS-16 | P1: Fail-loud (AC6, velocidade inválida) | T4, T5 | Implemented |
+| CTS-17 | P1: Fail-loud (AC7, marcha ou alavanca desconhecida) | T4, T5, T6 | Implemented |
+| CTS-18 | P1: Fail-loud (AC8, `id` ambíguo) | T7 | Implemented |
+| CTS-19 | P1: Fail-loud (AC9, log de transição) | T5, T7, T11 | Implemented |
+| CTS-20 | P1: Mapa (AC1, campos do mapa) | T1, T3, T11 | Implemented |
+| CTS-21 | P1: Mapa (AC2, mapa escolhido pelo veículo) | T11, T12, T17, T18 | Implemented |
+| CTS-22 | P1: Mapa (AC3, mapas CAT793F e Commander) | T6, T11, T17 | Implemented |
+| CTS-23 | P1: Mapa (AC4, mapa inválido) | T3, T5, T11 | Implemented |
 
-**Coverage:** 23 total, 0 mapped to tasks, 23 unmapped ⚠️
+**Coverage:** 23 total, 23 mapped to tasks, 0 unmapped
 
 ---
 

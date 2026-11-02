@@ -537,7 +537,7 @@ T17 → T18
 
 **Done when**:
 
-- [ ] Comandos do README rodam como escritos num shell limpo
+- [x] Comandos do README rodam como escritos num shell limpo (2026-11-02, `env -i`: preset, build e unit; `build-bridge.sh`; `test-vhal.sh` e `test-e2e.sh` já verdes no emulador; `build-android.sh` validado na fase 2, ~1 h, não repetido)
 
 **Tests**: none
 **Gate**: build

@@ -21,10 +21,10 @@ flowchart LR
 
 * **Android, processo ROS 2:** um único binário nativo (`rclcpp` + `rmw_cyclonedds_cpp`, cross-build com NDK) roda como serviço vendor (`.rc` + domínio SELinux `vendor_vipee_ros2`). Assina os tópicos do simulador e os traduz por um mapa tabelado e versionado. Um só participante DDS por device, porque a descoberta TCP com dial-out só suporta um.
 * **Descoberta:** CycloneDDS só por TCP, sem multicast. O host escuta na porta 7400 e o Android disca para ele (no emulador, `10.0.2.2:7400`). `ROS_DOMAIN_ID=25`.
-* **HALs:** o VHAL usa o `DefaultVehicleHal` do AOSP com um `IVehicleHardware` próprio, e uma HAL EVS virtual entrega as 4 câmeras (`FRONTVIEW`, `REARVIEW`, `LEFTVIEW`, `RIGHTVIEW`). As HALs recebem os dados do processo ROS por IPC local, a definir. Acima da fronteira HAL, o Android vê um veículo comum.
+* **HALs:** o VHAL usa o `DefaultVehicleHal` do AOSP com um `IVehicleHardware` próprio, e uma HAL EVS virtual entrega as 4 câmeras (`FRONTVIEW`, `REARVIEW`, `LEFTVIEW`, `RIGHTVIEW`). O VHAL recebe valor e status prontos do processo ROS por um socket `SOCK_SEQPACKET` em `/dev/socket/vipee_vhal` (AD-013); o IPC até o EVS está a definir. Acima da fronteira HAL, o Android vê um veículo comum.
 * **Fail-loud:** sinal ausente ou velho vira `UNAVAILABLE` no VHAL e para o stream no EVS. Nunca há valor padrão ou frame congelado.
 
-Estado validado (emulador, AOSP `android-16.0.0_r4`): `geometry_msgs/TwistStamped` do host chega ao serviço vendor em Enforcing, primeira mensagem em ~0,4 s. Ainda pendente: IPC até VHAL/EVS, vídeo 720p e build arm64 no RPi5.
+Estado validado (emulador, AOSP `android-16.0.0_r4`, Enforcing): velocidade, marcha e freio de mão do simulador chegam ao `CarService` (feature `ct-speed-slice`), pior latência medida 48 ms com o adb incluído; fonte parada vira `UNAVAILABLE` em ~540 ms. Ainda pendente: EVS (câmeras), portas e retrovisores, build arm64 no RPi5.
 
 As decisões e suas razões estão em [`.specs/STATE.md`](.specs/STATE.md) (AD-001 a AD-014).
 
@@ -52,7 +52,45 @@ O que o simulador publica está em [`docs/sim-contract.md`](docs/sim-contract.md
 * Árvore AOSP 16 em `$ANDROID_BUILD_TOP` e `adb` (política SELinux ligada por `tools/jazzy/sepolicy-sync.sh`).
 * Python 3.10 e `uv` para ferramentas auxiliares.
 
-O setup completo, as variáveis de ambiente e as armadilhas do ambiente estão no [`AGENTS.md`](AGENTS.md) §6. Os comandos de build entram aqui junto com o primeiro código.
+O setup completo, as variáveis de ambiente e as armadilhas do ambiente estão no [`AGENTS.md`](AGENTS.md) §6; a VM de build e o emulador compartilhados, em `../vipee-shared/SHARED.md`.
+
+## Build e execução
+
+Núcleo da ponte (C++17, sem ROS nem Android), no host:
+
+```bash
+cmake --preset default && cmake --build --preset default && ctest --preset default -L unit
+```
+
+Processo ROS para Android (contêiner Jazzy; o primeiro `build-android.sh` leva ~1 h) e teste de integração ROS:
+
+```bash
+tools/jazzy/run.sh /bridge/tools/jazzy/build-android.sh
+tools/jazzy/run.sh /bridge/tools/jazzy/build-bridge.sh
+tools/jazzy/run.sh /bridge/tools/jazzy/test-ros.sh
+```
+
+VHAL e política SELinux (escrevem em `$ANDROID_BUILD_TOP`; o `m` roda na VM `vipee`):
+
+```bash
+tools/jazzy/sepolicy-sync.sh && tools/emu/vhal-sync.sh
+~/aosp-scripts/vm_m.sh selinux_policy vipee-vehicle-service vipee_properties.json
+```
+
+No emulador (subir com `-writable-system`; com Wi-Fi ligado, `adb shell cmd wifi set-wifi-enabled enabled`). O `install-vendor.sh` troca o VHAL do emulador pelo da ponte e reinicia o device; `install-vendor.sh remove` devolve o original:
+
+```bash
+tools/jazzy/install-vendor.sh
+tools/emu/test-vhal.sh      # VHAL: indisponível, valores, watchdog, taxa
+tools/emu/test-e2e.sh       # host ➔ CarService: latência, dado velho, mapas
+```
+
+Veículo: a propriedade `vendor.vipee.vehicle` escolhe o mapa em `maps/` (`cat793f`, padrão, ou `commander`), sem recompilar:
+
+```bash
+adb shell setprop vendor.vipee.vehicle commander
+adb shell 'stop vipee_bridge; start vipee_bridge'
+```
 
 ## Projetos irmãos
 
