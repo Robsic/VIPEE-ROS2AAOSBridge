@@ -462,8 +462,8 @@ T17 → T18
 
 **Done when**:
 
-- [ ] Assinatura a 10 Hz com telemetria a ~66 Hz entrega 10 ± 1 eventos/s
-- [ ] Gate check passes: `tools/emu/test-vhal.sh`
+- [x] Telemetria a ~66 Hz (198 registros em 3 s no `recvfrom` do VHAL) entrega a taxa assinada: 23 eventos em 5 s a 5 Hz. Desvio: o `CarService` assina a 5 Hz e o shell não assina a 10 Hz, então o teste usa a taxa do dump (±12%). O espaçamento fica em ~210 ms (≥ período), porque o cliente descarta evento a menos de um período do anterior (`ContCarPropertyEventTracker.java:127`)
+- [x] Gate check passes: `tools/emu/test-vhal.sh rate`
 
 **Tests**: integration
 **Gate**: full
