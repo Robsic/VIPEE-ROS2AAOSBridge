@@ -1,0 +1,45 @@
+// VIPEE VHAL (AD-013): DefaultVehicleHal + VipeeVehicleHardware, fed by the
+// ROS bridge over /dev/socket/vipee_vhal. Synced to
+// device/generic/car/emulator/vipee_vhal by tools/emu/vhal-sync.sh.
+// Not in PRODUCT_PACKAGES: on the emulator the binary and .rc are pushed over
+// the V4-emulator-service ones (tools/emu/install-vhal.sh).
+
+package {
+    default_applicable_licenses: ["Android-Apache-2.0"],
+}
+
+cc_binary {
+    name: "vipee-vehicle-service",
+    vendor: true,
+    defaults: [
+        "VehicleHalDefaults",
+        "android-automotive-large-parcelable-defaults",
+    ],
+    relative_install_path: "hw",
+    srcs: [
+        "VehicleService.cpp",
+        "VipeeVehicleHardware.cpp",
+    ],
+    local_include_dirs: ["include"],
+    static_libs: [
+        "DefaultVehicleHal",
+        "VehicleHalJsonConfigLoader",
+        "VehicleHalUtils",
+    ],
+    header_libs: [
+        "IVehicleHardware",
+        "IVehicleGeneratedHeaders-V4",
+    ],
+    shared_libs: [
+        "libbinder_ndk",
+        "libcutils",
+        "libjsoncpp",
+    ],
+}
+
+prebuilt_etc {
+    name: "vipee_properties.json",
+    vendor: true,
+    src: "vipee_properties.json",
+    sub_dir: "vipee",
+}

@@ -1,0 +1,10 @@
+# VIPEE VHAL (AD-013). On the emulator this file replaces
+# /vendor/etc/init/vhal-emulator-service.rc and the binary is pushed over
+# /vendor/bin/hw/android.hardware.automotive.vehicle@V4-emulator-service,
+# inheriting its hal_vehicle_default_exec label. The socket is created here,
+# before the ROS bridge (class hal) connects to it.
+service vendor.vehicle-hal-emulator /vendor/bin/hw/android.hardware.automotive.vehicle@V4-emulator-service
+    class early_hal
+    user vehicle_network
+    group system inet
+    socket vipee_vhal seqpacket 0660 vehicle_network vehicle_network

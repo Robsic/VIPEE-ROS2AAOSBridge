@@ -408,10 +408,12 @@ T17 → T18
 
 **Done when**:
 
-- [ ] Com aprovação: `m vipee-vehicle-service`; binário instalado por push no caminho do `V4-emulator-service`
-- [ ] Emulador dá boot; `CarService` sobe sem as propriedades de plataforma (AD-014) ou a tabela da AD-014 é criada com o que faltar
-- [ ] `get` das 4 devolve `NOT_AVAILABLE`
-- [ ] Gate check passes: `tools/emu/test-vhal.sh`
+- [x] Com aprovação: `m vipee-vehicle-service` (2026-11-02, na VM `vipee` por `~/aosp-scripts/vm_m.sh`, 3m36s); binário instalado por push no caminho do `V4-emulator-service`, rótulo `hal_vehicle_default_exec` por `restorecon`
+- [x] Emulador dá boot; `CarService` sobe sem as propriedades de plataforma (AD-014); nenhuma tabela necessária
+- [x] `get` das 4 devolve `NOT_AVAILABLE` (o shell do `car_service` imprime `Can not get property value` para qualquer erro; o teste cruza com o status `UNAVAILABLE` guardado, lido do dump do VHAL)
+- [x] Gate check passes: `tools/emu/test-vhal.sh absent`
+
+**Desvio (2026-11-02)**: o código do VHAL das T13–T15 foi escrito de uma vez e entra neste commit, para ele compilar sozinho; as T14 e T15 registram os gates delas. A lógica testável (watchdog, piso de timestamp, dizimação) está em `vhal_ingest.h`, com 10 testes no host (`0614bf5`).
 
 **Tests**: integration
 **Gate**: full

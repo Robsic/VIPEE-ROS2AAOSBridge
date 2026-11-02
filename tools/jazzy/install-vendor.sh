@@ -2,7 +2,10 @@
 # Instala o vipee_bridge como serviço vendor no emulador (AD-012), no lugar do
 # spike vipee_twist_listener. Pré-requisitos: emulador iniciado com
 # -writable-system (~/aosp-scripts/emu_rw.sh), build-android.sh e
-# build-bridge.sh já rodados. Reinicia o emulador no fim.
+# build-bridge.sh já rodados. Reinicia o emulador no fim. Se existir
+# $OUT_VENDOR/bin/hw/vipee-vehicle-service (build do VHAL, T13), ele e o .rc
+# substituem o VHAL do emulador; o original fica em *.stock e volta no remove.
+# OUT_VENDOR aponta para o vendor de um build AOSP (local ou trazido da VM).
 #   tools/jazzy/install-vendor.sh          # instala
 #   tools/jazzy/install-vendor.sh remove   # remove tudo
 set -euo pipefail
@@ -16,6 +19,9 @@ OUT_VENDOR="${OUT_VENDOR:-$HOME/aosp/out/target/product/emulator_car64_x86_64/ve
 # e o linker ignora LD_LIBRARY_PATH (sintoma: serviço sai com 1 antes do main).
 LIB=/vendor/lib64
 LIBS="$(cd "$WS/push_x86_64/lib" && ls)"
+VHAL_DEV=/vendor/bin/hw/android.hardware.automotive.vehicle@V4-emulator-service
+VHAL_RC=/vendor/etc/init/vhal-emulator-service.rc
+VHAL_BIN="$OUT_VENDOR/bin/hw/vipee-vehicle-service"
 
 boot() {
   "$ADB" wait-for-device
@@ -36,6 +42,7 @@ if ! "$ADB" remount 2>&1 | grep -q 'remount succeeded'; then
 fi
 
 if [ "${1:-}" = remove ]; then
+  "$ADB" shell "for f in $VHAL_DEV $VHAL_RC; do [ -f \$f.stock ] && mv \$f.stock \$f; done; restorecon $VHAL_DEV"
   "$ADB" shell "cd $LIB && rm -f $(echo $LIBS)"
   "$ADB" shell rm -rf /vendor/lib64/vipee_ros2 /vendor/bin/vipee_bridge /vendor/bin/vipee_twist_listener \
     /vendor/etc/vipee /vendor/etc/init/vipee_bridge.rc /vendor/etc/init/vipee_twist_listener.rc
@@ -51,6 +58,14 @@ else
   "$ADB" shell chmod 755 /vendor/bin/vipee_bridge
   # Política com o domínio vendor_vipee_ros2 (sepolicy-sync.sh + m selinux_policy).
   "$ADB" push "$OUT_VENDOR/etc/selinux/." /vendor/etc/selinux/ | tail -1
+  if [ -f "$VHAL_BIN" ]; then
+    "$ADB" shell "for f in $VHAL_DEV $VHAL_RC; do [ -f \$f.stock ] || cp -p \$f \$f.stock; done"
+    "$ADB" push "$VHAL_BIN" "$VHAL_DEV"
+    "$ADB" push "$HERE/../../android/vhal/vipee-vehicle-service.rc" "$VHAL_RC"
+    "$ADB" push "$HERE/../../android/vhal/vipee_properties.json" /vendor/etc/vipee/
+    # Rótulo hal_vehicle_default_exec vem do file_contexts do caminho original.
+    "$ADB" shell "chmod 755 $VHAL_DEV && restorecon $VHAL_DEV && ls -Z $VHAL_DEV"
+  fi
 fi
 "$ADB" reboot; sleep 10; boot
 "$ADB" root >/dev/null; sleep 2; "$ADB" wait-for-device
