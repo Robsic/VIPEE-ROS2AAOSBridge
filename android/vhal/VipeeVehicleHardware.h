@@ -32,7 +32,8 @@ using ::android::hardware::automotive::vehicle::IVehicleHardware;
  *
  * Holds the last value and status of each property in a VehiclePropertyStore
  * and forwards change events. The bridge decides value and status; this class
- * only stores them, decimates speed to the subscribed rate and marks the four
+ * only stores them, forwards every speed sample (the client decimates) and
+ * marks the four
  * UNAVAILABLE when the peer closes or is silent for kWatchdogNs (300 ms).
  *
  * @note No platform properties are declared (AD-014).
@@ -73,7 +74,7 @@ class VipeeVehicleHardware final : public IVehicleHardware {
       std::unique_ptr<const PropertyChangeCallback> callback) override;
   void registerOnPropertySetErrorEvent(
       std::unique_ptr<const PropertySetErrorCallback> callback) override;
-  /// @note Records the PERF_VEHICLE_SPEED rate for decimation.
+  /// @note Records the PERF_VEHICLE_SPEED rate, shown in the dump.
   aidlvhal::StatusCode subscribe(aidlvhal::SubscribeOptions options) override;
   aidlvhal::StatusCode unsubscribe(int32_t propId, int32_t areaId) override;
   aidlvhal::StatusCode updateSampleRate(int32_t propId, int32_t areaId,
@@ -83,7 +84,7 @@ class VipeeVehicleHardware final : public IVehicleHardware {
   void socketLoop();
   void handleDatagram(const uint8_t* data, size_t len, int64_t now);
   void closePeer(bool marked, int64_t now);
-  void writeRecord(const WireRecord& r, bool emit);
+  void writeRecord(const WireRecord& r);
   void markAllUnavailable(int64_t ts);
   void setSpeedRate(int32_t propId, float hz);
 

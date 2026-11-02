@@ -10,6 +10,7 @@ namespace {
 constexpr int64_t kMs = 1000000;
 constexpr int32_t kSpeed = 0x11600207;
 constexpr int32_t kGearSelection = 0x11400400;
+constexpr int32_t kCurrentGear = 0x11400401;
 constexpr int32_t kParkingBrake = 0x11200402;
 
 // NOLINTNEXTLINE(bugprone-easily-swappable-parameters)
@@ -101,42 +102,38 @@ TEST(VhalIngest, BadSizeUnknownPropAndBadStatusAreDropped) {
   EXPECT_EQ(feed(in, odd, 1).drop, DropReason::kUnknownKind);
 }
 
-// CTS-10 / design: speed arrives at ~66 Hz and is decimated to the
-// subscribed 10 Hz.
-TEST(VhalIngest, SpeedIsDecimatedToSubscribedRate) {
+// CTS-11: the four served properties are written; nothing else is.
+TEST(VhalIngest, AllFourServedPropertiesAreWritten) {
   VhalIngest in;
   in.onConnect(0);
-  in.setSpeedRateHz(10.0f);
-  int emitted = 0;
-  for (int64_t t = 0; t < 1000 * kMs; t += 15 * kMs) {
-    if (feed(in, update(kSpeed, 0, t), t).emit) ++emitted;
+  for (int32_t p : {kSpeed, kGearSelection, kCurrentGear, kParkingBrake}) {
+    EXPECT_EQ(feed(in, update(p, 0, 1), 1).action, IngestAction::kWrite) << p;
   }
-  EXPECT_GE(emitted, 9);
-  EXPECT_LE(emitted, 11);
 }
 
-TEST(VhalIngest, SpeedStatusChangeIsAlwaysEmitted) {
+// CTS-11: valid updates alone keep the peer alive, without heartbeats.
+TEST(VhalIngest, UpdatesFeedTheWatchdog) {
   VhalIngest in;
   in.onConnect(0);
-  in.setSpeedRateHz(1.0f);
-  EXPECT_TRUE(feed(in, update(kSpeed, 0, 0), 0).emit);
-  EXPECT_FALSE(feed(in, update(kSpeed, 0, 15 * kMs), 15 * kMs).emit);
-  EXPECT_TRUE(feed(in, update(kSpeed, 1, 30 * kMs), 30 * kMs).emit);
+  feed(in, update(kGearSelection, 0, 250 * kMs), 250 * kMs);
+  EXPECT_FALSE(in.expire(400 * kMs));
+  EXPECT_TRUE(in.expire(551 * kMs));
 }
 
-TEST(VhalIngest, OnChangePropertiesAreNotDecimated) {
+// IVehicleHardware.h (VUR off: at least the subscribed rate) and CTS-09: every
+// speed sample is written with its own arrival stamp; the client decimates.
+TEST(VhalIngest, EverySpeedSampleIsWrittenWithItsStamp) {
   VhalIngest in;
   in.onConnect(0);
-  in.setSpeedRateHz(1.0f);
-  EXPECT_TRUE(feed(in, update(kGearSelection, 0, 0), 0).emit);
-  EXPECT_TRUE(feed(in, update(kGearSelection, 0, 1 * kMs), 1 * kMs).emit);
-}
-
-TEST(VhalIngest, UnsubscribedSpeedIsNotDecimated) {
-  VhalIngest in;
-  in.onConnect(0);
-  EXPECT_TRUE(feed(in, update(kSpeed, 0, 0), 0).emit);
-  EXPECT_TRUE(feed(in, update(kSpeed, 0, 1 * kMs), 1 * kMs).emit);
+  in.setSpeedRateHz(5.0f);
+  int written = 0;
+  for (int64_t t = 0; t < 1000 * kMs; t += 15 * kMs) {
+    IngestResult r = feed(in, update(kSpeed, 0, t), t);
+    ASSERT_EQ(r.action, IngestAction::kWrite);
+    EXPECT_EQ(r.record.timestamp_ns, t);
+    ++written;
+  }
+  EXPECT_EQ(written, 67);
 }
 
 }  // namespace

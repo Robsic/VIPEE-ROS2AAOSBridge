@@ -4,8 +4,8 @@
 #   absent  - sem o vipee_bridge: CarService no ar e as 4 NOT_AVAILABLE (T13)
 #   live    - telemetria fake do host: valores lidos; SIGSTOP no bridge leva às
 #             4 NOT_AVAILABLE pelo watchdog (≤ 300 ms); SIGCONT volta (T14)
-#   rate    - telemetria a ~66 Hz chega aos assinantes na taxa assinada, ±12%
-#             (T15; o CarService assina a 5 Hz e o shell não assina a 10 Hz)
+#   rate    - telemetria a ~66 Hz gera pelo menos a taxa assinada de eventos
+#             (T15; contrato do IVehicleHardware com VUR desligado)
 #   tools/emu/test-vhal.sh [absent|live|rate]...   # padrão: todas
 # Sai com 1 na primeira falha. Avc dos dois domínios também falha (T16).
 set -euo pipefail
@@ -132,9 +132,11 @@ rate() {
   n0=$(sh dumpsys $VHAL | awk -F': ' '/speed events/{print $2}')
   sleep 5
   n1=$(sh dumpsys $VHAL | awk -F': ' '/speed events/{print $2}')
-  awk -v n=$((n1 - n0)) -v h="$hz" 'BEGIN{e=5*h; exit !(n >= 0.88*e && n <= 1.12*e)}' ||
-    fail "rate: $((n1 - n0)) eventos em 5 s, esperado $hz Hz"
-  echo "rate: OK ($((n1 - n0)) eventos em 5 s a $hz Hz)"
+  # IVehicleHardware.h, VUR desligado: pelo menos a taxa assinada. O VHAL
+  # repassa toda amostra (~66 Hz) e o cliente do CarService dizima.
+  awk -v n=$((n1 - n0)) -v h="$hz" 'BEGIN{exit !(n >= 5*h)}' ||
+    fail "rate: $((n1 - n0)) eventos em 5 s, abaixo de $hz Hz"
+  echo "rate: OK ($((n1 - n0)) eventos em 5 s, assinatura a $hz Hz)"
 }
 
 boot

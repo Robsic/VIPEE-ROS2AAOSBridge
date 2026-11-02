@@ -1,7 +1,12 @@
 /**
  * @file vhal_ingest.h
  * @brief VHAL-side handling of socket records: validation, watchdog,
- *        timestamp floor and speed decimation (AD-013).
+ *        timestamp floor (AD-013).
+ *
+ * Speed is not decimated here: every sample becomes an event, which meets the
+ * IVehicleHardware rule (VUR off: at least the subscribed rate) and lets the
+ * client-side ContCarPropertyEventTracker pick events >= one period apart.
+ * Decimating here on arrival stamps drops the app below the rate.
  *
  * Header-only, stdlib only, so it is unit-tested on the host. Not thread-safe:
  * the caller serializes access. All times are CLOCK_BOOTTIME in ns (the base
@@ -49,8 +54,6 @@ struct IngestResult {
   IngestAction action = IngestAction::kDrop;
   DropReason drop = DropReason::kNone;
   WireRecord record{};  ///< For kWrite; timestamp already raised to the floor.
-  bool emit = false;    ///< For kWrite: generate a change event (false = only
-                        ///< refresh the stored value, speed decimation).
 };
 
 /**
@@ -98,14 +101,10 @@ class VhalIngest {
   int64_t floorNs() const { return floor_ns_; }
 
   /**
-   * @brief Sets the subscribed rate of PERF_VEHICLE_SPEED.
-   * @param hz Events per second; <= 0 disables decimation (no subscriber).
+   * @brief Records the subscribed rate of PERF_VEHICLE_SPEED (for the dump).
+   * @param hz Events per second the subscriber asked for; 0 = none.
    */
-  void setSpeedRateHz(float hz) {
-    speed_rate_hz_ = hz;
-    speed_period_ns_ = hz > 0 ? static_cast<int64_t>(1e9 / hz) : 0;
-    next_speed_ns_ = 0;
-  }
+  void setSpeedRateHz(float hz) { speed_rate_hz_ = hz; }
 
   /**
    * @brief Validates and classifies one datagram.
@@ -150,13 +149,6 @@ class VhalIngest {
     r.timestamp_ns = std::max(r.timestamp_ns, floor_ns_);
     res.action = IngestAction::kWrite;
     res.record = r;
-    res.emit = true;
-    if (r.prop_id == kPropPerfVehicleSpeed && speed_period_ns_ > 0) {
-      res.emit =
-          r.status != last_speed_status_ || r.timestamp_ns >= next_speed_ns_;
-      if (res.emit) next_speed_ns_ = r.timestamp_ns + speed_period_ns_;
-    }
-    if (r.prop_id == kPropPerfVehicleSpeed) last_speed_status_ = r.status;
     return res;
   }
 
@@ -165,7 +157,6 @@ class VhalIngest {
     if (!alive_) return false;
     alive_ = false;
     floor_ns_ = now_ns;
-    last_speed_status_ = 1;  // the marker wrote UNAVAILABLE
     return true;
   }
 
@@ -173,9 +164,6 @@ class VhalIngest {
   int64_t last_rx_ns_ = 0;
   int64_t floor_ns_ = 0;
   float speed_rate_hz_ = 0;
-  int64_t speed_period_ns_ = 0;
-  int64_t next_speed_ns_ = 0;
-  int32_t last_speed_status_ = 1;  // starts UNAVAILABLE (NO_DATA)
 };
 
 }  // namespace vipee

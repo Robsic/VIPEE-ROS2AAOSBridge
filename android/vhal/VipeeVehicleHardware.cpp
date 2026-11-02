@@ -142,7 +142,7 @@ void VipeeVehicleHardware::handleDatagram(const uint8_t* data, size_t len,
     if (!mLoggedDrop) ALOGE("dropped record: %s", dropName(r.drop));
     mLoggedDrop = true;
   } else if (r.action == IngestAction::kWrite) {
-    writeRecord(r.record, r.emit);
+    writeRecord(r.record);
   }
 }
 
@@ -160,7 +160,7 @@ void VipeeVehicleHardware::closePeer(bool marked, int64_t now) {
   markAllUnavailable(floor);
 }
 
-void VipeeVehicleHardware::writeRecord(const WireRecord& r, bool emit) {
+void VipeeVehicleHardware::writeRecord(const WireRecord& r) {
   auto v = r.prop_id == kPropPerfVehicleSpeed
                ? mPool->obtainFloat(r.float_value)
                : mPool->obtainInt32(r.int_value);
@@ -168,13 +168,12 @@ void VipeeVehicleHardware::writeRecord(const WireRecord& r, bool emit) {
   v->areaId = 0;
   v->timestamp = r.timestamp_ns;
   v->status = static_cast<VehiclePropertyStatus>(r.status);
-  // Speed is CONTINUOUS: every emitted sample is an event. The others are
-  // ON_CHANGE: the store suppresses repeats (CTS-08).
-  const auto mode = !emit ? VehiclePropertyStore::EventMode::NEVER
-                    : r.prop_id == kPropPerfVehicleSpeed
+  // Speed is CONTINUOUS: every sample is an event (the client decimates).
+  // The others are ON_CHANGE: the store suppresses repeats (CTS-08).
+  const auto mode = r.prop_id == kPropPerfVehicleSpeed
                         ? VehiclePropertyStore::EventMode::ALWAYS
                         : VehiclePropertyStore::EventMode::ON_VALUE_CHANGE;
-  if (emit && r.prop_id == kPropPerfVehicleSpeed) ++mSpeedEvents;
+  if (r.prop_id == kPropPerfVehicleSpeed) ++mSpeedEvents;
   if (auto res = mStore->writeValue(std::move(v), /*updateStatus=*/true, mode);
       !res.ok()) {
     ALOGE("store rejected prop 0x%x: %s", r.prop_id,
@@ -189,7 +188,7 @@ void VipeeVehicleHardware::markAllUnavailable(int64_t ts) {
     r.prop_id = prop;
     r.status = static_cast<int32_t>(VehiclePropertyStatus::UNAVAILABLE);
     r.timestamp_ns = ts;
-    writeRecord(r, /*emit=*/true);
+    writeRecord(r);
   }
 }
 

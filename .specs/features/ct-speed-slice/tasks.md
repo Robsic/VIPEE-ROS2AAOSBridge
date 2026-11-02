@@ -449,7 +449,7 @@ T17 → T18
 
 ### T15: Taxa da propriedade contínua
 
-**What**: `subscribe`/`updateSampleRate` guardam a taxa de `PERF_VEHICLE_SPEED` e o VHAL dizima os eventos para ela.
+**What**: `subscribe`/`updateSampleRate` guardam a taxa de `PERF_VEHICLE_SPEED` e o VHAL dizima os eventos para ela. **Revisto na validação (2026-11-02, Gap 4):** o VHAL repassa toda amostra e o cliente dizima; o gate exige pelo menos a taxa assinada (332 eventos em 5 s a 5 Hz). Ver design, linha da taxa da contínua.
 **Where**: `android/vhal/VipeeVehicleHardware.cpp` (modify)
 **Depends on**: T14
 **Reuses**: `IVehicleHardware::subscribe`
