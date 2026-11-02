@@ -147,8 +147,8 @@ T13 → T14 → T15 → T16
 
 **Done when**:
 
-- [ ] `tools/emu/test-cam.sh stall` passa
-- [ ] Se o fechamento travar ou a ordem de abertura mudar o tamanho: parar e escalar ao usuário com proposta de AD (não seguir para a fase 2)
+- [x] `tools/emu/test-cam.sh stall` passa
+- [x] Se o fechamento travar ou a ordem de abertura mudar o tamanho: parar e escalar ao usuário com proposta de AD (não seguir para a fase 2) (travou; escalado, fork aprovado: AD-016)
 
 **Tests**: integration
 **Gate**: full
