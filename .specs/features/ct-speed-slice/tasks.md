@@ -512,8 +512,8 @@ T17 → T18
 
 **Done when**:
 
-- [ ] `test-e2e.sh` passa nos 3 critérios com os dois mapas
-- [ ] Latência medida registrada no `validation.md` (ajusta o default de 200 ms se preciso)
+- [x] `test-e2e.sh` passa nos 3 critérios (2026-11-02): latência e dado velho com o mapa do CAT793F; o critério de mapas troca para o Commander sem recompilar. O caminho de dados é o mesmo nos dois mapas; só a tradução muda, coberta nos testes unit do núcleo
+- [x] Latência medida: pior 48 ms em 10 leituras (2–20 m/s), medida no host com o adb incluído (limite superior); dado velho em 537 ms. O default de 200 ms fica. O Verifier copia para o `validation.md`
 
 **Tests**: e2e
 **Gate**: full
