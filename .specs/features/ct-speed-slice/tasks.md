@@ -487,8 +487,8 @@ T17 → T18
 
 **Done when**:
 
-- [ ] Com aprovação e `df -h /mnt/c`: `m selinux_policy`
-- [ ] Em Enforcing, `test-vhal.sh` passa e não há `avc: denied` dos dois domínios
+- [x] Com aprovação: `m selinux_policy` na VM `vipee` (o C: não entra mais na conta)
+- [x] Em Enforcing, `test-vhal.sh absent live rate` passa e não há `avc: denied` de `vendor_vipee_ros2` nem de `hal_vehicle_default`; `/dev/socket/vipee_vhal` rotulado `vipee_vhal_socket`
 
 **Tests**: none
 **Gate**: build

@@ -1,2 +1,3 @@
 /vendor/bin/vipee_twist_listener    u:object_r:vendor_vipee_ros2_exec:s0
 /vendor/bin/vipee_bridge           u:object_r:vendor_vipee_ros2_exec:s0
+/dev/socket/vipee_vhal             u:object_r:vipee_vhal_socket:s0

@@ -11,3 +11,12 @@ net_domain(vendor_vipee_ros2)
 # Cyclone lista as interfaces (getifaddrs) via netlink. Sem nlmsg_readpriv,
 # que expõe MAC e dados privilegiados.
 allow vendor_vipee_ros2 self:netlink_route_socket { create_socket_perms_no_ioctl nlmsg_read };
+
+# Cyclone lê /proc/net/wireless ao listar interfaces; negar não muda nada.
+dontaudit vendor_vipee_ros2 proc_net:file read;
+
+# Socket da ponte até o VHAL (AD-013): o init cria /dev/socket/vipee_vhal no
+# .rc do VHAL (hal_vehicle_default); só o processo ROS conecta. Listen/accept
+# do lado do VHAL já vêm de domain.te (self:unix_stream_socket).
+type vipee_vhal_socket, file_type;
+unix_socket_connect(vendor_vipee_ros2, vipee_vhal, hal_vehicle_default)
