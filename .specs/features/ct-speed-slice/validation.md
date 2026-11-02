@@ -1,11 +1,90 @@
 # ct-speed-slice Validation
 
+## Validation: PASS (ciclo 2 de 3, re-verificação)
+
 **Date**: 2026-11-02
-**Spec**: `.specs/features/ct-speed-slice/spec.md`
-**Diff range**: `a369c5b^..a9eab54` (T1–T18, fases 1–4)
+**Spec**: `.specs/features/ct-speed-slice/spec.md` (CTS-19 emendado em `2667c74`)
+**Diff range**: `a369c5b^..2667c74`; re-verificado só o delta `f72c91c..2667c74` (`e7515a7`, `1834de4`, `f72f2bb`, `2667c74`)
 **Verifier**: sub-agente independente (autor ≠ verificador)
 
-**Verdict**: FAIL
+Os 5 gaps do ciclo 1 estão fechados. Sobrevivente remanescente: nenhum. Gate unit 81/81, ROS 2/2 (inclui o novo `unreadable_map_test`), `test-vhal.sh` e `test-e2e.sh` verdes no emulador.
+
+### Gaps do ciclo 1 ➔ estado
+
+| Gap | Correção | Evidência (`file:line` + asserção) | Estado |
+| --- | -------- | ---------------------------------- | ------ |
+| 1. M21/M18 sobreviviam no ingest do VHAL | dois testes novos | `android/vhal/test/vhal_ingest_test.cpp:110` `EXPECT_EQ(...action, kWrite)` nas 4 propriedades; `:119-120` `expire(400ms)` falso e `expire(551ms)` verdadeiro só com update | ✅ M18 e M21 mortos |
+| 2. CTS-23 mapa ilegível saía com `fatal` | `ros/vipee_bridge/src/main.cpp:77-92` refaz o `rclcpp::init` sem `--params-file <path>`; o nó sobe sem mapa e o `Bridge` loga `MAP_INVALID` | `ros/vipee_bridge/CMakeLists.txt:39-40` `[ $rc -eq 124 ] && [ $(grep -c 'UNAVAILABLE MAP_INVALID' ...) -eq 4 ]` (processo vivo 3 s, 4 linhas); rodado aqui: `tools/jazzy/run.sh /bridge/tools/jazzy/test-ros.sh` 2/2 | ✅ CTS-23 coberto |
+| 3. e2e só checava a velocidade | latência e dado velho nas 4 propriedades | `tools/emu/test-e2e.sh:80-89` (as 4 casam no mesmo laço do device; `worst -le 200`), `:98-105` (as 4 `Can not get`, `STALE` de cada uma no logcat, `-le 600`) | ✅ |
+| 4. dizimação abaixo da taxa assinada | VHAL repassa toda amostra (`EventMode::ALWAYS`, `android/vhal/VipeeVehicleHardware.cpp:174`); dizimação e seus testes removidos | `android/vhal/test/vhal_ingest_test.cpp:132-136` toda amostra a 15 ms vira `kWrite` com o próprio carimbo (67 em 1 s); `tools/emu/test-vhal.sh:137` `n >= 5*h` | ✅ (decisão julgada abaixo) |
+| 5. CTS-19 mudança só de motivo | spec emendado ("ou, com o mesmo status, de motivo") | `core/test/bridge_test.cpp:474-475` `UNKNOWN_GEAR` ➔ `STALE` com status `UNAVAILABLE` | ✅ M7 morto |
+
+### Decisão do Gap 4 (sem dizimação no VHAL), julgada
+
+- **Contrato AOSP**: com VUR desligado, o `IVehicleHardware` "must generate at least" a taxa assinada (`hardware/include/IVehicleHardware.h:173-174`). Repassar ~66 Hz cumpre; nada no contrato proíbe exceder o `maxSampleRate` 10 do config. O `vipee_properties.json` não declara `supportVariableUpdateRate`, então o VUR fica desligado e o `ALWAYS` é o modo correto. O `DefaultVehicleHal` entrega os eventos aos clientes assinados sem dizimar por taxa (`SubscriptionManager::getSubscribedClients`); quem dizima por app é o `ContCarPropertyEventTracker.java:127`. ✅
+- **CTS-10**: sem dizimação, nenhum valor novo de velocidade espera um período para virar evento; a latência só melhora.
+- **Custo e limite**: ~66 eventos/s de um escalar pelo binder até o `CarService`, desprezível no emulador; reavaliar no RPi5. A taxa vista pelo app continua um pouco abaixo da assinada (com chegada a 15 ms e período de 200 ms, o cliente aceita a cada 210 ms ≈ 4,8 Hz), mas isso é regra do cliente do AOSP, fora do VHAL. A medição `rate` conta escritas no VHAL (`mSpeedEvents`), não eventos no app; é o lugar certo para o contrato do `IVehicleHardware`.
+- **Rastreabilidade**: design ("Taxa da contínua", duas linhas) e T15 registram a revisão. Aceito.
+
+### Discrimination Sensor (ciclo 2)
+
+Worktree descartável em `scratchpad/verify-wt` no `2667c74`; unit por `ctest --preset default -L unit`, ROS pelo `run.sh` da worktree (monta a worktree em `/bridge`). Worktree removida; `git status --porcelain` igual ao baseline. O diretório de build compartilhado `~/ros2_android_ws/ros_test/build_bridge` ficou com o binário mutante (mesmo caminho `/bridge`, mtime mais novo); foi apagado e refeito do repo real, que passou 2/2.
+
+| Mutation | File:line | Description | Killed? |
+| -------- | --------- | ----------- | ------- |
+| M7 | `core/src/bridge.cpp:95` | log só em mudança de status | ✅ Killed (`ReasonOnlyChangeIsLogged`, por SEGFAULT: `.back()` em vetor vazio, ver nota) |
+| M18 | `android/vhal/include/vipee/vhal_ingest.h` (update ➔ `last_rx_ns_`) | update válido não alimenta o watchdog | ✅ Killed (`UpdatesFeedTheWatchdog`) |
+| M21 | `vhal_ingest.h` (lista de propriedades) | `CURRENT_GEAR` descartada | ✅ Killed (`AllFourServedPropertiesAreWritten`) |
+| M20 | - | código removido junto com a dizimação | N/A |
+| N1 | `vhal_ingest.h` (`res.action`) | VHAL volta a dizimar a velocidade (descarta metade das amostras) | ✅ Killed (`EverySpeedSampleIsWrittenWithItsStamp`) |
+| N2 | `vhal_ingest.h` (piso) | carimbo trocado pelo instante de recepção no VHAL | ✅ Killed (`RecordsOlderThanMarkerAreRaisedToIt`) |
+| M16 | `vhal_ingest.h` (watchdog) | `>` ➔ `>=` (regressão) | ✅ Killed |
+| M17 | `vhal_ingest.h` (piso) | remove o piso (regressão) | ✅ Killed |
+| R1 | `ros/vipee_bridge/src/main.cpp:87` | não pula o caminho depois de `--params-file` | ✅ Killed (`unreadable_map_test`) |
+| R2 | `ros/vipee_bridge/src/main.cpp:91` | refaz o init com os argumentos originais | ✅ Killed (`unreadable_map_test`, `fatal`) |
+
+**Sensor depth**: expandido. **Resultado do ciclo 2**: 9/9 killed (M20 N/A).
+
+O mutante de `EventMode::ALWAYS` ➔ `ON_VALUE_CHANGE` em `VipeeVehicleHardware.cpp:174` não foi injetado: exige build AOSP (proibido aqui). O gate `test-vhal.sh rate` (`:137`) o mataria, já que velocidade constante deixaria de gerar eventos.
+
+### Live evidence (emulador, 2026-11-02, ciclo 2)
+
+- `tools/emu/test-vhal.sh`: `absent`, `live` OK; `rate: OK (332 eventos em 5 s, assinatura a 5 Hz)`.
+- `tools/emu/test-e2e.sh`: latência das 4 propriedades juntas 62–134 ms (pior 134 ms, adb incluído; o autor mediu 152 ms); dado velho das 4 em 577 ms (autor: 556 ms) com `STALE` de cada uma; mapas OK; sem `avc: denied`.
+- Histórico (só velocidade): T17 pior 48 ms e dado velho 537 ms; ciclo 1 pior 42 ms e 554 ms.
+
+### Gate
+
+- Unit: `cmake --preset default && cmake --build --preset default && ctest --preset default` ➔ 81 passed, 0 failed (4 testes de dizimação removidos com o requisito, 4 novos: 3 no ingest, 1 no núcleo).
+- ROS: `tools/jazzy/run.sh /bridge/tools/jazzy/test-ros.sh` ➔ 2/2 (`bridge_node_rostest` com 4 casos, `unreadable_map_test`).
+
+### Observações (não bloqueiam)
+
+1. `core/test/bridge_test.cpp:471` usa `log_.of(...).back()` sem checar vazio; o mutante M7 morre por comportamento indefinido (SEGFAULT), não por asserção. Trocar por `ASSERT_FALSE(log_.of(prop::kCurrentGear).empty())` antes.
+2. O dado velho das 4 no e2e fecha a 577 ms contra o limite de 600 ms (500 do mapa + até 50 do tick + adb). Margem curta, já registrada como medida no host; se o teste oscilar, medir no device em vez de aumentar o limite.
+3. `initRclcpp` refaz o init para qualquer exceção do primeiro, não só a do arquivo de parâmetros; outra causa falha de novo no segundo init e sai com `fatal`, o que segue fail-loud.
+
+### Requirement Traceability Update (ciclo 2)
+
+| Requirement | Ciclo 1 | Ciclo 2 |
+| ----------- | ------- | ------- |
+| CTS-10 | ⚠️ só velocidade | ✅ Verified (4 propriedades, pior 134 ms) |
+| CTS-19 | ⚠️ spec-precision gap | ✅ Verified (spec emendado, M7 morto) |
+| CTS-23 | ❌ Needs Fix | ✅ Verified (`unreadable_map_test`) |
+| Demais | ✅ Verified | ✅ Verified |
+
+**Overall**: ✅ Ready.
+
+---
+
+# Ciclo 1 (histórico)
+
+**Date**: 2026-11-02
+**Spec**: `.specs/features/ct-speed-slice/spec.md`
+**Diff range (ciclo 1)**: `a369c5b^..a9eab54` (T1–T18, fases 1–4)
+**Verifier**: sub-agente independente (autor ≠ verificador)
+
+**Veredito do ciclo 1**: reprovado, commit `f72c91c`; gaps fechados no ciclo 2 (acima)
 
 Motivo: 3 mutantes de comportamento sobrevivem à suíte unit (um deles só morre no teste de emulador), o ramo "mapa ilegível" do CTS-23 não tem evidência e o processo faz o oposto do spec, e os Success Criteria 1 e 2 são checados ponta a ponta em 1 das 4 propriedades. O núcleo (`core/`) está bem coberto: 22 de 23 mutantes do núcleo, do sink e do ingest morrem.
 
@@ -90,7 +169,7 @@ Worktree descartável em `scratchpad/verify-wt` (`git worktree add --detach`), s
 | M25 | `ros/vipee_bridge/src/socket_sink.cpp:89` | não reenvia o estado ao reconectar | ✅ Killed |
 
 **Sensor depth**: expandido (P0: dado entregue ao dashboard, fail-loud)
-**Result**: 21/25 killed, 4 survived - FAIL ❌
+**Resultado (ciclo 1)**: 21/25 killed, 4 survived - reprovado
 
 ---
 
