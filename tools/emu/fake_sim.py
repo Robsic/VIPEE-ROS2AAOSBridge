@@ -3,8 +3,9 @@
 Runs in the Jazzy container on the host network. The state comes from a JSON
 file the test rewrites; the publisher rereads it when its mtime changes:
     {"speed": km/h, "gear": int8, "lever": ASCII int8, "handbrake": bool,
-     "telemetry": bool}
-`telemetry: false` stops the telemetry stream (the source goes stale).
+     "telemetry": bool, "publish": bool}
+`telemetry: false` stops the telemetry stream; `publish: false` stops all
+three (the simulator goes silent).
 Telemetry at 66 Hz on /<ns>/telemetry, the CAT793F lever at 20 Hz on
 /<ns>/vehicle_control and the control at 20 Hz on /apply_control_to_vehicle.
 """
@@ -44,6 +45,8 @@ def main() -> None:
             with open(state_path) as f:
                 state = json.load(f)
             print(f"STATE {state}", flush=True)
+        if not state.get("publish", True):
+            return
         if state.get("telemetry", True):
             tel = SirvVehicleTelemetry()
             tel.speed = float(state.get("speed", 0.0))

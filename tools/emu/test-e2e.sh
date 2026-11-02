@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # Teste ponta a ponta da ct-speed-slice (T17): fake_sim.py no host ➔ vipee_bridge
 # ➔ VHAL ➔ CarService no emulador. Os 3 Success Criteria do spec:
-#   1. 10 velocidades seguidas legíveis em ≤ 200 ms após a publicação
-#   2. telemetria parada ➔ UNAVAILABLE em ≤ 600 ms e STALE no logcat
+#   1. 10 leituras seguidas das 4 propriedades em ≤ 200 ms após a publicação
+#   2. simulador mudo ➔ as 4 UNAVAILABLE em ≤ 600 ms e STALE no logcat
 #   3. alavanca 'P' dá GEAR_PARK com o mapa do CAT793F; com o do Commander a
 #      mesma telemetria dá a seleção derivada (DRIVE), sem recompilar
 # Pré-requisito: install-vendor.sh com o VHAL; Wi-Fi do emulador ligado.
@@ -13,7 +13,7 @@ ADB="${ADB:-$HOME/aosp/out/host/linux-x86/bin/adb}"
 HERE="$(cd "$(dirname "$0")" && pwd)"
 WS="${WS:-$HOME/ros2_android_ws}"
 VHAL=android.hardware.automotive.vehicle.IVehicle/default
-SPEED=0x11600207 GEAR_SEL=0x11400400
+SPEED=0x11600207 GEAR_SEL=0x11400400 CUR_GEAR=0x11400401 BRAKE=0x11200402
 SIM=vipee_e2e_sim
 STATE_DIR="$(mktemp -d)"
 
@@ -42,10 +42,21 @@ start_sim() {  # $1: namespace do veículo
 
 # Espera, no device, até o get casar o padrão; devolve o tempo no host (ms).
 until_get() {  # $1 prop, $2 regex, $3 limite em segundos
-  local t0 t1
+  until_all "$3" "$1" "$2"
+}
+
+# Espera, no device, até todos os pares (prop, regex) casarem; devolve o
+# tempo no host (ms). $1 limite em segundos, depois pares prop regex.
+until_all() {
+  local t0 t1 limit=$1 cond=""
+  shift
+  while [ $# -gt 0 ]; do
+    cond="$cond && cmd car_service get-property-value $1 2>&1 | grep -qE '$2'"
+    shift 2
+  done
   t0=$(ms)
-  sh "end=\$((\$(date +%s) + $3))
-      until cmd car_service get-property-value $1 2>&1 | grep -qE '$2'; do
+  sh "end=\$((\$(date +%s) + $limit))
+      until true $cond; do
         [ \$(date +%s) -gt \$end ] && exit 1; done; :" || return 1
   t1=$(ms)
   echo $((t1 - t0))
@@ -57,31 +68,42 @@ vehicle() {  # $1: cat793f | commander
 }
 
 latency() {
-  local worst=0 t k
-  # 2..20 m/s (7,2..72 km/h, dentro do max_abs_kmh 80 do CAT793F); o float
-  # pode chegar como 5.9999995 em vez de 6.0.
+  # As 4 propriedades mudam juntas a cada leitura: velocidade 2..20 m/s
+  # (7,2..72 km/h, dentro do max_abs_kmh 80 do CAT793F; o float pode chegar
+  # como 5.9999995), marcha 1..9 ➔ GEAR_k, alavanca D/N, freio alternado.
+  local worst=0 t k v g lever sel brake
   for k in 1 2 3 4 5 6 7 8 9 10; do
-    local v=$((2 * k))
-    state "{\"speed\": $(awk -v v=$v 'BEGIN{print v * 3.6}'), \"gear\": 2, \"lever\": 68}"
-    t=$(until_get $SPEED "Value: ($v\.0|$((v - 1))\.99)[0-9]* METER_PER_SEC" 5) ||
-      fail "latência: $v m/s não apareceu: $(get $SPEED)"
-    echo "  $v m/s em $t ms"
+    v=$((2 * k)) g=$(((k - 1) % 9 + 1))
+    if [ $((k % 2)) = 1 ]; then lever=68 sel='GEAR_DRIVE.0x8.' brake=true
+    else lever=78 sel='GEAR_NEUTRAL.0x1.' brake=false; fi
+    state "{\"speed\": $(awk -v v=$v 'BEGIN{print v * 3.6}'), \"gear\": $g, \"lever\": $lever, \"handbrake\": $brake}"
+    t=$(until_all 5 \
+      $SPEED "Value: ($v\\.0|$((v - 1))\\.99)[0-9]* METER_PER_SEC" \
+      $CUR_GEAR "Value: GEAR_$g\\(" \
+      $GEAR_SEL "Value: $sel" \
+      $BRAKE "Value: $(echo $brake | tr a-z A-Z)") ||
+      fail "latência: leitura $k não apareceu: $(get $SPEED); $(get $CUR_GEAR); $(get $GEAR_SEL); $(get $BRAKE)"
+    echo "  $v m/s, GEAR_$g, alavanca $lever, freio $brake em $t ms"
     [ "$t" -gt "$worst" ] && worst=$t
   done
   [ "$worst" -le 200 ] || fail "latência: pior caso $worst ms > 200 ms"
-  echo "1. latência: OK (pior $worst ms, com adb)"
+  echo "1. latência: OK (pior $worst ms, 4 propriedades, com adb)"
 }
 
 stale() {
+  # Simulador mudo: as 4 propriedades ficam indisponíveis.
   sh logcat -c
-  state '{"speed": 36.0, "gear": 2, "lever": 68, "telemetry": false}'
-  local t
-  t=$(until_get $SPEED 'Can not get property value' 5) ||
-    fail "dado velho: velocidade não ficou indisponível"
-  sh logcat -d -s vipee_bridge | grep -q '0x11600207 UNAVAILABLE STALE' ||
-    fail "dado velho: sem STALE no logcat"
+  state '{"speed": 7.2, "gear": 2, "lever": 68, "publish": false}'
+  local t p
+  t=$(until_all 5 $SPEED 'Can not get' $CUR_GEAR 'Can not get' \
+    $GEAR_SEL 'Can not get' $BRAKE 'Can not get') ||
+    fail "dado velho: alguma propriedade não ficou indisponível"
+  for p in $SPEED $CUR_GEAR $GEAR_SEL $BRAKE; do
+    sh logcat -d -s vipee_bridge | grep -q "0x${p#0x} UNAVAILABLE STALE" ||
+      fail "dado velho: sem STALE de $p no logcat"
+  done
   [ "$t" -le 600 ] || fail "dado velho: $t ms > 600 ms"
-  echo "2. dado velho: OK ($t ms, STALE no logcat)"
+  echo "2. dado velho: OK ($t ms, 4 propriedades, STALE no logcat)"
 }
 
 maps() {
