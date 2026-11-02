@@ -172,8 +172,8 @@ T13 → T14 → T15 → T16
 
 **Done when**:
 
-- [ ] `cmake --preset default && cmake --build --preset default` liga com `turbojpeg-static`
-- [ ] Suíte atual 100% verde (mesma contagem)
+- [x] `cmake --preset default && cmake --build --preset default` liga com `turbojpeg-static`
+- [x] Suíte atual 100% verde (mesma contagem)
 
 **Tests**: none
 **Gate**: build

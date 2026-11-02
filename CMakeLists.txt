@@ -6,6 +6,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 add_compile_options(-Wall -Wextra -Werror)
 
 find_package(GTest CONFIG REQUIRED)
+find_package(libjpeg-turbo CONFIG REQUIRED)
 
 enable_testing()
 include(GoogleTest)
@@ -14,6 +15,8 @@ include(GoogleTest)
 add_library(vipee_core core/src/vehicle_map.cpp core/src/translate.cpp
   core/src/bridge.cpp)
 target_include_directories(vipee_core PUBLIC ${CMAKE_SOURCE_DIR}/core/include)
+# Static TurboJPEG: the bridge decodes /compressed JPEG to YUYV (cam-evs-slice).
+target_link_libraries(vipee_core PUBLIC libjpeg-turbo::turbojpeg-static)
 
 # Bridge sink: POSIX only, no ROS, so the unit test builds on the host.
 add_library(vipee_socket_sink ros/vipee_bridge/src/socket_sink.cpp)
