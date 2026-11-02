@@ -437,8 +437,8 @@ T17 → T18
 
 **Done when**:
 
-- [ ] `test-vhal.sh` com o `vipee_bridge` real e telemetria fake: valor lido; parar o processo ROS ➔ `NOT_AVAILABLE` em ≤ 300 ms
-- [ ] Gate check passes: `tools/emu/test-vhal.sh`
+- [x] `test-vhal.sh live` com o `vipee_bridge` real e `fake_sim.py`: 10.0 m/s, GEAR_2, DRIVE e freio solto lidos; `SIGSTOP` no processo ROS ➔ watchdog e `NOT_AVAILABLE` (limite do teste 450 ms: 300 do watchdog + 50 de poll + 100 do último heartbeat); `SIGCONT` ➔ resync. Resync exige o piso de timestamp: o `CarPropertyManager` descarta evento mais velho que o anterior (`OnChangeCarPropertyEventTracker.java:50`)
+- [x] Gate check passes: `tools/emu/test-vhal.sh live`
 
 **Tests**: integration
 **Gate**: full
