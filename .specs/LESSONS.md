@@ -50,6 +50,30 @@ Seen once or not yet corroborated. Tracked, not trusted.
 - evidence: CTS-19 M7 core/src/bridge.cpp:95 (core)
 - last seen: 2026-11-02T10:31:07Z
 
+### L-007 - A test that a slow path does not block another must start its clock before the slow work is triggered and assert while it is still running; never spin the executor between triggering the stall and starting the measurement.
+- signal: `surviving_mutant` · recurrence: 1 feature(s) · scope: `ros-tests` · harmful: 0
+- features: cam-evs-slice
+- evidence: R3 ros/vipee_bridge/src/camera_bridge.cpp:77; ros/vipee_bridge/test/camera_bridge_rostest.cpp:243 (ros-tests)
+- last seen: 2026-11-02T23:57:52Z
+
+### L-008 - When an AC says an invalid config opens nothing, assert the absence with a counting factory or sink, not only the error log line.
+- signal: `surviving_mutant` · recurrence: 1 feature(s) · scope: `ros-tests` · harmful: 0
+- features: cam-evs-slice
+- evidence: R1 ros/vipee_bridge/src/bridge_node.cpp:128; ros/vipee_bridge/test/bridge_node_rostest.cpp:293 (ros-tests)
+- last seen: 2026-11-02T23:57:52Z
+
+### L-009 - Device sinks whose success path needs real hardware should keep format and write-length acceptance in pure functions with host unit tests.
+- signal: `surviving_mutant` · recurrence: 1 feature(s) · scope: `device-io` · harmful: 0
+- features: cam-evs-slice
+- evidence: M10/M11 ros/vipee_bridge/src/v4l2_sink.cpp:132,147 (device-io)
+- last seen: 2026-11-02T23:57:52Z
+
+### L-010 - An install AC naming the consumer-facing identifiers must be asserted at that layer, not only at the layer below.
+- signal: `ac_gap` · recurrence: 1 feature(s) · scope: `emulator-tests` · harmful: 0
+- features: cam-evs-slice
+- evidence: CAM-19 tools/emu/test-cam.sh:380 (emulator-tests)
+- last seen: 2026-11-02T23:57:58Z
+
 ## Quarantined (failed when applied - ignore)
 
 A confirmed lesson that recurred alongside failure. Kept for the maintainer to review.

@@ -3,7 +3,7 @@
   "promote_threshold": 2,
   "window_days": 45,
   "quarantine_threshold": 2,
-  "next_id": 7,
+  "next_id": 11,
   "lessons": [
     {
       "id": "L-001",
@@ -112,6 +112,78 @@
       ],
       "created": "2026-11-02T10:31:07Z",
       "last_seen": "2026-11-02T10:31:07Z"
+    },
+    {
+      "id": "L-007",
+      "key": "surviving_mutant::a test that a slow path does not block another must start its clock before the slow work is triggered and assert while it is still running never spin the executor between triggering the stall and starting the measurement",
+      "text": "A test that a slow path does not block another must start its clock before the slow work is triggered and assert while it is still running; never spin the executor between triggering the stall and starting the measurement.",
+      "signal": "surviving_mutant",
+      "scope": "ros-tests",
+      "status": "candidate",
+      "features": [
+        "cam-evs-slice"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "R3 ros/vipee_bridge/src/camera_bridge.cpp:77; ros/vipee_bridge/test/camera_bridge_rostest.cpp:243 (ros-tests)"
+      ],
+      "created": "2026-11-02T23:57:52Z",
+      "last_seen": "2026-11-02T23:57:52Z"
+    },
+    {
+      "id": "L-008",
+      "key": "surviving_mutant::when an ac says an invalid config opens nothing assert the absence with a counting factory or sink not only the error log line",
+      "text": "When an AC says an invalid config opens nothing, assert the absence with a counting factory or sink, not only the error log line.",
+      "signal": "surviving_mutant",
+      "scope": "ros-tests",
+      "status": "candidate",
+      "features": [
+        "cam-evs-slice"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "R1 ros/vipee_bridge/src/bridge_node.cpp:128; ros/vipee_bridge/test/bridge_node_rostest.cpp:293 (ros-tests)"
+      ],
+      "created": "2026-11-02T23:57:52Z",
+      "last_seen": "2026-11-02T23:57:52Z"
+    },
+    {
+      "id": "L-009",
+      "key": "surviving_mutant::device sinks whose success path needs real hardware should keep format and write length acceptance in pure functions with host unit tests",
+      "text": "Device sinks whose success path needs real hardware should keep format and write-length acceptance in pure functions with host unit tests.",
+      "signal": "surviving_mutant",
+      "scope": "device-io",
+      "status": "candidate",
+      "features": [
+        "cam-evs-slice"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "M10/M11 ros/vipee_bridge/src/v4l2_sink.cpp:132,147 (device-io)"
+      ],
+      "created": "2026-11-02T23:57:52Z",
+      "last_seen": "2026-11-02T23:57:52Z"
+    },
+    {
+      "id": "L-010",
+      "key": "ac_gap::an install ac naming the consumer facing identifiers must be asserted at that layer not only at the layer below",
+      "text": "An install AC naming the consumer-facing identifiers must be asserted at that layer, not only at the layer below.",
+      "signal": "ac_gap",
+      "scope": "emulator-tests",
+      "status": "candidate",
+      "features": [
+        "cam-evs-slice"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "CAM-19 tools/emu/test-cam.sh:380 (emulator-tests)"
+      ],
+      "created": "2026-11-02T23:57:58Z",
+      "last_seen": "2026-11-02T23:57:58Z"
     }
   ]
 }
