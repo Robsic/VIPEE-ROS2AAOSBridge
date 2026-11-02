@@ -160,7 +160,7 @@ O CalibDroid (AD-016, AD-027) e o runtime AVM consomem as 4 câmeras fisheye pel
 
 | Requirement ID | Story | AC | Phase | Status |
 | -------------- | ----- | -- | ----- | ------ |
-| CAM-01 | P1: 4 câmeras no EVS | 1 | Design | Pending |
+| CAM-01 | P1: 4 câmeras no EVS | 1 | Tasks | In Progress |
 | CAM-02 | P1: 4 câmeras no EVS | 2 | Design | Pending |
 | CAM-03 | P1: 4 câmeras no EVS | 3 | Design | Pending |
 | CAM-04 | P1: 4 câmeras no EVS | 4 | Design | Pending |
@@ -168,9 +168,9 @@ O CalibDroid (AD-016, AD-027) e o runtime AVM consomem as 4 câmeras fisheye pel
 | CAM-06 | P1: Sem dado não congela | 1 | Design | Pending |
 | CAM-07 | P1: Sem dado não congela | 2 | Design | Pending |
 | CAM-08 | P1: Sem dado não congela | 3 | Design | Pending |
-| CAM-09 | P1: Quadro inválido | 1 | Design | Pending |
-| CAM-10 | P1: Quadro inválido | 2 | Design | Pending |
-| CAM-11 | P1: Quadro inválido | 3 | Design | Pending |
+| CAM-09 | P1: Quadro inválido | 1 | Tasks | In Progress |
+| CAM-10 | P1: Quadro inválido | 2 | Tasks | In Progress |
+| CAM-11 | P1: Quadro inválido | 3 | Tasks | In Progress |
 | CAM-12 | P1: Quadro inválido | 4 | Design | Pending |
 | CAM-13 | P1: Quadro inválido | 5 | Design | Pending |
 | CAM-14 | P1: Falha do dispositivo | 1 | Design | Pending |

@@ -223,9 +223,9 @@ T13 → T14 → T15 → T16
 
 **Done when**:
 
-- [ ] Testes com JPEG gerado no teste (`tj3Compress8` de um padrão conhecido) 4:2:0 e 4:2:2: Y e croma YUYV dentro de tolerância de compressão; 480×480 ➔ `kFrameSizeMismatch` sem decodificar; `format` `png` ➔ `kFormatUnsupported`; `format` `rgb8; jpeg compressed bgr8` aceito; JPEG cortado ➔ `kDecodeError`; 4:4:4 ➔ `kDecodeError`
-- [ ] Teste do `packI420ToYuyv` com planos pequenos conhecidos (valores exatos)
-- [ ] Gate quick passa
+- [x] Testes com JPEG gerado no teste (`tj3Compress8` de um padrão conhecido) 4:2:0 e 4:2:2: Y e croma YUYV dentro de tolerância de compressão; 480×480 ➔ `kFrameSizeMismatch` sem decodificar; `format` `png` ➔ `kFormatUnsupported`; `format` `rgb8; jpeg compressed bgr8` aceito; JPEG cortado ➔ `kDecodeError`; 4:4:4 ➔ `kDecodeError`
+- [x] Teste do `packI420ToYuyv` com planos pequenos conhecidos (valores exatos)
+- [x] Gate quick passa
 
 **Tests**: unit
 **Gate**: quick
