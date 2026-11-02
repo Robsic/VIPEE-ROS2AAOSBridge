@@ -107,7 +107,7 @@ T13 → T14 → T15 → T16
 
 ### T2: Plataforma EVS por v4l2loopback
 
-**What**: `android/evs/` com `evs_configuration_v4l2.xml` (4 dispositivos 1280×720), `init.vipee_evs.rc` (recarga do `v4l2loopback` com `devices=4 video_nr=10,11,12,13`, `evs-v4l2`, `evsmanagerd --target hw/1`), linhas de `ueventd` (`0660 system camera`); `install-vendor.sh evs` e `remove` com cópias `*.stock`; `set-camera-id` dos 4 tipos; regra `video_device` no `vendor_vipee_ros2.te` e grupo `camera` no `vipee_bridge.rc`. Teste `tools/emu/test-cam.sh platform`: com o escritor do spike (`~/ros2_android_ws/spike_v4l2`) em 1280×720, o probe lista `/dev/video10..13` e recebe quadros 1280×720 das 4; `remove` devolve os MP4.
+**What**: Fork `vipee-evs-v4l2` em `android/evs_hal/` (AD-016, decidido na T3); `android/evs/` com `evs_configuration_v4l2.xml` (4 dispositivos 1280×720), `init.vipee_evs.rc` (recarga do `v4l2loopback` com `devices=4 video_nr=10,11,12,13`, `evs-v4l2`, `evsmanagerd --target hw/1`), linhas de `ueventd` (`0660 system camera`); `install-vendor.sh evs` e `remove` com cópias `*.stock`; `set-camera-id` dos 4 tipos; regra `video_device` no `vendor_vipee_ros2.te` e grupo `camera` no `vipee_bridge.rc`. Teste `tools/emu/test-cam.sh platform`: com o escritor do spike (`~/ros2_android_ws/spike_v4l2`) em 1280×720, o probe lista `/dev/video10..13` e recebe quadros 1280×720 das 4; `remove` devolve os MP4.
 **Where**: `android/evs/init.vipee_evs.rc` (com o XML e as linhas de `ueventd` ao lado; `tools/jazzy/install-vendor.sh`, `tools/jazzy/sepolicy/vendor_vipee_ros2.te`, `tools/emu/test-cam.sh`)
 **Depends on**: T1
 **Reuses**: passo do VHAL em `install-vendor.sh`; `sepolicy-sync.sh`; `v4l2_spike.cpp`
@@ -120,10 +120,10 @@ T13 → T14 → T15 → T16
 
 **Done when**:
 
-- [ ] Build na VM de `android.hardware.automotive.evs-v4l2` e `selinux_policy`, com o ok do usuário
-- [ ] Depois do reboot, `/dev/video10..13` existem com `system camera 0660`; `evs-v4l2` e `evsmanagerd` rodam; nenhum `avc: denied` de `vendor_modprobe`, `hal_evs_default` ou `vendor_vipee_ros2`
-- [ ] Se o `modprobe -r` no `.rc` falhar, plano B do design (blocklist + `insmod`) aplicado e anotado
-- [ ] `tools/emu/test-cam.sh platform` passa (4 câmeras, 1280×720, quadros; `remove` volta aos MP4)
+- [x] Build na VM de `vipee-evs-v4l2` (fork, AD-016) e `selinux_policy`, com o ok do usuário
+- [x] Depois do reboot, `/dev/video10..13` existem com `system camera 0660`; `evs-v4l2` e `evsmanagerd` rodam; nenhum `avc: denied` de `vendor_modprobe`, `hal_evs_default` ou `vendor_vipee_ros2`
+- [x] Se o `modprobe -r` no `.rc` falhar, plano B do design (blocklist + `insmod`) aplicado e anotado (não falhou: `modprobe -r` funcionou; `dontaudit` para a busca em `/system_dlkm`)
+- [x] `tools/emu/test-cam.sh platform` passa (4 câmeras, 1280×720, quadros; `remove` volta aos MP4)
 
 **Tests**: integration
 **Gate**: full

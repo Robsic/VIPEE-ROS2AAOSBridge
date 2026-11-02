@@ -1,0 +1,77 @@
+// VIPEE fork of the AOSP evs-v4l2 HAL (AD-016), from
+// packages/services/Car/cpp/evs/v4l2_hal/aidl at commit b8fe0e1 (Android 16
+// QPR, sdk_car bp4a tree). Patches, all marked "VIPEE:" in the source:
+//   1. VideoCapture::collectFrames: poll() with a 100 ms timeout before DQBUF,
+//      so stopVideoStream returns while the ROS bridge is silent (STALE).
+//   2. VideoCapture::startStream: STREAMON failing with EIO (v4l2loopback with
+//      no writer yet) is retried in the capture thread instead of failing.
+//   3. EvsEnumerator::primeLoopbackDevice: a v4l2loopback device declared in
+//      the configuration gets its YUYV output format and keep_format at
+//      enumeration, so it is listed before the bridge writes.
+//   4. VideoCapture::collectFrames: frames stamped before startStream (the
+//      loopback keeps the last one written) are requeued, never delivered.
+// Synced to device/generic/car/emulator/vipee_evs_hal by tools/emu/evs-sync.sh;
+// not in PRODUCT_PACKAGES, pushed by tools/jazzy/install-vendor.sh evs. The
+// init .rc and the configuration XML live in android/evs/.
+
+package {
+    default_applicable_licenses: ["Android-Apache-2.0"],
+}
+
+cc_binary {
+    name: "vipee-evs-v4l2",
+    defaults: ["android.hardware.graphics.common-ndk_static"],
+    vendor: true,
+    relative_install_path: "hw",
+    srcs: [
+        ":libgui_frame_event_aidl",
+        "src/*.cpp",
+    ],
+    shared_libs: [
+        "android.hardware.graphics.bufferqueue@1.0",
+        "android.hardware.graphics.bufferqueue@2.0",
+        "android.hidl.token@1.0-utils",
+        "libEGL",
+        "libGLESv2",
+        "libbase",
+        "libbinder_ndk",
+        "libbufferqueueconverter",
+        "libcamera_metadata",
+        "libhardware_legacy",
+        "libhidlbase",
+        "liblog",
+        "libnativewindow",
+        "libtinyxml2",
+        "libui",
+        "libutils",
+        "libyuv",
+    ],
+    static_libs: [
+        "android.frameworks.automotive.display-V2-ndk",
+        "android.hardware.automotive.evs-V2-ndk",
+        "android.hardware.common-V2-ndk",
+        "libaidlcommonsupport",
+        "libcutils",
+    ],
+    header_libs: [
+        "libgui_aidl_headers",
+    ],
+    local_include_dirs: [
+        "include",
+    ],
+    include_dirs: [
+        "frameworks/native/include/",
+    ],
+    cflags: [
+        "-DLOG_TAG=\"EvsV4lDriver\"",
+        "-DGL_GLEXT_PROTOTYPES",
+        "-DEGL_EGLEXT_PROTOTYPES",
+        "-Wall",
+        "-Wextra",
+        "-Werror",
+        "-Wthread-safety",
+    ],
+    vintf_fragments: [
+        "manifest_vipee-evs-v4l2.xml",
+    ],
+}

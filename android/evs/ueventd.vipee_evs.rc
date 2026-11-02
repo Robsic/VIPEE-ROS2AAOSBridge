@@ -1,0 +1,6 @@
+# VIPEE cam-evs-slice: appended to /vendor/etc/ueventd.rc by install-vendor.sh evs.
+# evs-v4l2 (user graphics, group camera) reads and vipee_bridge (group camera) writes.
+/dev/video10              0660   system     camera
+/dev/video11              0660   system     camera
+/dev/video12              0660   system     camera
+/dev/video13              0660   system     camera

@@ -20,7 +20,7 @@ O CalibDroid (AD-016, AD-027) e o runtime AVM consomem as 4 câmeras fisheye pel
 | Tópico `Image` cru | O cru das 4 câmeras não cabe na rede até o RPi5 (contrato §3.4); a ponte assina só o `/compressed` |
 | Sincronia exata das 4 câmeras (grupo por `header.stamp`) | A JNI do `CarEvsService` descarta o carimbo de captura (CalibDroid AD-027); o consumidor agrupa pela chegada |
 | `camera3P` e outras câmeras do bag | Não são câmeras do veículo |
-| HAL EVS própria | Substituída por `v4l2loopback` + HAL `evs-v4l2` do AOSP (spike de 2026-10-30, STATE); vira AD no Design |
+| HAL EVS própria | Substituída por `v4l2loopback` + HAL `evs-v4l2` do AOSP (spike de 2026-10-30, STATE; AD-015). Exceção (AD-016): fork mínimo da `evs-v4l2` com 4 patches de robustez, sem HAL escrita do zero |
 | Build arm64 e validação no RPi5 | Etapa seguinte; esta fatia fecha no emulador. `v4l2loopback` no kernel do RPi5 ainda não verificado |
 | Ajuste do simulador para 1280×720 | Trabalho do time do simulador; a ponte rejeita outro tamanho até lá |
 | Escrita do Android para o simulador | MVP é só leitura |
@@ -179,8 +179,8 @@ O CalibDroid (AD-016, AD-027) e o runtime AVM consomem as 4 câmeras fisheye pel
 | CAM-17 | P2: Câmeras no mapa | 2 | Tasks | In Progress |
 | CAM-18 | P2: Câmeras no mapa | 3 | Tasks | In Progress |
 | CAM-19 | P2: Instalação reversível | 1 | Tasks | In Progress |
-| CAM-20 | P2: Instalação reversível | 2 | Design | Pending |
-| CAM-21 | P2: Instalação reversível | 3 | Design | Pending |
+| CAM-20 | P2: Instalação reversível | 2 | Tasks | In Progress |
+| CAM-21 | P2: Instalação reversível | 3 | Tasks | In Progress |
 | CAM-22 | Edge: loop do bag | - | Tasks | In Progress |
 | CAM-23 | Edge: só o mais novo | - | Tasks | In Progress |
 | CAM-24 | Edge: sem cliente | - | Tasks | In Progress |

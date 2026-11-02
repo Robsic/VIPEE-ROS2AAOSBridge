@@ -7,7 +7,7 @@
 
 ## Architecture Overview
 
-O processo ROS da ponte (AD-012) assina os 4 `/compressed`, decodifica o JPEG para YUYV e escreve cada quadro num dispositivo `v4l2loopback` (`/dev/video10..13`). A HAL `evs-v4l2` do AOSP lê esses dispositivos como câmeras V4L2 comuns e o `evsmanagerd` as entrega ao `CarEvsService`/`CarEvsManager`. Não há HAL EVS própria nem IPC de vídeo próprio: o `v4l2loopback` é o IPC, e a HAL acima dele é a mesma do `aosp_rpi5_car`.
+O processo ROS da ponte (AD-012) assina os 4 `/compressed`, decodifica o JPEG para YUYV e escreve cada quadro num dispositivo `v4l2loopback` (`/dev/video10..13`). A HAL `evs-v4l2` do AOSP lê esses dispositivos como câmeras V4L2 comuns e o `evsmanagerd` as entrega ao `CarEvsService`/`CarEvsManager`. Não há IPC de vídeo próprio: o `v4l2loopback` é o IPC. A HAL acima dele é `vipee-evs-v4l2`, fork mínimo da `evs-v4l2` do `aosp_rpi5_car` com 4 patches de robustez (AD-016, T3).
 
 ```mermaid
 graph LR

@@ -1,0 +1,4 @@
+# Câmeras (AD-015/AD-016): o init.evs.rc da ponte recarrega o v4l2loopback com
+# 4 dispositivos via vendor_modprobe. O modprobe olha /system_dlkm antes de
+# /vendor/lib/modules (-d); negar não muda nada, os módulos vêm do vendor.
+dontaudit vendor_modprobe system_dlkm_file:dir search;

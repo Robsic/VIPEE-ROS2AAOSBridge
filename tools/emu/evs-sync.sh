@@ -1,14 +1,16 @@
 #!/usr/bin/env bash
-# Copia o probe EVS (android/evs_probe) para a árvore AOSP. Escreve em
+# Copia o probe EVS (android/evs_probe) e o fork da HAL evs-v4l2
+# (android/evs_hal, AD-016) para a árvore AOSP. Escreve em
 # $ANDROID_BUILD_TOP: na árvore local só com aprovação (AGENTS.md §5).
-# Depois: vm_m.sh vipee_evs_probe android.hardware.automotive.evs-v4l2
+# Depois: vm_m.sh vipee_evs_probe vipee-evs-v4l2
 set -euo pipefail
 
 AOSP="${ANDROID_BUILD_TOP:-$HOME/aosp}"
 REPO="$(cd "$(dirname "$0")/../.." && pwd)"
-DST="$AOSP/device/generic/car/emulator/vipee_evs_probe"
+EMU="$AOSP/device/generic/car/emulator"
 
-rm -rf "$DST"
-mkdir -p "$DST"
-cp "$REPO"/android/evs_probe/{Android.bp,*.cpp} "$DST/"
-find "$DST" -type f | sort
+rm -rf "$EMU/vipee_evs_probe" "$EMU/vipee_evs_hal"
+mkdir -p "$EMU/vipee_evs_probe"
+cp "$REPO"/android/evs_probe/{Android.bp,*.cpp} "$EMU/vipee_evs_probe/"
+cp -r "$REPO/android/evs_hal" "$EMU/vipee_evs_hal"
+find "$EMU/vipee_evs_probe" "$EMU/vipee_evs_hal" -type f | sort

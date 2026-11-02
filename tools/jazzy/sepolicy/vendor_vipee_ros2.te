@@ -20,3 +20,7 @@ dontaudit vendor_vipee_ros2 proc_net:file read;
 # do lado do VHAL já vêm de domain.te (self:unix_stream_socket).
 type vipee_vhal_socket, file_type;
 unix_socket_connect(vendor_vipee_ros2, vipee_vhal, hal_vehicle_default)
+
+# Câmeras (AD-015): escreve YUYV nos /dev/video10..13 do v4l2loopback, que a
+# HAL evs-v4l2 (hal_evs_default) lê. ioctl inclui VIDIOC_S_FMT.
+allow vendor_vipee_ros2 video_device:chr_file rw_file_perms;
