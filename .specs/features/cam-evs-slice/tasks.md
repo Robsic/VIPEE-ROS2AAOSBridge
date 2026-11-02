@@ -249,8 +249,8 @@ T13 → T14 → T15 → T16
 
 **Done when**:
 
-- [ ] Testes: dois `put` antes do `take` entregam só o segundo; `take` vazio volta `nullopt` no timeout; `close` acorda um `take` bloqueado; `put` em sequência sem `take` não acumula (um só valor guardado)
-- [ ] Gate quick passa
+- [x] Testes: dois `put` antes do `take` entregam só o segundo; `take` vazio volta `nullopt` no timeout; `close` acorda um `take` bloqueado; `put` em sequência sem `take` não acumula (um só valor guardado)
+- [x] Gate quick passa
 
 **Tests**: unit
 **Gate**: quick

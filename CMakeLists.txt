@@ -36,6 +36,7 @@ add_unit_test(vehicle_map_test core/test/vehicle_map_test.cpp)
 add_unit_test(translate_test core/test/translate_test.cpp)
 add_unit_test(bridge_test core/test/bridge_test.cpp)
 add_unit_test(jpeg_yuyv_test core/test/jpeg_yuyv_test.cpp)
+add_unit_test(latest_slot_test core/test/latest_slot_test.cpp)
 add_unit_test(socket_sink_test ros/vipee_bridge/test/socket_sink_test.cpp
   vipee_socket_sink)
 

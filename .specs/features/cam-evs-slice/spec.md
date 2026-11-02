@@ -182,8 +182,8 @@ O CalibDroid (AD-016, AD-027) e o runtime AVM consomem as 4 câmeras fisheye pel
 | CAM-20 | P2: Instalação reversível | 2 | Design | Pending |
 | CAM-21 | P2: Instalação reversível | 3 | Design | Pending |
 | CAM-22 | Edge: loop do bag | - | Design | Pending |
-| CAM-23 | Edge: só o mais novo | - | Design | Pending |
-| CAM-24 | Edge: sem cliente | - | Design | Pending |
+| CAM-23 | Edge: só o mais novo | - | Tasks | In Progress |
+| CAM-24 | Edge: sem cliente | - | Tasks | In Progress |
 
 **Coverage:** 24 total, 0 mapped to tasks, 24 unmapped (Tasks ainda não feito).
 
