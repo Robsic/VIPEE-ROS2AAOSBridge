@@ -34,6 +34,12 @@ class RecordingLogger : public Logger {
   std::vector<Entry> entries;
 };
 
+class RecordingCameraLogger : public CameraLogger {
+ public:
+  void log(const std::string& line) override { lines.push_back(line); }
+  std::vector<std::string> lines;
+};
+
 std::string MapPath(const std::string& vehicle) {
   return std::string(VIPEE_MAPS_DIR) + "/" + vehicle + ".yaml";
 }
@@ -60,7 +66,8 @@ class BridgeNodeTest : public ::testing::Test {
   void StartNode(const std::string& params_file) {
     rclcpp::NodeOptions opts;
     opts.arguments({"--ros-args", "--params-file", params_file});
-    node_ = std::make_shared<BridgeNode>(opts, server_.path(), logger_);
+    node_ = std::make_shared<BridgeNode>(opts, server_.path(), logger_,
+                                         camera_logger_);
     test_node_ = std::make_shared<rclcpp::Node>("vipee_test_pub");
     exec_.add_node(node_);
     exec_.add_node(test_node_);
@@ -105,6 +112,7 @@ class BridgeNodeTest : public ::testing::Test {
 
   TestServer server_;
   RecordingLogger logger_;
+  RecordingCameraLogger camera_logger_;
   std::shared_ptr<BridgeNode> node_;
   std::shared_ptr<rclcpp::Node> test_node_;
   rclcpp::executors::SingleThreadedExecutor exec_;
@@ -214,6 +222,97 @@ TEST_F(BridgeNodeTest, MapWithMissingParameterLeavesFourUnavailableAndAlive) {
   }
   EXPECT_EQ(4u, invalid);
   unlink(path);
+}
+
+// Writes text to a fresh temp params file and returns its path.
+std::string WriteTempMap(const std::string& text) {
+  char path[] = "/tmp/vipee_map_XXXXXX";
+  const int fd = mkstemp(path);
+  EXPECT_GE(fd, 0);
+  close(fd);
+  std::ofstream(path) << text;
+  return path;
+}
+
+std::string ReadFile(const std::string& path) {
+  std::ifstream in(path);
+  std::stringstream out;
+  out << in.rdbuf();
+  return out.str();
+}
+
+TEST_F(BridgeNodeTest, BothRealMapsLoadFourCamerasWithTheFileValues) {
+  const struct {
+    const char* name;
+    EvsView view;
+    int device;
+  } kExpected[] = {{"front", EvsView::kFront, 10},
+                   {"left", EvsView::kLeft, 12},
+                   {"rear", EvsView::kRear, 11},
+                   {"right", EvsView::kRight, 13}};
+  for (const char* vehicle : {"commander", "cat793f"}) {
+    TestServer server;
+    server.Start();
+    rclcpp::NodeOptions opts;
+    opts.arguments({"--ros-args", "--params-file", MapPath(vehicle)});
+    RecordingLogger logger;
+    RecordingCameraLogger camera_logger;
+    BridgeNode node(opts, server.path(), logger, camera_logger);
+    EXPECT_EQ(MapError::kNone, node.mapError()) << vehicle;
+    EXPECT_EQ(CameraMapError::kNone, node.cameraMapError()) << vehicle;
+    EXPECT_TRUE(camera_logger.lines.empty()) << vehicle;
+    const auto& cams = node.map().cameras;
+    ASSERT_EQ(4u, cams.size()) << vehicle;
+    for (size_t i = 0; i < 4; ++i) {
+      const auto& c = cams[i];
+      EXPECT_EQ(kExpected[i].name, c.name) << vehicle;
+      EXPECT_EQ(kExpected[i].view, c.view) << vehicle << " " << c.name;
+      EXPECT_EQ(std::string("/sirv/sensor/fisheye/") + kExpected[i].name +
+                    "/image/compressed",
+                c.topic);
+      EXPECT_EQ("/dev/video" + std::to_string(kExpected[i].device), c.device);
+      EXPECT_EQ(1280, c.width);
+      EXPECT_EQ(720, c.height);
+      EXPECT_EQ(500, c.stale_ms);
+    }
+  }
+}
+
+TEST_F(BridgeNodeTest, MapWithoutCamerasHasAnEmptyListAndIsValid) {
+  std::string text = ReadFile(MapPath("cat793f"));
+  text.erase(text.find("    cameras:"));
+  const std::string path = WriteTempMap(text);
+  StartNode(path);
+  EXPECT_EQ(MapError::kNone, node_->mapError());
+  EXPECT_EQ(CameraMapError::kNone, node_->cameraMapError());
+  EXPECT_TRUE(node_->map().cameras.empty());
+  EXPECT_TRUE(camera_logger_.lines.empty());
+  unlink(path.c_str());
+}
+
+TEST_F(BridgeNodeTest, DuplicateEvsViewLogsCamMapInvalidAndKeepsTelemetry) {
+  std::string text = ReadFile(MapPath("cat793f"));
+  const auto pos = text.find("RIGHTVIEW");
+  ASSERT_NE(std::string::npos, pos);
+  text.replace(pos, 9, "FRONTVIEW");
+  const std::string path = WriteTempMap(text);
+  StartNode(path);
+  EXPECT_EQ(MapError::kNone, node_->mapError());
+  EXPECT_EQ(CameraMapError::kDuplicateView, node_->cameraMapError());
+  ASSERT_EQ(1u, camera_logger_.lines.size());
+  EXPECT_EQ("CAM MAP_INVALID DUPLICATE_VIEW", camera_logger_.lines[0]);
+
+  // The four VHAL properties work as before: telemetry reaches the socket.
+  auto telemetry = Publisher<SirvVehicleTelemetry>("/cat793f/telemetry", 5);
+  SirvVehicleTelemetry t;
+  t.speed = 36.0f;
+  t.gear = 0;
+  telemetry->publish(t);
+  ASSERT_TRUE(
+      SpinUntil([&] { return Last(prop::kPerfVehicleSpeed).has_value(); }));
+  EXPECT_EQ(10.0f, Last(prop::kPerfVehicleSpeed)->float_value);
+  EXPECT_EQ(0, Last(prop::kPerfVehicleSpeed)->status);
+  unlink(path.c_str());
 }
 
 }  // namespace

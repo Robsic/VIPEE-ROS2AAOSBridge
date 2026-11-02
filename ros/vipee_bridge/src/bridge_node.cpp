@@ -21,6 +21,26 @@ void read(const std::map<std::string, rclcpp::ParameterValue>& o,
   }
 }
 
+const char* cameraErrorName(CameraMapError e) {
+  switch (e) {
+    case CameraMapError::kNone:
+      return "NONE";
+    case CameraMapError::kUnknownView:
+      return "UNKNOWN_VIEW";
+    case CameraMapError::kDuplicateView:
+      return "DUPLICATE_VIEW";
+    case CameraMapError::kDuplicateDevice:
+      return "DUPLICATE_DEVICE";
+    case CameraMapError::kMissingField:
+      return "MISSING_FIELD";
+    case CameraMapError::kBadSize:
+      return "BAD_SIZE";
+    case CameraMapError::kBadStaleMs:
+      return "BAD_STALE_MS";
+  }
+  return "?";
+}
+
 }  // namespace
 
 int64_t boottimeNs() {
@@ -54,24 +74,55 @@ VehicleMap mapFromOverrides(
   // Property sections are the dotted top-level keys (map_version, vehicle,
   // namespace, stale_ms are plain keys). ROS adds qos_overrides.* itself.
   std::set<std::string> sections;
+  std::set<std::string> camera_names;
   for (const auto& kv : o) {
     const auto dot = kv.first.find('.');
     if (dot == std::string::npos) continue;
     const std::string section = kv.first.substr(0, dot);
-    if (section != "qos_overrides") sections.insert(section);
+    if (section == "cameras") {
+      const auto end = kv.first.find('.', dot + 1);
+      if (end != std::string::npos)
+        camera_names.insert(kv.first.substr(dot + 1, end - dot - 1));
+    } else if (section != "qos_overrides") {
+      sections.insert(section);
+    }
+  }
+  for (const std::string& name : camera_names) {
+    const std::string k = "cameras." + name + ".";
+    CameraConfig c;
+    c.name = name;
+    std::string evs;
+    read<std::string>(o, k + "evs", &evs);
+    c.view = evsViewFromName(evs);
+    read<std::string>(o, k + "topic", &c.topic);
+    read<std::string>(o, k + "device", &c.device);
+    int64_t v = 0;
+    read<int64_t>(o, k + "width", &v);
+    c.width = static_cast<int>(v);
+    v = 0;
+    read<int64_t>(o, k + "height", &v);
+    c.height = static_cast<int>(v);
+    read<int64_t>(o, k + "stale_ms", &c.stale_ms);
+    m.cameras.push_back(c);
   }
   m.sections.assign(sections.begin(), sections.end());
   return m;
 }
 
 BridgeNode::BridgeNode(const rclcpp::NodeOptions& options,
-                       const std::string& socket_path, Logger& logger)
+                       const std::string& socket_path, Logger& logger,
+                       CameraLogger& camera_logger)
     : rclcpp::Node("vipee_bridge", options),
       map_(mapFromOverrides(
           get_node_parameters_interface()->get_parameter_overrides())),
       map_error_(validateMap(map_)),
+      camera_error_(validateCameras(map_.cameras)),
       sink_(socket_path),
       bridge_(std::make_unique<Bridge>(map_, sink_, logger, boottimeNs())) {
+  if (camera_error_ != CameraMapError::kNone) {
+    camera_logger.log(std::string("CAM MAP_INVALID ") +
+                      cameraErrorName(camera_error_));
+  }
   if (map_error_ != MapError::kNone) {
     RCLCPP_ERROR(get_logger(), "vehicle map refused (MapError %d)",
                  static_cast<int>(map_error_));

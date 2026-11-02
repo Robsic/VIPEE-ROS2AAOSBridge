@@ -324,8 +324,8 @@ T13 → T14 → T15 → T16
 
 **Done when**:
 
-- [ ] Testes ROS: os dois mapas reais carregam 4 câmeras com os valores do arquivo; mapa sem `cameras` dá lista vazia; posição repetida dá `CAM MAP_INVALID` e as 4 propriedades do VHAL seguem como antes
-- [ ] Gate full (ROS) passa
+- [x] Testes ROS: os dois mapas reais carregam 4 câmeras com os valores do arquivo; mapa sem `cameras` dá lista vazia; posição repetida dá `CAM MAP_INVALID` e as 4 propriedades do VHAL seguem como antes
+- [x] Gate full (ROS) passa
 
 **Tests**: integration
 **Gate**: full

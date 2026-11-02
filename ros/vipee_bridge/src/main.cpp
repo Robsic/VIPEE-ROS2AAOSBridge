@@ -63,6 +63,18 @@ class PlatformLogger : public vipee::Logger {
   }
 };
 
+// CAM lines (built by the core) under the same tag.
+class PlatformCameraLogger : public vipee::CameraLogger {
+ public:
+  void log(const std::string& line) override {
+#ifdef __ANDROID__
+    __android_log_print(ANDROID_LOG_INFO, "vipee_bridge", "%s", line.c_str());
+#else
+    std::fprintf(stderr, "vipee_bridge: %s\n", line.c_str());
+#endif
+  }
+};
+
 void logError(const char* what) {
 #ifdef __ANDROID__
   __android_log_print(ANDROID_LOG_ERROR, "vipee_bridge", "%s", what);
@@ -99,8 +111,10 @@ int main(int argc, char** argv) {
     initRclcpp(argc, argv);
     const char* path = std::getenv("VIPEE_VHAL_SOCKET");
     PlatformLogger logger;
+    PlatformCameraLogger camera_logger;
     auto node = std::make_shared<vipee::BridgeNode>(
-        rclcpp::NodeOptions(), path ? path : "/dev/socket/vipee_vhal", logger);
+        rclcpp::NodeOptions(), path ? path : "/dev/socket/vipee_vhal", logger,
+        camera_logger);
     rclcpp::executors::SingleThreadedExecutor executor;
     executor.add_node(node);
     executor.spin();

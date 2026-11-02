@@ -1,8 +1,8 @@
-# Mapa do CAT793F (version 1). Frame: sinais do simulador, sem transformação.
+# Mapa do CAT793F (version 2). Frame: sinais do simulador, sem transformação.
 # Unidades: km/h (speed), ms (stale_ms), ASCII int8 (lever_codes).
 vipee_bridge:
   ros__parameters:
-    map_version: 1
+    map_version: 2
     vehicle: cat793f
     namespace: cat793f
     stale_ms: 500
@@ -18,3 +18,32 @@ vipee_bridge:
       lever_gears: [PARK, REVERSE, NEUTRAL, DRIVE, GEAR_1, GEAR_2]
     parking_brake:
       source: apply_control_to_vehicle.handbrake
+    cameras:
+      front:
+        evs: FRONTVIEW
+        topic: /sirv/sensor/fisheye/front/image/compressed
+        device: /dev/video10
+        width: 1280  # px
+        height: 720  # px
+        stale_ms: 500
+      rear:
+        evs: REARVIEW
+        topic: /sirv/sensor/fisheye/rear/image/compressed
+        device: /dev/video11
+        width: 1280
+        height: 720
+        stale_ms: 500
+      left:
+        evs: LEFTVIEW
+        topic: /sirv/sensor/fisheye/left/image/compressed
+        device: /dev/video12
+        width: 1280
+        height: 720
+        stale_ms: 500
+      right:
+        evs: RIGHTVIEW
+        topic: /sirv/sensor/fisheye/right/image/compressed
+        device: /dev/video13
+        width: 1280
+        height: 720
+        stale_ms: 500

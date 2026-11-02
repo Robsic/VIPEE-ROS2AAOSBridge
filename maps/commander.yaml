@@ -1,8 +1,8 @@
-# Mapa do Commander (version 1): GEAR_SELECTION derivada da marcha engatada.
+# Mapa do Commander (version 2): GEAR_SELECTION derivada da marcha engatada.
 # Unidades: km/h (speed), ms (stale_ms).
 vipee_bridge:
   ros__parameters:
-    map_version: 1
+    map_version: 2
     vehicle: commander
     namespace: commander
     stale_ms: 500
@@ -16,3 +16,32 @@ vipee_bridge:
       source: derived
     parking_brake:
       source: apply_control_to_vehicle.handbrake
+    cameras:
+      front:
+        evs: FRONTVIEW
+        topic: /sirv/sensor/fisheye/front/image/compressed
+        device: /dev/video10
+        width: 1280  # px
+        height: 720  # px
+        stale_ms: 500
+      rear:
+        evs: REARVIEW
+        topic: /sirv/sensor/fisheye/rear/image/compressed
+        device: /dev/video11
+        width: 1280
+        height: 720
+        stale_ms: 500
+      left:
+        evs: LEFTVIEW
+        topic: /sirv/sensor/fisheye/left/image/compressed
+        device: /dev/video12
+        width: 1280
+        height: 720
+        stale_ms: 500
+      right:
+        evs: RIGHTVIEW
+        topic: /sirv/sensor/fisheye/right/image/compressed
+        device: /dev/video13
+        width: 1280
+        height: 720
+        stale_ms: 500
