@@ -374,9 +374,9 @@ T13 → T14 → T15 → T16
 
 **Done when**:
 
-- [ ] Teste ROS real com sink de teste: JPEG 1280×720 publicado chega ao sink da câmera certa uma vez; publicação parada ➔ `CAM <pos> STALE` e nenhum quadro novo; volta ➔ `LIVE`; rajada de 5 mensagens com sink lento entrega a última; câmera parada não atrasa a telemetria no socket do teste
-- [ ] `build-bridge.sh` passa (binário Android liga com `libturbojpeg.a`)
-- [ ] Gate full (ROS) passa
+- [x] Teste ROS real com sink de teste: JPEG 1280×720 publicado chega ao sink da câmera certa uma vez; publicação parada ➔ `CAM <pos> STALE` e nenhum quadro novo; volta ➔ `LIVE`; rajada de 5 mensagens com sink lento entrega a última; câmera parada não atrasa a telemetria no socket do teste
+- [x] `build-bridge.sh` passa (binário Android liga com `libturbojpeg.a`)
+- [x] Gate full (ROS) passa
 
 **Tests**: integration
 **Gate**: full

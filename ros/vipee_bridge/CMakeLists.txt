@@ -10,14 +10,20 @@ add_compile_options(-Wall -Wextra)
 
 find_package(rclcpp REQUIRED)
 find_package(sirv_msgs REQUIRED)
+find_package(sensor_msgs REQUIRED)
+# Static TurboJPEG: the host test build and the NDK build both get it from
+# CMAKE_PREFIX_PATH (test-ros.sh / build-android.sh).
+find_package(libjpeg-turbo CONFIG REQUIRED)
 
 set(CORE ${CMAKE_CURRENT_SOURCE_DIR}/../../core)
 add_library(vipee_bridge_lib STATIC
   ${CORE}/src/vehicle_map.cpp ${CORE}/src/translate.cpp ${CORE}/src/bridge.cpp
-  src/socket_sink.cpp src/bridge_node.cpp)
+  ${CORE}/src/jpeg_yuyv.cpp ${CORE}/src/camera_channel.cpp
+  src/socket_sink.cpp src/v4l2_sink.cpp src/camera_bridge.cpp
+  src/bridge_node.cpp)
 target_include_directories(vipee_bridge_lib PUBLIC ${CORE}/include include)
 target_link_libraries(vipee_bridge_lib PUBLIC rclcpp::rclcpp
-  ${sirv_msgs_TARGETS})
+  ${sirv_msgs_TARGETS} ${sensor_msgs_TARGETS} libjpeg-turbo::turbojpeg-static)
 
 add_executable(vipee_bridge src/main.cpp)
 target_link_libraries(vipee_bridge vipee_bridge_lib)
@@ -34,6 +40,11 @@ if(VIPEE_ROS_TESTS)
     VIPEE_MAPS_DIR="${CMAKE_CURRENT_SOURCE_DIR}/../../maps")
   target_link_libraries(bridge_node_rostest vipee_bridge_lib GTest::gtest_main)
   add_test(NAME bridge_node_rostest COMMAND bridge_node_rostest)
+  add_executable(camera_bridge_rostest test/camera_bridge_rostest.cpp)
+  target_compile_definitions(camera_bridge_rostest PRIVATE
+    VIPEE_MAPS_DIR="${CMAKE_CURRENT_SOURCE_DIR}/../../maps")
+  target_link_libraries(camera_bridge_rostest vipee_bridge_lib GTest::gtest_main)
+  add_test(NAME camera_bridge_rostest COMMAND camera_bridge_rostest)
   # CTS-23: an unreadable map file is refused with MAP_INVALID and the process
   # stays up (timeout kills it: exit 124), instead of an init crash loop.
   add_test(NAME unreadable_map_test COMMAND sh -c

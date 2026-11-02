@@ -17,6 +17,7 @@
 #include "vipee/bridge.h"
 #include "vipee/camera_channel.h"
 #include "vipee/vehicle_map.h"
+#include "vipee_bridge/camera_bridge.h"
 #include "vipee_bridge/socket_sink.h"
 
 namespace vipee {
@@ -46,8 +47,9 @@ VehicleMap mapFromOverrides(
  * SocketSink::poll every 50 ms. With an invalid map it subscribes to nothing
  * and only reports the four properties UNAVAILABLE/MAP_INVALID; it stays
  * alive. An invalid `cameras` section logs `CAM MAP_INVALID <error>` and
- * leaves the telemetry untouched. Timestamps are CLOCK_BOOTTIME ns. Use with a
- * single-threaded executor.
+ * leaves the telemetry untouched; a valid non-empty one starts a
+ * CameraBridge (one thread per camera, outside the executor). Timestamps are
+ * CLOCK_BOOTTIME ns. Use with a single-threaded executor.
  */
 class BridgeNode : public rclcpp::Node {
  public:
@@ -56,10 +58,14 @@ class BridgeNode : public rclcpp::Node {
    * @param options Node options carrying the map parameters.
    * @param socket_path Unix socket of the VHAL.
    * @param logger Receiver of status transitions; must outlive the node.
-   * @param camera_logger Receiver of the CAM lines; must outlive the node.
+   * @param camera_logger Receiver of the CAM lines; must outlive the node and
+   * be thread-safe (the camera threads call it).
+   * @param make_sink Creates the sink of each camera; empty means V4l2Sink on
+   * the device of the map. The ROS test passes a test sink.
    */
   BridgeNode(const rclcpp::NodeOptions& options, const std::string& socket_path,
-             Logger& logger, CameraLogger& camera_logger);
+             Logger& logger, CameraLogger& camera_logger,
+             SinkFactory make_sink = {});
 
   /// @brief Result of validating the map this node loaded.
   MapError mapError() const { return map_error_; }
@@ -76,6 +82,7 @@ class BridgeNode : public rclcpp::Node {
   CameraMapError camera_error_;
   SocketSink sink_;
   std::unique_ptr<Bridge> bridge_;
+  std::unique_ptr<CameraBridge> camera_bridge_;
   rclcpp::Subscription<sirv_msgs::msg::SirvVehicleTelemetry>::SharedPtr
       telemetry_sub_;
   rclcpp::Subscription<sirv_msgs::msg::CAT793FVehicleControl>::SharedPtr

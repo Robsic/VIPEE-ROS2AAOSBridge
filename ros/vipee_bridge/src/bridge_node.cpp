@@ -5,6 +5,8 @@
 #include <chrono>
 #include <set>
 
+#include "vipee_bridge/v4l2_sink.h"
+
 namespace vipee {
 namespace {
 
@@ -111,7 +113,7 @@ VehicleMap mapFromOverrides(
 
 BridgeNode::BridgeNode(const rclcpp::NodeOptions& options,
                        const std::string& socket_path, Logger& logger,
-                       CameraLogger& camera_logger)
+                       CameraLogger& camera_logger, SinkFactory make_sink)
     : rclcpp::Node("vipee_bridge", options),
       map_(mapFromOverrides(
           get_node_parameters_interface()->get_parameter_overrides())),
@@ -122,6 +124,15 @@ BridgeNode::BridgeNode(const rclcpp::NodeOptions& options,
   if (camera_error_ != CameraMapError::kNone) {
     camera_logger.log(std::string("CAM MAP_INVALID ") +
                       cameraErrorName(camera_error_));
+  }
+  if (camera_error_ == CameraMapError::kNone && !map_.cameras.empty()) {
+    if (!make_sink) {
+      make_sink = [](const CameraConfig& c) -> std::unique_ptr<FrameSink> {
+        return std::make_unique<V4l2Sink>(c);
+      };
+    }
+    camera_bridge_ = std::make_unique<CameraBridge>(*this, map_.cameras,
+                                                    camera_logger, make_sink);
   }
   if (map_error_ != MapError::kNone) {
     RCLCPP_ERROR(get_logger(), "vehicle map refused (MapError %d)",
