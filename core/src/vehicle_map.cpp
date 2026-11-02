@@ -17,6 +17,32 @@ std::optional<int32_t> gearFromName(const std::string& name) {
   return std::nullopt;
 }
 
+EvsView evsViewFromName(const std::string& name) {
+  if (name == "FRONTVIEW") return EvsView::kFront;
+  if (name == "REARVIEW") return EvsView::kRear;
+  if (name == "LEFTVIEW") return EvsView::kLeft;
+  if (name == "RIGHTVIEW") return EvsView::kRight;
+  return EvsView::kUnknown;
+}
+
+CameraMapError validateCameras(const std::vector<CameraConfig>& cameras) {
+  std::set<EvsView> views;
+  std::set<std::string> devices;
+  for (const auto& c : cameras) {
+    if (c.name.empty() || c.topic.empty() || c.device.empty()) {
+      return CameraMapError::kMissingField;
+    }
+    if (c.view == EvsView::kUnknown) return CameraMapError::kUnknownView;
+    if (c.width <= 0 || c.height <= 0) return CameraMapError::kBadSize;
+    if (c.stale_ms <= 0) return CameraMapError::kBadStaleMs;
+    if (!views.insert(c.view).second) return CameraMapError::kDuplicateView;
+    if (!devices.insert(c.device).second) {
+      return CameraMapError::kDuplicateDevice;
+    }
+  }
+  return CameraMapError::kNone;
+}
+
 MapError validateMap(const VehicleMap& map) {
   if (map.map_version != kMapVersion) return MapError::kUnknownVersion;
   if (map.vehicle.empty() || map.ns.empty()) return MapError::kMissingField;

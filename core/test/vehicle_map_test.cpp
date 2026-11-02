@@ -17,7 +17,9 @@ TEST(VehicleMap, CommanderMapIsValid) {
 
 TEST(VehicleMap, UnknownVersionIsRejected) {
   VehicleMap m = Cat793fMap();
-  m.map_version = 2;
+  m.map_version = 1;
+  EXPECT_EQ(validateMap(m), MapError::kUnknownVersion);
+  m.map_version = 3;
   EXPECT_EQ(validateMap(m), MapError::kUnknownVersion);
   m.map_version = 0;
   EXPECT_EQ(validateMap(m), MapError::kUnknownVersion);
@@ -114,6 +116,86 @@ TEST(VehicleMap, GearNamesFollowVehicleGearAidl) {
   EXPECT_EQ(gearFromName("GEAR_2"), 0x0020);
   EXPECT_EQ(gearFromName("GEAR_9"), 0x1000);
   EXPECT_EQ(gearFromName("GEAR_10"), std::nullopt);
+}
+
+TEST(VehicleMap, MapVersionIsTwo) {
+  VehicleMap m = Cat793fMap();
+  m.map_version = 2;
+  EXPECT_EQ(validateMap(m), MapError::kNone);
+}
+
+TEST(CameraMap, BothVehicleMapsDeclareFourValidCameras) {
+  EXPECT_EQ(Cat793fMap().cameras.size(), 4u);
+  EXPECT_EQ(validateCameras(Cat793fMap().cameras), CameraMapError::kNone);
+  EXPECT_EQ(validateCameras(CommanderMap().cameras), CameraMapError::kNone);
+}
+
+TEST(CameraMap, NoCamerasIsValid) {
+  EXPECT_EQ(validateCameras({}), CameraMapError::kNone);
+}
+
+TEST(CameraMap, EvsViewNamesFollowCarEvsManager) {
+  EXPECT_EQ(evsViewFromName("FRONTVIEW"), EvsView::kFront);
+  EXPECT_EQ(evsViewFromName("REARVIEW"), EvsView::kRear);
+  EXPECT_EQ(evsViewFromName("LEFTVIEW"), EvsView::kLeft);
+  EXPECT_EQ(evsViewFromName("RIGHTVIEW"), EvsView::kRight);
+  EXPECT_EQ(evsViewFromName("SURROUNDVIEW"), EvsView::kUnknown);
+  EXPECT_EQ(evsViewFromName("frontview"), EvsView::kUnknown);
+  EXPECT_EQ(evsViewFromName(""), EvsView::kUnknown);
+}
+
+TEST(CameraMap, UnknownViewIsRejected) {
+  VehicleMap m = CommanderMap();
+  m.cameras[2].view = EvsView::kUnknown;
+  EXPECT_EQ(validateCameras(m.cameras), CameraMapError::kUnknownView);
+}
+
+TEST(CameraMap, RepeatedViewIsRejected) {
+  VehicleMap m = CommanderMap();
+  m.cameras[1].view = EvsView::kFront;
+  EXPECT_EQ(validateCameras(m.cameras), CameraMapError::kDuplicateView);
+}
+
+TEST(CameraMap, RepeatedDeviceIsRejected) {
+  VehicleMap m = CommanderMap();
+  m.cameras[3].device = "/dev/video10";
+  EXPECT_EQ(validateCameras(m.cameras), CameraMapError::kDuplicateDevice);
+}
+
+TEST(CameraMap, MissingFieldIsRejected) {
+  VehicleMap m = CommanderMap();
+  m.cameras[0].name.clear();
+  EXPECT_EQ(validateCameras(m.cameras), CameraMapError::kMissingField);
+  m = CommanderMap();
+  m.cameras[1].topic.clear();
+  EXPECT_EQ(validateCameras(m.cameras), CameraMapError::kMissingField);
+  m = CommanderMap();
+  m.cameras[2].device.clear();
+  EXPECT_EQ(validateCameras(m.cameras), CameraMapError::kMissingField);
+}
+
+TEST(CameraMap, NonPositiveSizeIsRejected) {
+  VehicleMap m = CommanderMap();
+  m.cameras[0].width = 0;
+  EXPECT_EQ(validateCameras(m.cameras), CameraMapError::kBadSize);
+  m = CommanderMap();
+  m.cameras[0].height = -720;
+  EXPECT_EQ(validateCameras(m.cameras), CameraMapError::kBadSize);
+}
+
+TEST(CameraMap, NonPositiveStaleMsIsRejected) {
+  VehicleMap m = CommanderMap();
+  m.cameras[3].stale_ms = 0;
+  EXPECT_EQ(validateCameras(m.cameras), CameraMapError::kBadStaleMs);
+  m.cameras[3].stale_ms = -500;
+  EXPECT_EQ(validateCameras(m.cameras), CameraMapError::kBadStaleMs);
+}
+
+TEST(CameraMap, InvalidCamerasDoNotInvalidateTelemetry) {
+  VehicleMap m = Cat793fMap();
+  m.cameras[1].view = EvsView::kFront;
+  m.cameras[2].width = 0;
+  EXPECT_EQ(validateMap(m), MapError::kNone);
 }
 
 }  // namespace

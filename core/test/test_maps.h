@@ -8,7 +8,7 @@ namespace vipee {
 // Equivalent to maps/cat793f.yaml in design.md.
 inline VehicleMap Cat793fMap() {
   VehicleMap m;
-  m.map_version = 1;
+  m.map_version = 2;
   m.vehicle = "cat793f";
   m.ns = "cat793f";
   m.stale_ms = 500;
@@ -21,6 +21,16 @@ inline VehicleMap Cat793fMap() {
   m.lever_codes = {80, 82, 78, 68, 49, 50};
   m.lever_gears = {"PARK", "REVERSE", "NEUTRAL", "DRIVE", "GEAR_1", "GEAR_2"};
   m.parking_brake_source = "apply_control_to_vehicle.handbrake";
+  m.cameras = {
+      {"front", EvsView::kFront, "/sirv/sensor/fisheye/front/image/compressed",
+       "/dev/video10", 1280, 720, 500},
+      {"rear", EvsView::kRear, "/sirv/sensor/fisheye/rear/image/compressed",
+       "/dev/video11", 1280, 720, 500},
+      {"left", EvsView::kLeft, "/sirv/sensor/fisheye/left/image/compressed",
+       "/dev/video12", 1280, 720, 500},
+      {"right", EvsView::kRight, "/sirv/sensor/fisheye/right/image/compressed",
+       "/dev/video13", 1280, 720, 500},
+  };
   return m;
 }
 

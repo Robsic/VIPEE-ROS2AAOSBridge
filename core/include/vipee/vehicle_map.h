@@ -5,7 +5,8 @@
  *
  * Everything that varies per vehicle lives here (spec CTS-20): map version,
  * vehicle namespace, source of each property, unit scale, maximum speed,
- * staleness limit and the GEAR_SELECTION source with its lever table.
+ * staleness limit, the GEAR_SELECTION source with its lever table and the
+ * cameras (spec CAM-16).
  */
 #ifndef VIPEE_VEHICLE_MAP_H_
 #define VIPEE_VEHICLE_MAP_H_
@@ -36,10 +37,35 @@ constexpr int32_t kGear1 = 0x0010;    ///< GEAR_1; GEAR_n = kGear1 << (n - 1).
 }  // namespace gear
 
 /// @brief Only map version this build understands.
-constexpr int kMapVersion = 1;
+constexpr int kMapVersion = 2;
 
 /// @brief Only valid speed scale: km/h ➔ m/s (1 / 3.6).
 constexpr double kKmhToMps = 1.0 / 3.6;
+
+/// @brief EVS camera type a camera feeds (CarEvsManager SERVICE_TYPE_*).
+enum class EvsView {
+  kUnknown,  ///< Any name evsViewFromName() rejects.
+  kFront,    ///< FRONTVIEW.
+  kRear,     ///< REARVIEW.
+  kLeft,     ///< LEFTVIEW.
+  kRight,    ///< RIGHTVIEW.
+};
+
+/**
+ * @brief One camera of the map (YAML section cameras.<name>).
+ *
+ * Strings left empty and numbers left at 0 mean "missing" and fail
+ * validateCameras().
+ */
+struct CameraConfig {
+  std::string name;  ///< Position key, e.g. "front"; used in the CAM logs.
+  EvsView view = EvsView::kUnknown;  ///< EVS type; unique within the map.
+  std::string topic;     ///< sensor_msgs/CompressedImage topic (JPEG).
+  std::string device;    ///< v4l2loopback output, e.g. /dev/video10; unique.
+  int width = 0;         ///< Frame width in px, > 0; other sizes are dropped.
+  int height = 0;        ///< Frame height in px, > 0.
+  int64_t stale_ms = 0;  ///< ms without a valid frame before STALE, > 0.
+};
 
 /**
  * @brief One vehicle's map, as read from the ROS parameter YAML.
@@ -70,6 +96,9 @@ struct VehicleMap {
   std::vector<std::string> lever_gears;
   /// Must be "apply_control_to_vehicle.handbrake" (SirvVehicleControl).
   std::string parking_brake_source;
+  /// Cameras of the vehicle; empty means telemetry only (spec CAM-18).
+  /// Checked by validateCameras(), never by validateMap().
+  std::vector<CameraConfig> cameras;
 };
 
 /// @brief Named reasons a map is refused (logged as MAP_INVALID).
@@ -86,6 +115,34 @@ enum class MapError {
   kDuplicateLeverCode,  ///< The same lever code appears twice.
   kUnknownLeverGear,    ///< lever_gears holds a name gearFromName() rejects.
 };
+
+/// @brief Named reasons a camera section is refused (CAM MAP_INVALID).
+enum class CameraMapError {
+  kNone,             ///< Valid (an empty list is valid).
+  kUnknownView,      ///< A camera has EvsView::kUnknown.
+  kDuplicateView,    ///< Two cameras feed the same EVS type.
+  kDuplicateDevice,  ///< Two cameras write the same device.
+  kMissingField,     ///< Empty name, topic or device.
+  kBadSize,          ///< width or height <= 0.
+  kBadStaleMs,       ///< stale_ms <= 0.
+};
+
+/**
+ * @brief EvsView of an EVS type name.
+ * @param name FRONTVIEW, REARVIEW, LEFTVIEW or RIGHTVIEW (case-sensitive).
+ * @return The view, or EvsView::kUnknown for any other name.
+ */
+EvsView evsViewFromName(const std::string& name);
+
+/**
+ * @brief Checks the camera section before any camera opens (spec CAM-17).
+ *
+ * Independent of validateMap(): an invalid camera section opens no camera
+ * and leaves the telemetry as validateMap() decides.
+ * @param cameras Cameras read from the vehicle's YAML.
+ * @return CameraMapError::kNone, or the first reason found.
+ */
+CameraMapError validateCameras(const std::vector<CameraConfig>& cameras);
 
 /**
  * @brief VehicleGear value of a gear name.

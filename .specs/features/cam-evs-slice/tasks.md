@@ -197,9 +197,9 @@ T13 → T14 → T15 → T16
 
 **Done when**:
 
-- [ ] Um teste por erro de câmera; lista vazia é válida (CAM-18); mapa de telemetria válido com câmeras inválidas continua `kNone` em `validateMap` (CAM-17)
-- [ ] Testes de versão do mapa atualizados para 2 (versão 1 recusada)
-- [ ] Gate quick passa; contagem anterior + novos, sem remoção
+- [x] Um teste por erro de câmera; lista vazia é válida (CAM-18); mapa de telemetria válido com câmeras inválidas continua `kNone` em `validateMap` (CAM-17)
+- [x] Testes de versão do mapa atualizados para 2 (versão 1 recusada)
+- [x] Gate quick passa; contagem anterior + novos, sem remoção
 
 **Tests**: unit
 **Gate**: quick

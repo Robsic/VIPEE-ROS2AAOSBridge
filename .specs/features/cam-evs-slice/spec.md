@@ -175,9 +175,9 @@ O CalibDroid (AD-016, AD-027) e o runtime AVM consomem as 4 câmeras fisheye pel
 | CAM-13 | P1: Quadro inválido | 5 | Design | Pending |
 | CAM-14 | P1: Falha do dispositivo | 1 | Design | Pending |
 | CAM-15 | P1: Falha do dispositivo | 2 | Design | Pending |
-| CAM-16 | P2: Câmeras no mapa | 1 | Design | Pending |
-| CAM-17 | P2: Câmeras no mapa | 2 | Design | Pending |
-| CAM-18 | P2: Câmeras no mapa | 3 | Design | Pending |
+| CAM-16 | P2: Câmeras no mapa | 1 | Tasks | In Progress |
+| CAM-17 | P2: Câmeras no mapa | 2 | Tasks | In Progress |
+| CAM-18 | P2: Câmeras no mapa | 3 | Tasks | In Progress |
 | CAM-19 | P2: Instalação reversível | 1 | Design | Pending |
 | CAM-20 | P2: Instalação reversível | 2 | Design | Pending |
 | CAM-21 | P2: Instalação reversível | 3 | Design | Pending |
