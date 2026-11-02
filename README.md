@@ -92,6 +92,45 @@ adb shell setprop vendor.vipee.vehicle commander
 adb shell 'stop vipee_bridge; start vipee_bridge'
 ```
 
+Câmeras (AD-015, AD-016): a ponte escreve as 4 câmeras em `/dev/video10..13` (`v4l2loopback`) e a HAL `vipee-evs-v4l2` as entrega ao EVS. O passo `evs` troca os MP4 do EVS do emulador pelas câmeras da ponte; avise AVM e CalibDroid antes, porque o emulador é compartilhado. `evs-remove` devolve os MP4. Compilar na VM antes:
+
+```bash
+tools/jazzy/sepolicy-sync.sh && tools/emu/evs-sync.sh
+~/aosp-scripts/vm_m.sh vipee-evs-v4l2 vipee_evs_probe selinux_policy
+tools/jazzy/install-vendor.sh evs          # reinicia o device
+tools/jazzy/install-vendor.sh evs-remove   # devolve os MP4
+```
+
+O `cmd car_service set-camera-id` (FRONTVIEW..RIGHTVIEW ➔ `/dev/video10..13`) não sobrevive a reboot. O `install-vendor.sh evs` o aplica; depois de outro reboot, reaplique:
+
+```bash
+for m in FRONTVIEW:10 REARVIEW:11 LEFTVIEW:12 RIGHTVIEW:13; do
+  adb shell cmd car_service set-camera-id ${m%%:*} /dev/video${m#*:}
+done
+```
+
+Para tocar o bag de calibração (Commander) no host, use um participante DDS só, sem o `fake_sim` junto. Depois troque o veículo para `commander` e reinicie a ponte, que só disca o host na partida:
+
+```bash
+docker run --rm --network host --entrypoint '' \
+  -v $PWD/tools/jazzy/config:/cfg:ro -v ~/ros2_android_ws:/ws:ro \
+  -v ~/rosbags/rosbag2_calibration_2026_10_01:/bag:ro \
+  -e CYCLONEDDS_URI=file:///cfg/cyclonedds_host.xml -e ROS_DOMAIN_ID=25 \
+  -e RMW_IMPLEMENTATION=rmw_cyclonedds_cpp vipee/ros2-jazzy-android bash -c \
+  'source /opt/ros/jazzy/setup.bash && source /ws/ros_test/install_sirv/setup.bash &&
+   ros2 bag play --loop /bag --topics /commander/telemetry /apply_control_to_vehicle \
+     /sirv/sensor/fisheye/{front,rear,left,right}/image/compressed'
+# em outro terminal, com o bag tocando:
+adb shell setprop vendor.vipee.vehicle commander
+adb shell 'stop vipee_bridge; start vipee_bridge'
+```
+
+Teste das câmeras no emulador (sobe a própria fonte DDS; pare o bag antes). Sem argumentos roda todos os passos: `platform`, `stall`, `bag`, `stale`, `drops`, `device` e `install` (dois reboots):
+
+```bash
+tools/emu/test-cam.sh
+```
+
 ## Projetos irmãos
 
 * [`VIPEE-CalibDroid`](https://github.com/Robsic/VIPEE-CalibDroid): app AAOS de calibração extrínseca; consome as 4 câmeras desta ponte.

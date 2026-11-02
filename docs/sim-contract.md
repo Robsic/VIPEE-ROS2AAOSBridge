@@ -1,6 +1,6 @@
 # Contrato Simulador ➔ ROS2AAOSBridge
 
-**Versão:** 0.2.2 (rascunho para discussão) · **Data:** 2026-10-30 · **Escopo:** MVP do demo no RPi5 (prazo 2026-11-28)
+**Versão:** 0.2.3 (rascunho para discussão) · **Data:** 2026-11-02 · **Escopo:** MVP do demo no RPi5 (prazo 2026-11-28)
 
 Este documento define o que o simulador publica em ROS2 para que a ponte entregue os sinais ao Android Automotive (VHAL e EVS) sem que o dashboard perceba que a fonte é simulada. A v0.2 parte do que o simulador **já publica**, levantado do repositório `SIRV-Simulator`, branch `SIRV_UE5.5_ROS2_Jazzy` (2026-10-30), em vez dos tópicos `/vehicle/...` propostos na v0.1. O que falta foi solicitado ao time do simulador e aparece como **pedido** (§4). As decisões do lado da ponte estão em `.specs/STATE.md` (AD-011 e AD-012: o processo ROS da ponte roda dentro do Android).
 
@@ -51,7 +51,7 @@ Na ponte: `CURRENT_GEAR` vem da engatada. `GEAR_SELECTION` vem da alavanca no CA
 
 ### 3.4 Câmeras
 
-O rig fisheye 360° do CAT793F (`params/vehicles/CAT793F.yaml`, bloco `fisheye`):
+O rig fisheye 360° do CAT793F (`params/vehicles/CAT793F.yaml`, bloco `fisheye`). O tópico de cada câmera é `/sirv/sensor/fisheye/<pos>/image/compressed`:
 
 | Posição (`<pos>`) | EVS | `role_name` | Pose `[x, y, z, roll, pitch, yaw]` |
 | ----------------- | --- | ----------- | ---------------------------------- |
@@ -60,7 +60,9 @@ O rig fisheye 360° do CAT793F (`params/vehicles/CAT793F.yaml`, bloco `fisheye`)
 | `left` | `LEFTVIEW` | `FisheyeLeft` | `[0, -3.5, 3.80, 0, -0.5236, -1.5708]` |
 | `right` | `RIGHTVIEW` | `FisheyeRight` | `[0, 3.5, 3.80, 0, -0.5236, 1.5708]` |
 
-* **Resolução 480×480**, FOV 180° × 180°, modelo Kannala-Brandt. O `camera_info` traz `distortion_model: equidistant` e `D = [k0, k1, k2, k3]`, que o `cv::fisheye` usa direto. Os coeficientes são sintéticos, não de lente real. O MVP pedia 720p; ver §6.
+* **Resolução de referência 1280×720** nas 4 câmeras. Hoje o simulador publica 480×480 (o `Commander.yaml`, por exemplo) e será ajustado para 1280×720. A ponte não redimensiona: quadro de outro tamanho é descartado (`FRAME_SIZE_MISMATCH`) e a câmera fica sem quadros.
+* **FOV:** do CAT793F, indefinido; do Commander, ~192° (o `Commander.yaml` diz 190°). Modelo Kannala-Brandt: o `camera_info` traz `distortion_model: equidistant` e `D = [k0, k1, k2, k3]`, que o `cv::fisheye` usa direto. Os coeficientes são sintéticos, não de lente real. A ponte não lê o `camera_info`; o CalibDroid usa os intrínsecos do seu próprio arquivo.
+* **Rig e bag.** As poses da tabela são do CAT793F. O bag de calibração do CalibDroid (`rosbag2_calibration_2026_10_01`) é do Commander, com os mesmos nomes de tópico, JPEG 1280×720 a ~8,9 Hz por câmera.
 * Cada câmera publica também `<topic>` (`sensor_msgs/Image` cru) e `<topic>/compressed`. **A ponte assina só o `/compressed`**: o cru das 4 câmeras não cabe na rede até o RPi5. O `/compressed` é JPEG (TurboJPEG, qualidade 80).
 * **Poses no frame do Unreal**, em m e rad, relativas à origem do ator do veículo: X à frente, **Y à direita** (a câmera esquerda está em `y = -3.5`), Z para cima, yaw positivo girando para a direita e pitch negativo olhando para baixo. Isso difere do frame do veículo da ponte (origem no solo sob o eixo dianteiro, X à frente, Y à esquerda, Z para cima; CalibDroid AD-004). A ponte converte com `y ➔ -y`, `yaw ➔ -yaw` e a translação até o eixo dianteiro. O `Commander.yaml` documenta a convenção (as poses vão sem mudança, de m para cm e de rad para graus, para o frame local do ator no UE; GNSS e IMU são publicados em REP-103) e a origem da malha do Commander: no solo, no meio do entre-eixos (eixo traseiro em `x = -1.24`). **A confirmar:** a origem do ator do CAT793F e a ordem de rotação.
 * As poses de `left`, `right` e `rear` são estimativas iniciais (só a `front` está calibrada na cena). Para o demo isso basta; para calibração, o CalibDroid estima as extrínsecas.
@@ -96,7 +98,6 @@ Se o tempo do simulador não for real, a latência medida pela ponte perde senti
 
 ## 6. Pontos em aberto
 
-* **720p ou 480×480.** O MVP pedia 4 câmeras 720p para o CalibDroid. O simulador entrega 480×480 a 10 Hz, e subir a resolução pesa na GPU (§3.4). Para o demo, 480×480 serve; a calibração em 720p é decisão do stakeholder.
 * **QoS reliable nas câmeras.** As câmeras publicam com `reliable`. A ponte assina com `best_effort` (compatível), mas um link lento até o Android ainda faz o publicador reter amostras. Se a latência subir no RPi5, pedir `best_effort` no publicador.
 * **Retrovisor por lado.** A propriedade padrão `MIRROR_FOLD` do AAOS 16 é global: um booleano para todos os retrovisores. Se o dashboard precisa cortar o BEV de um lado só, a ponte expõe também uma propriedade vendor por lado. O simulador publica por lado de qualquer jeito (P2).
 * **Telemetria de pose.** `SirvVehicleTelemetry.position`/`orientation` vêm como `Vector3` sem frame nem unidade declarados. Fora do MVP.
@@ -107,6 +108,7 @@ Mudança de nome, tipo ou semântica sobe a versão deste documento, e mudança 
 
 ### Histórico
 
+* **0.2.3 (2026-11-02):** câmeras com referência 1280×720 (o simulador será ajustado; a ponte descarta outro tamanho); FOV do CAT793F indefinido e do Commander ~192°; o rig da tabela é do CAT793F e o bag de calibração é do Commander, com os mesmos tópicos. Sai de §6 a dúvida 720p ou 480×480.
 * **0.2.2 (2026-10-30):** `id` do `SirvVehicleControl` é o uid do spawn; a ponte aceita qualquer `id` e marca fonte ambígua com dois `id`. Reforça o P3.
 * **0.2.1 (2026-10-30):** velocidade com sinal e marcha engatada genérica lidas do código do simulador (perguntas respondidas); alavanca do CAT793F em `/<ns>/vehicle_control`; origem do Commander; pedidos P6 e P7.
 * **0.2 (2026-10-30):** parte dos tópicos e de `sirv_msgs` do simulador (branch `SIRV_UE5.5_ROS2_Jazzy`). Abandona `/vehicle/...` e `vipee_vehicle_msgs`. Jazzy + CycloneDDS TCP. Portas, retrovisores e freio de mão como estado viram pedidos.
