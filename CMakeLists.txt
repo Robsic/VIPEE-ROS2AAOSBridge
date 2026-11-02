@@ -25,6 +25,12 @@ target_include_directories(vipee_socket_sink PUBLIC
   ${CMAKE_SOURCE_DIR}/ros/vipee_bridge/include)
 target_link_libraries(vipee_socket_sink PUBLIC vipee_core)
 
+# V4L2 output sink: Linux only, no ROS.
+add_library(vipee_v4l2_sink ros/vipee_bridge/src/v4l2_sink.cpp)
+target_include_directories(vipee_v4l2_sink PUBLIC
+  ${CMAKE_SOURCE_DIR}/ros/vipee_bridge/include)
+target_link_libraries(vipee_v4l2_sink PUBLIC vipee_core)
+
 function(add_unit_test name source)
   add_executable(${name} ${source})
   target_link_libraries(${name} PRIVATE GTest::gtest_main vipee_core ${ARGN})
@@ -41,6 +47,8 @@ add_unit_test(latest_slot_test core/test/latest_slot_test.cpp)
 add_unit_test(camera_channel_test core/test/camera_channel_test.cpp)
 add_unit_test(socket_sink_test ros/vipee_bridge/test/socket_sink_test.cpp
   vipee_socket_sink)
+add_unit_test(v4l2_sink_test ros/vipee_bridge/test/v4l2_sink_test.cpp
+  vipee_v4l2_sink)
 
 # VHAL ingest logic: header-only, no AOSP, unit-tested on the host.
 add_unit_test(vhal_ingest_test android/vhal/test/vhal_ingest_test.cpp)

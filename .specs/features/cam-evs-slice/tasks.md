@@ -349,8 +349,8 @@ T13 → T14 → T15 → T16
 
 **Done when**:
 
-- [ ] Testes: caminho inexistente ➔ `open` falso; arquivo comum ➔ `S_FMT` falha e `open` falso, fd fechado; `write` com fd inválido ➔ falso e `isOpen` falso
-- [ ] Gate quick passa
+- [x] Testes: caminho inexistente ➔ `open` falso; arquivo comum ➔ `S_FMT` falha e `open` falso, fd fechado; `write` com fd inválido ➔ falso e `isOpen` falso
+- [x] Gate quick passa
 
 **Tests**: unit
 **Gate**: quick
