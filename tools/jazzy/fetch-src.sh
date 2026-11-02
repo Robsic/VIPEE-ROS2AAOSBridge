@@ -43,3 +43,14 @@ for pin in $PINS; do
   git -C "$repo" checkout -q "$commit"
   echo "$repo -> $(git -C "$repo" rev-parse --short HEAD)"
 done
+
+# libjpeg-turbo 3.2.0 (a mesma versão que o vcpkg do host resolve), fora do
+# colcon: build-android.sh a compila estática com o NDK.
+JT=/ws/third_party/libjpeg-turbo
+if [ ! -d "$JT/.git" ]; then
+  mkdir -p /ws/third_party
+  git clone -q https://github.com/libjpeg-turbo/libjpeg-turbo.git "$JT"
+fi
+git -C "$JT" fetch -q origin tag 3.2.0 2>/dev/null || true
+git -C "$JT" checkout -q 3.2.0
+echo "libjpeg-turbo -> $(git -C "$JT" describe --tags)"

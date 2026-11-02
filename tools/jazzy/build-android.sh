@@ -58,10 +58,22 @@ OUT="--base-paths src --build-base build_android_x86_64 --install-base install_a
 # 1) libyaml_vendor com P1.
 colcon build $OUT --packages-up-to libyaml_vendor --packages-ignore $SKIP \
   --cmake-args $TC $CORE_ARGS -DCMAKE_DISABLE_FIND_PACKAGE_yaml=ON $EH
-# 2) núcleo até rclcpp + mensagens do MVP.
-colcon build $OUT --packages-up-to rclcpp std_msgs geometry_msgs --packages-ignore $SKIP \
+# 2) núcleo até rclcpp + mensagens do MVP (sensor_msgs: CompressedImage das câmeras).
+colcon build $OUT --packages-up-to rclcpp std_msgs geometry_msgs sensor_msgs --packages-ignore $SKIP \
   --cmake-args $TC $CORE_ARGS $EH
 # 3) mensagens do simulador: sirv_msgs (puxa diagnostic_msgs). Sem Python/Rust (SKIP).
 colcon build --base-paths src "$SIRV_BASE" --build-base build_android_x86_64 \
   --install-base install_android_x86_64 --packages-up-to sirv_msgs \
   --packages-ignore $SKIP --cmake-args $TC $CORE_ARGS $EH
+# 4) libjpeg-turbo estática (decodificação das câmeras), páginas de 16 KB, no
+#    prefixo libjpeg_turbo do install Android (sem .so; só libturbojpeg.a).
+JT=/ws/third_party/libjpeg-turbo
+JI=/ws/ros2_src/install_android_x86_64/libjpeg_turbo
+cmake -S "$JT" -B /ws/third_party/build_jpeg_android_x86_64 $TC \
+  -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX="$JI" \
+  -DENABLE_SHARED=OFF -DENABLE_STATIC=ON -DWITH_TURBOJPEG=ON -DWITH_JAVA=OFF \
+  -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
+  -DCMAKE_EXE_LINKER_FLAGS=-Wl,-z,max-page-size=16384 \
+  -DCMAKE_SHARED_LINKER_FLAGS=-Wl,-z,max-page-size=16384
+cmake --build /ws/third_party/build_jpeg_android_x86_64 -j"$(nproc)"
+cmake --install /ws/third_party/build_jpeg_android_x86_64

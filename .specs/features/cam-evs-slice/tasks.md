@@ -299,8 +299,8 @@ T13 → T14 → T15 → T16
 
 **Done when**:
 
-- [ ] `install_android_x86_64/sensor_msgs` e a `libturbojpeg.a` x86_64 existem
-- [ ] `build-bridge.sh` passa sem lib versionada (`llvm-readelf -d`)
+- [x] `install_android_x86_64/sensor_msgs` e a `libturbojpeg.a` x86_64 existem
+- [x] `build-bridge.sh` passa sem lib versionada (`llvm-readelf -d`)
 
 **Tests**: none
 **Gate**: build
