@@ -161,7 +161,7 @@ O CalibDroid (AD-016, AD-027) e o runtime AVM consomem as 4 câmeras fisheye pel
 | Requirement ID | Story | AC | Phase | Status |
 | -------------- | ----- | -- | ----- | ------ |
 | CAM-01 | P1: 4 câmeras no EVS | 1 | Tasks | In Progress |
-| CAM-02 | P1: 4 câmeras no EVS | 2 | Design | Pending |
+| CAM-02 | P1: 4 câmeras no EVS | 2 | Tasks | In Progress |
 | CAM-03 | P1: 4 câmeras no EVS | 3 | Tasks | In Progress |
 | CAM-04 | P1: 4 câmeras no EVS | 4 | Tasks | In Progress |
 | CAM-05 | P1: 4 câmeras no EVS | 5 | Design | Pending |
@@ -178,7 +178,7 @@ O CalibDroid (AD-016, AD-027) e o runtime AVM consomem as 4 câmeras fisheye pel
 | CAM-16 | P2: Câmeras no mapa | 1 | Tasks | In Progress |
 | CAM-17 | P2: Câmeras no mapa | 2 | Tasks | In Progress |
 | CAM-18 | P2: Câmeras no mapa | 3 | Tasks | In Progress |
-| CAM-19 | P2: Instalação reversível | 1 | Design | Pending |
+| CAM-19 | P2: Instalação reversível | 1 | Tasks | In Progress |
 | CAM-20 | P2: Instalação reversível | 2 | Design | Pending |
 | CAM-21 | P2: Instalação reversível | 3 | Design | Pending |
 | CAM-22 | Edge: loop do bag | - | Tasks | In Progress |

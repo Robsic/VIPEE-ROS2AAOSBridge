@@ -1,0 +1,25 @@
+// vipee_evs_probe: headless EVS client for the cam-evs-slice tests.
+// Synced to device/generic/car/emulator/vipee_evs_probe by tools/emu/evs-sync.sh;
+// not in PRODUCT_PACKAGES, pushed by tools/emu/test-cam.sh.
+
+package {
+    default_applicable_licenses: ["Android-Apache-2.0"],
+}
+
+cc_binary {
+    name: "vipee_evs_probe",
+    defaults: ["android.hardware.graphics.common-ndk_static"],
+    vendor: true,
+    srcs: ["vipee_evs_probe.cpp"],
+    static_libs: [
+        "android.hardware.automotive.evs-V2-ndk",
+        "android.hardware.common-V2-ndk",
+    ],
+    shared_libs: [
+        "libbinder_ndk",
+    ],
+    cflags: [
+        "-Wall",
+        "-Werror",
+    ],
+}

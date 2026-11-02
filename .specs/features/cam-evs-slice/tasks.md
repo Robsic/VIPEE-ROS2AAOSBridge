@@ -94,9 +94,9 @@ T13 → T14 → T15 → T16
 
 **Done when**:
 
-- [ ] Build na VM (`vm_m.sh vipee_evs_probe`) sem erro, com o ok do usuário
-- [ ] No emulador atual (MP4), `vipee_evs_probe --list` mostra `cam_front`..`cam_right` e `vipee_evs_probe 5 cam_front` conta quadros 1280×720
-- [ ] Doxygen no topo do arquivo (uso, saída, códigos de saída)
+- [x] Build na VM (`vm_m.sh vipee_evs_probe`) sem erro, com o ok do usuário
+- [x] No emulador atual (MP4), `vipee_evs_probe --list` mostra `cam_front`..`cam_right` e `vipee_evs_probe 5 cam_front` conta quadros 1280×720
+- [x] Doxygen no topo do arquivo (uso, saída, códigos de saída)
 
 **Tests**: integration
 **Gate**: full
