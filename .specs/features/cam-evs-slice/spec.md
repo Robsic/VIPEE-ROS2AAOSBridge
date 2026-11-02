@@ -164,10 +164,10 @@ O CalibDroid (AD-016, AD-027) e o runtime AVM consomem as 4 câmeras fisheye pel
 | CAM-02 | P1: 4 câmeras no EVS | 2 | Tasks | Implemented |
 | CAM-03 | P1: 4 câmeras no EVS | 3 | Tasks | Implemented |
 | CAM-04 | P1: 4 câmeras no EVS | 4 | Tasks | In Progress |
-| CAM-05 | P1: 4 câmeras no EVS | 5 | Design | Pending |
+| CAM-05 | P1: 4 câmeras no EVS | 5 | Tasks | Implemented |
 | CAM-06 | P1: Sem dado não congela | 1 | Tasks | Implemented |
 | CAM-07 | P1: Sem dado não congela | 2 | Tasks | Implemented |
-| CAM-08 | P1: Sem dado não congela | 3 | Design | Pending |
+| CAM-08 | P1: Sem dado não congela | 3 | Tasks | Implemented |
 | CAM-09 | P1: Quadro inválido | 1 | Tasks | Implemented |
 | CAM-10 | P1: Quadro inválido | 2 | Tasks | Implemented |
 | CAM-11 | P1: Quadro inválido | 3 | Tasks | Implemented |

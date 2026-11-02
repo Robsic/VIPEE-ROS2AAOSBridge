@@ -450,7 +450,7 @@ T13 → T14 → T15 → T16
 
 **Done when**:
 
-- [ ] `tools/emu/test-e2e.sh` passa com as câmeras ligadas (latência ≤ 200 ms, dado velho ≤ 600 ms)
+- [x] `tools/emu/test-e2e.sh` passa com as câmeras ligadas (latência ≤ 200 ms, dado velho ≤ 600 ms)
 
 **Tests**: e2e
 **Gate**: full

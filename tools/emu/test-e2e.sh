@@ -5,6 +5,8 @@
 #   2. simulador mudo ➔ as 4 UNAVAILABLE em ≤ 600 ms e STALE no logcat
 #   3. alavanca 'P' dá GEAR_PARK com o mapa do CAT793F; com o do Commander a
 #      mesma telemetria dá a seleção derivada (DRIVE), sem recompilar
+# Com as 4 câmeras do fake_sim ligadas o tempo todo (cam-evs-slice, CAM-05,
+# CAM-08): os critérios valem com vídeo, e no fim o STATS das 4 tem quadros.
 # Pré-requisito: install-vendor.sh com o VHAL; Wi-Fi do emulador ligado.
 # A latência medida no host inclui o adb (limite superior da real).
 set -euo pipefail
@@ -16,13 +18,16 @@ VHAL=android.hardware.automotive.vehicle.IVehicle/default
 SPEED=0x11600207 GEAR_SEL=0x11400400 CUR_GEAR=0x11400401 BRAKE=0x11200402
 SIM=vipee_e2e_sim
 STATE_DIR="$(mktemp -d)"
+BAG="${BAG:-$HOME/rosbags/rosbag2_calibration_2026_10_01}"
+POS="front rear left right"
+CAMS='"cameras": {"front": "ok", "rear": "ok", "left": "ok", "right": "ok"}'
 
 fail() { echo "FAIL: $*" >&2; exit 1; }
 sh() { "$ADB" shell "$@" | tr -d '\r'; }
 get() { sh cmd car_service get-property-value "$1" 2>&1; }
 ms() { date +%s%3N; }
-state() {  # escrita atômica: o fake_sim relê pelo mtime
-  echo "$1" > "$STATE_DIR/s.tmp" && mv "$STATE_DIR/s.tmp" "$STATE_DIR/state.json"
+state() {  # escrita atômica: o fake_sim relê pelo mtime; câmeras sempre ok
+  echo "${1%\}}, $CAMS}" > "$STATE_DIR/s.tmp" && mv "$STATE_DIR/s.tmp" "$STATE_DIR/state.json"
 }
 stop_sim() { docker rm -f "$SIM" >/dev/null 2>&1 || true; }
 trap stop_sim EXIT
@@ -37,7 +42,28 @@ start_sim() {  # $1: namespace do veículo
     vipee/ros2-jazzy-android bash -c "
       source /opt/ros/jazzy/setup.bash
       source /ws/ros_test/install_sirv/setup.bash
-      exec python3 /emu/fake_sim.py $1 /state/state.json" >/dev/null
+      exec python3 /emu/fake_sim.py $1 /state/state.json /state" >/dev/null
+}
+
+# Um JPEG 1280x720 por câmera, tirado do bag de calibração, para o fake_sim.
+frames() {
+  docker run --rm --entrypoint '' --user "$(id -u):$(id -g)" \
+    -v "$BAG:/bag:ro" -v "$HERE:/emu:ro" -v "$STATE_DIR:/out" \
+    vipee/ros2-jazzy-android bash -c \
+    "source /opt/ros/jazzy/setup.bash && python3 /emu/extract_frames.py /bag /out" >/dev/null
+}
+
+cam_stats() {
+  # As 4 câmeras entregaram quadros: STATS com frames > 0 de cada uma.
+  local p end=$(($(date +%s) + 15))
+  for p in $POS; do
+    until sh logcat -d -s vipee_bridge | grep -q " CAM $p STATS frames=[1-9]"; do
+      [ "$(date +%s)" -gt $end ] && fail "câmeras: sem STATS com quadros de $p"
+      sleep 1
+    done
+  done
+  sh logcat -d -s vipee_bridge | grep ' STATS ' | tail -4
+  echo "4. câmeras: OK (STATS com quadros das 4)"
 }
 
 # Espera, no device, até o get casar o padrão; devolve o tempo no host (ms).
@@ -121,6 +147,7 @@ maps() {
 
 [ "$(sh cmd wifi status | head -1)" = "Wifi is enabled" ] ||
   fail "Wi-Fi do emulador desligado: adb shell cmd wifi set-wifi-enabled enabled"
+frames
 state '{"speed": 0.0, "gear": 2, "lever": 68}'
 start_sim cat793f
 sleep 3  # contêiner escutando a 7400 antes da partida do bridge
@@ -132,6 +159,7 @@ stale
 state '{"speed": 0.0, "gear": 2, "lever": 68}'
 maps
 vehicle cat793f
+cam_stats
 sh logcat -d -b all | grep 'avc: *denied' |
   grep -E 'scontext=u:r:(vendor_vipee_ros2|hal_vehicle_default):' &&
   fail "negações SELinux"
