@@ -1,6 +1,9 @@
 #include <cstdlib>
+#include <cstring>
 #include <exception>
 #include <memory>
+#include <string>
+#include <vector>
 
 #include "rclcpp/rclcpp.hpp"
 #include "vipee_bridge/bridge_node.h"
@@ -60,11 +63,40 @@ class PlatformLogger : public vipee::Logger {
   }
 };
 
+void logError(const char* what) {
+#ifdef __ANDROID__
+  __android_log_print(ANDROID_LOG_ERROR, "vipee_bridge", "%s", what);
+#else
+  std::fprintf(stderr, "vipee_bridge: %s\n", what);
+#endif
+}
+
+// CTS-23: an unreadable map file must not crash-loop the service. rcl refuses
+// it inside init; init again without "--params-file <path>": the node then
+// has no map, refuses it and reports MAP_INVALID on the four properties.
+void initRclcpp(int argc, char** argv) {
+  try {
+    rclcpp::init(argc, argv);
+    return;
+  } catch (const std::exception& e) {
+    logError(e.what());
+  }
+  std::vector<char*> args;
+  for (int i = 0; i < argc; ++i) {
+    if (std::strcmp(argv[i], "--params-file") == 0) {
+      ++i;  // also skip the path
+      continue;
+    }
+    args.push_back(argv[i]);
+  }
+  rclcpp::init(static_cast<int>(args.size()), args.data());
+}
+
 }  // namespace
 
 int main(int argc, char** argv) {
   try {
-    rclcpp::init(argc, argv);
+    initRclcpp(argc, argv);
     const char* path = std::getenv("VIPEE_VHAL_SOCKET");
     PlatformLogger logger;
     auto node = std::make_shared<vipee::BridgeNode>(
@@ -74,12 +106,7 @@ int main(int argc, char** argv) {
     executor.spin();
     rclcpp::shutdown();
   } catch (const std::exception& e) {
-#ifdef __ANDROID__
-    __android_log_print(ANDROID_LOG_ERROR, "vipee_bridge", "fatal: %s",
-                        e.what());
-#else
-    std::fprintf(stderr, "vipee_bridge: fatal: %s\n", e.what());
-#endif
+    logError((std::string("fatal: ") + e.what()).c_str());
     return 1;
   }
   return 0;
