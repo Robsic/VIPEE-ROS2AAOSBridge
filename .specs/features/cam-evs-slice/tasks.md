@@ -274,8 +274,8 @@ T13 → T14 → T15 → T16
 
 **Done when**:
 
-- [ ] Testes com sink e logger fakes: quadro válido escrito uma vez com os bytes YUYV certos; sem quadro novo, `tick` não escreve nada; `STALE` em `stale_ms + 1`, não em `stale_ms`; `LIVE` no quadro seguinte; descarte não renova o prazo; `DROP` logado uma vez por motivo e de novo quando muda; `write` falha ➔ `DEVICE_UNAVAILABLE` uma vez e `open` tentado de novo só depois de 1 s; `open` ok ➔ `DEVICE_OK`; `rx` com `header.stamp` voltando (loop do bag) não muda nada; p95 de latência calculado
-- [ ] Gate quick passa; build gate da fase 2 (clang-format, clang-tidy nos arquivos tocados)
+- [x] Testes com sink e logger fakes: quadro válido escrito uma vez com os bytes YUYV certos; sem quadro novo, `tick` não escreve nada; `STALE` em `stale_ms + 1`, não em `stale_ms`; `LIVE` no quadro seguinte; descarte não renova o prazo; `DROP` logado uma vez por motivo e de novo quando muda; `write` falha ➔ `DEVICE_UNAVAILABLE` uma vez e `open` tentado de novo só depois de 1 s; `open` ok ➔ `DEVICE_OK`; `rx` com `header.stamp` voltando (loop do bag) não muda nada; p95 de latência calculado
+- [x] Gate quick passa; build gate da fase 2 (clang-format, clang-tidy nos arquivos tocados)
 
 **Tests**: unit
 **Gate**: quick
