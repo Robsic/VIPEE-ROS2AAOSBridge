@@ -425,8 +425,8 @@ T13 → T14 → T15 → T16
 
 **Done when**:
 
-- [ ] `tools/emu/test-cam.sh` passa inteiro, com o ok do usuário para usar o emulador
-- [ ] Zero `avc: denied` nos domínios da ponte, da HAL EVS e do `vendor_modprobe`
+- [x] `tools/emu/test-cam.sh` passa inteiro, com o ok do usuário para usar o emulador
+- [x] Zero `avc: denied` nos domínios da ponte, da HAL EVS e do `vendor_modprobe`
 
 **Tests**: e2e
 **Gate**: full
