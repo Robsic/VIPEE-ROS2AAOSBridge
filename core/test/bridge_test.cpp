@@ -470,6 +470,7 @@ TEST_F(BridgeTest, ReasonOnlyChangeIsLogged) {
   b.onTelemetry({0.0, 20}, kT0);  // gear out of -9..9
   ASSERT_EQ(log_.of(prop::kCurrentGear).back().reason, Reason::kUnknownGear);
   b.tick(kT0 + 501 * kMs);  // telemetry stale, status stays UNAVAILABLE
+  ASSERT_FALSE(log_.of(prop::kCurrentGear).empty());
   const LogEntry e = log_.of(prop::kCurrentGear).back();
   EXPECT_EQ(e.status, Status::kUnavailable);
   EXPECT_EQ(e.reason, Reason::kStale);
