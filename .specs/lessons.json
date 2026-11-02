@@ -1,0 +1,117 @@
+{
+  "schema": 1,
+  "promote_threshold": 2,
+  "window_days": 45,
+  "quarantine_threshold": 2,
+  "next_id": 7,
+  "lessons": [
+    {
+      "id": "L-001",
+      "key": "surviving_mutant::exercise every member of an allow list in unit tests not a representative subset",
+      "text": "Exercise every member of an allow-list in unit tests, not a representative subset",
+      "signal": "surviving_mutant",
+      "scope": "vhal",
+      "status": "candidate",
+      "features": [
+        "ct-speed-slice"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "M21 android/vhal/include/vipee/vhal_ingest.h:140 (vhal)"
+      ],
+      "created": "2026-11-02T10:31:07Z",
+      "last_seen": "2026-11-02T10:31:07Z"
+    },
+    {
+      "id": "L-002",
+      "key": "surviving_mutant::test each input that refreshes a liveness watchdog on its own not only the heartbeat",
+      "text": "Test each input that refreshes a liveness watchdog on its own, not only the heartbeat",
+      "signal": "surviving_mutant",
+      "scope": "vhal",
+      "status": "candidate",
+      "features": [
+        "ct-speed-slice"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "M18 android/vhal/include/vipee/vhal_ingest.h:149 (vhal)"
+      ],
+      "created": "2026-11-02T10:31:07Z",
+      "last_seen": "2026-11-02T10:31:07Z"
+    },
+    {
+      "id": "L-003",
+      "key": "surviving_mutant::test the first event after a reconnect or reset against rate limiting and deduplication state",
+      "text": "Test the first event after a reconnect or reset against rate-limiting and deduplication state",
+      "signal": "surviving_mutant",
+      "scope": "vhal",
+      "status": "candidate",
+      "features": [
+        "ct-speed-slice"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "M20 android/vhal/include/vipee/vhal_ingest.h:168 (vhal)"
+      ],
+      "created": "2026-11-02T10:31:07Z",
+      "last_seen": "2026-11-02T10:31:07Z"
+    },
+    {
+      "id": "L-004",
+      "key": "ac_gap::cover every failure branch an ac lists including errors raised during framework startup before the app s own handling runs",
+      "text": "Cover every failure branch an AC lists, including errors raised during framework startup before the app's own handling runs",
+      "signal": "ac_gap",
+      "scope": "ros",
+      "status": "candidate",
+      "features": [
+        "ct-speed-slice"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "CTS-23 ros/vipee_bridge/src/main.cpp:172 (ros)"
+      ],
+      "created": "2026-11-02T10:31:07Z",
+      "last_seen": "2026-11-02T10:31:07Z"
+    },
+    {
+      "id": "L-005",
+      "key": "ac_gap::end to end checks of a success criterion that names several signals must assert every signal not one representative",
+      "text": "End-to-end checks of a success criterion that names several signals must assert every signal, not one representative",
+      "signal": "ac_gap",
+      "scope": "e2e",
+      "status": "candidate",
+      "features": [
+        "ct-speed-slice"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "CTS-10 tools/emu/test-e2e.sh:63 (e2e)"
+      ],
+      "created": "2026-11-02T10:31:07Z",
+      "last_seen": "2026-11-02T10:31:07Z"
+    },
+    {
+      "id": "L-006",
+      "key": "spec_precision_gap::when status and reason are separate fields the spec must say whether a reason only change is a logged transition",
+      "text": "When status and reason are separate fields, the spec must say whether a reason-only change is a logged transition",
+      "signal": "spec_precision_gap",
+      "scope": "core",
+      "status": "candidate",
+      "features": [
+        "ct-speed-slice"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "CTS-19 M7 core/src/bridge.cpp:95 (core)"
+      ],
+      "created": "2026-11-02T10:31:07Z",
+      "last_seen": "2026-11-02T10:31:07Z"
+    }
+  ]
+}
