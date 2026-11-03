@@ -16,6 +16,7 @@
 #define VIPEE_VHAL_INGEST_H_
 
 #include <algorithm>
+#include <array>
 #include <cstddef>
 #include <cstdint>
 
@@ -28,6 +29,26 @@ constexpr int32_t kPropPerfVehicleSpeed = 0x11600207;
 constexpr int32_t kPropGearSelection = 0x11400400;
 constexpr int32_t kPropCurrentGear = 0x11400401;
 constexpr int32_t kPropParkingBrakeOn = 0x11200402;
+
+/// @brief Properties fed by the bridge socket; the watchdog and a lost peer
+///        mark exactly these UNAVAILABLE.
+constexpr std::array<int32_t, 4> kBridgeProps = {
+    kPropPerfVehicleSpeed, kPropGearSelection, kPropCurrentGear,
+    kPropParkingBrakeOn};
+
+/// @brief CalibDroid session trigger (CalibDroid AD-010; AD-018): vendor
+///        GLOBAL INT32 0x21402a11, READ_WRITE, ON_CHANGE, initial 0.
+constexpr int32_t kPropCalibTrigger = 0x21402a11;
+
+/**
+ * @brief Whether a property is local to the VHAL (AD-018): no ROS source,
+ *        AVAILABLE from boot, written by setValues, outside the watchdog.
+ * @param prop_id VehicleProperty id.
+ * @return true only for kPropCalibTrigger.
+ */
+constexpr bool isLocalProp(int32_t prop_id) {
+  return prop_id == kPropCalibTrigger;
+}
 
 /// @brief Silence after which the peer is treated as dead (design: 300 ms).
 constexpr int64_t kWatchdogNs = 300LL * 1000 * 1000;
@@ -136,8 +157,8 @@ class VhalIngest {
       res.drop = DropReason::kUnknownKind;
       return res;
     }
-    if (r.prop_id != kPropPerfVehicleSpeed && r.prop_id != kPropGearSelection &&
-        r.prop_id != kPropCurrentGear && r.prop_id != kPropParkingBrakeOn) {
+    if (std::find(kBridgeProps.begin(), kBridgeProps.end(), r.prop_id) ==
+        kBridgeProps.end()) {
       res.drop = DropReason::kUnknownProp;
       return res;
     }

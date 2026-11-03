@@ -28,13 +28,18 @@ using ::android::hardware::automotive::vehicle::IVehicleHardware;
 
 /**
  * @brief Serves PERF_VEHICLE_SPEED, GEAR_SELECTION, CURRENT_GEAR and
- *        PARKING_BRAKE_ON, all READ, from the bridge socket.
+ *        PARKING_BRAKE_ON, all READ, from the bridge socket, plus the local
+ *        CalibDroid trigger.
  *
  * Holds the last value and status of each property in a VehiclePropertyStore
  * and forwards change events. The bridge decides value and status; this class
  * only stores them, forwards every speed sample (the client decimates) and
  * marks the four
  * UNAVAILABLE when the peer closes or is silent for kWatchdogNs (300 ms).
+ *
+ * Also serves kPropCalibTrigger (READ_WRITE), local to the VHAL: AVAILABLE
+ * with its JSON default from boot, written only by setValues, outside the
+ * watchdog (AD-018).
  *
  * @note No platform properties are declared (AD-014).
  */
@@ -58,7 +63,9 @@ class VipeeVehicleHardware final : public IVehicleHardware {
 
   std::vector<aidlvhal::VehiclePropConfig> getAllPropertyConfigs()
       const override;
-  /// @return ACCESS_DENIED for every request (all properties are READ).
+  /// @return Per request: OK after storing a local property (AVAILABLE; an
+  ///         ON_CHANGE event if the value changed, AD-018); ACCESS_DENIED
+  ///         for the bridge-fed properties.
   aidlvhal::StatusCode setValues(
       std::shared_ptr<const SetValuesCallback> callback,
       const std::vector<aidlvhal::SetValueRequest>& requests) override;

@@ -65,6 +65,17 @@ VipeeVehicleHardware::VipeeVehicleHardware(const std::string& configPath)
   for (const auto& [propId, decl] : *configs) {
     mConfigs.push_back(decl.config);
     mStore->registerProperty(decl.config);
+    if (isLocalProp(propId)) {  // AD-018: AVAILABLE with the JSON default
+      auto v = mPool->obtain(aidlvhal::VehiclePropValue{
+          .prop = propId, .value = decl.initialValue});
+      if (auto res = mStore->writeValue(std::move(v), /*updateStatus=*/true,
+                                        VehiclePropertyStore::EventMode::NEVER,
+                                        /*useCurrentTimestamp=*/true);
+          !res.ok()) {
+        LOG_ALWAYS_FATAL("cannot seed prop 0x%x: %s", propId,
+                         res.error().message().c_str());
+      }
+    }
   }
   mStore->setOnValuesChangeCallback(
       [this](std::vector<aidlvhal::VehiclePropValue> values) {
@@ -183,8 +194,7 @@ void VipeeVehicleHardware::writeRecord(const WireRecord& in) {
 }
 
 void VipeeVehicleHardware::markAllUnavailable(int64_t ts) {
-  for (int32_t prop : {kPropPerfVehicleSpeed, kPropGearSelection,
-                       kPropCurrentGear, kPropParkingBrakeOn}) {
+  for (int32_t prop : kBridgeProps) {  // never the local ones (AD-018)
     WireRecord r{};
     r.prop_id = prop;
     r.status = static_cast<int32_t>(VehiclePropertyStatus::UNAVAILABLE);
@@ -203,8 +213,17 @@ StatusCode VipeeVehicleHardware::setValues(
     const std::vector<aidlvhal::SetValueRequest>& requests) {
   std::vector<SetValueResult> results;
   for (const auto& req : requests) {
-    results.push_back(
-        {.requestId = req.requestId, .status = StatusCode::ACCESS_DENIED});
+    StatusCode st = StatusCode::ACCESS_DENIED;
+    if (isLocalProp(req.value.prop)) {  // AD-018: store, ON_CHANGE event
+      auto v = mPool->obtain(req.value);
+      v->status = VehiclePropertyStatus::AVAILABLE;
+      auto res =
+          mStore->writeValue(std::move(v), /*updateStatus=*/true,
+                             VehiclePropertyStore::EventMode::ON_VALUE_CHANGE,
+                             /*useCurrentTimestamp=*/true);
+      st = res.ok() ? StatusCode::OK : getErrorCode(res);
+    }
+    results.push_back({.requestId = req.requestId, .status = st});
   }
   (*callback)(std::move(results));
   return StatusCode::OK;
@@ -257,7 +276,7 @@ void VipeeVehicleHardware::registerOnPropertyChangeEvent(
 
 void VipeeVehicleHardware::registerOnPropertySetErrorEvent(
     std::unique_ptr<const PropertySetErrorCallback>) {
-  // All properties are READ: no asynchronous set errors exist.
+  // setValues answers synchronously: no asynchronous set errors exist.
 }
 
 void VipeeVehicleHardware::setSpeedRate(int32_t propId, float hz) {

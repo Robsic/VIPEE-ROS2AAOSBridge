@@ -2,6 +2,7 @@
 
 #include <gtest/gtest.h>
 
+#include <algorithm>
 #include <cstdint>
 
 namespace vipee {
@@ -12,6 +13,7 @@ constexpr int32_t kSpeed = 0x11600207;
 constexpr int32_t kGearSelection = 0x11400400;
 constexpr int32_t kCurrentGear = 0x11400401;
 constexpr int32_t kParkingBrake = 0x11200402;
+constexpr int32_t kCalibTrigger = 0x21402a11;  // CalibDroid session (AD-018)
 
 // NOLINTNEXTLINE(bugprone-easily-swappable-parameters)
 WireRecord update(int32_t prop, int32_t status, int64_t ts) {
@@ -177,6 +179,34 @@ TEST(VhalGet, AvailableValueIsKeptAsIs) {
   EXPECT_EQ(out.float_value, -3.5f);
   EXPECT_EQ(out.status, 0);
   EXPECT_EQ(out.timestamp_ns, 7);
+}
+
+// AD-018: the CalibDroid trigger is local to the VHAL: settable, never fed
+// by the bridge and never marked UNAVAILABLE by the watchdog.
+TEST(VhalLocal, OnlyTheCalibDroidTriggerIsLocal) {
+  EXPECT_TRUE(isLocalProp(kCalibTrigger));
+  for (int32_t p : {kSpeed, kGearSelection, kCurrentGear, kParkingBrake}) {
+    EXPECT_FALSE(isLocalProp(p)) << p;
+  }
+}
+
+TEST(VhalLocal, WatchdogMarksOnlyTheFourBridgeProperties) {
+  ASSERT_EQ(kBridgeProps.size(), 4u);
+  for (int32_t p : {kSpeed, kGearSelection, kCurrentGear, kParkingBrake}) {
+    EXPECT_NE(std::find(kBridgeProps.begin(), kBridgeProps.end(), p),
+              kBridgeProps.end())
+        << p;
+  }
+  EXPECT_EQ(std::find(kBridgeProps.begin(), kBridgeProps.end(), kCalibTrigger),
+            kBridgeProps.end());
+}
+
+TEST(VhalLocal, BridgeRecordForTheTriggerIsDropped) {
+  VhalIngest in;
+  in.onConnect(0);
+  const IngestResult r = feed(in, update(kCalibTrigger, 0, kMs), kMs);
+  EXPECT_EQ(r.action, IngestAction::kDrop);
+  EXPECT_EQ(r.drop, DropReason::kUnknownProp);
 }
 
 }  // namespace

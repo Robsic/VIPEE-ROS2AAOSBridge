@@ -42,6 +42,16 @@
         },
         {
             "property": "VehicleProperty::PARKING_BRAKE_ON"
+        },
+        {
+            "property": 557853201,
+            "defaultValue": {
+                "int32Values": [
+                    0
+                ]
+            },
+            "access": "VehiclePropertyAccess::READ_WRITE",
+            "changeMode": "VehiclePropertyChangeMode::ON_CHANGE"
         }
     ]
 }
