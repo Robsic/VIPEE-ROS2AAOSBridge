@@ -26,7 +26,7 @@
 #   device   - mapa com a câmera front em /dev/video99: DEVICE_UNAVAILABLE uma
 #              vez, o processo segue, as outras 3 >= 8 quadros/s e o VHAL
 #              entrega a velocidade do fake_sim (CAM-14, CAM-15)
-#   install  - evs-remove devolve os MP4; evs reinstala,
+#   install  - evs-remove devolve os 4 MP4 e para a evs-v4l2; evs reinstala,
 #              o probe volta a listar /dev/video10..13 e o CarEvsService usa
 #              /dev/video10..13 para FRONT/REAR/LEFT/RIGHTVIEW (CAM-19,
 #              CAM-20; dois reboots)
@@ -376,10 +376,15 @@ step_install() {
   stop_src
   "$HERE/../jazzy/install-vendor.sh" evs-remove
   boot
-  sh $PROBE --list | grep -qx 'CAMERA cam_front' || fail "evs-remove não devolveu os MP4"
+  local list d p t i=10
+  list="$(sh $PROBE --list)"
+  for p in $POS; do
+    echo "$list" | grep -qx "CAMERA cam_$p" || fail "evs-remove não devolveu cam_$p: $list"
+  done
+  [ "$(sh getprop init.svc.vendor.evs-v4l2)" != running ] ||
+    fail "evs-remove: vendor.evs-v4l2 ainda roda"
   "$HERE/../jazzy/install-vendor.sh" evs
   setup
-  local list d t i=10
   list="$(sh $PROBE --list)"
   for d in $DEVS; do
     echo "$list" | grep -qx "CAMERA $d" || fail "install: probe não lista $d: $list"
