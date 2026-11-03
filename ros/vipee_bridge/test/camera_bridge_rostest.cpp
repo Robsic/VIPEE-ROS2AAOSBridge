@@ -209,8 +209,11 @@ TEST_F(CameraBridgeTest, SilencedTopicGoesStaleWithoutNewFramesThenLive) {
   auto pub = CameraPublisher("front");
   pub->publish(Message(GrayJpeg(100)));
   ASSERT_TRUE(SpinUntil([&] { return sinks_["front"]->Count() == 1; }));
-  ASSERT_TRUE(
-      SpinUntil([&] { return camera_logger_.Count("CAM front STALE") == 1; }));
+  // Spec CAM-06: STALE after 500 ms, within 600 ms.
+  const auto first_write = Clock::now();
+  ASSERT_TRUE(SpinUntil(
+      [&] { return camera_logger_.Count("CAM front STALE") == 1; }, 600));
+  EXPECT_GE(Clock::now() - first_write, std::chrono::milliseconds(450));
   EXPECT_EQ(1u, sinks_["front"]->Count());
 
   pub->publish(Message(GrayJpeg(100)));
