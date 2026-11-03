@@ -55,5 +55,38 @@ TEST(V4l2SinkTest, WriteWithoutOpenFails) {
   EXPECT_FALSE(sink.isOpen());
 }
 
+// What VIDIOC_S_FMT returns when the driver takes the 1280x720 request as is.
+v4l2_pix_format Yuyv720() {
+  v4l2_pix_format f{};
+  f.pixelformat = V4L2_PIX_FMT_YUYV;
+  f.width = 1280;
+  f.height = 720;
+  return f;
+}
+
+TEST(V4l2SinkTest, ExactYuyvFormatIsAccepted) {
+  EXPECT_TRUE(v4l2FormatAccepted(Yuyv720(), 1280, 720));
+}
+
+TEST(V4l2SinkTest, DriverAdjustedFormatIsRefused) {
+  v4l2_pix_format taller = Yuyv720();
+  taller.height = 736;
+  EXPECT_FALSE(v4l2FormatAccepted(taller, 1280, 720));
+  v4l2_pix_format wider = Yuyv720();
+  wider.width = 1288;
+  EXPECT_FALSE(v4l2FormatAccepted(wider, 1280, 720));
+  v4l2_pix_format uyvy = Yuyv720();
+  uyvy.pixelformat = V4L2_PIX_FMT_UYVY;
+  EXPECT_FALSE(v4l2FormatAccepted(uyvy, 1280, 720));
+}
+
+TEST(V4l2SinkTest, OnlyAFullWriteIsComplete) {
+  const size_t len = size_t{1280} * 720 * 2;
+  EXPECT_TRUE(v4l2WriteComplete(static_cast<ssize_t>(len), len));
+  EXPECT_FALSE(v4l2WriteComplete(static_cast<ssize_t>(len) - 1, len));
+  EXPECT_FALSE(v4l2WriteComplete(0, len));
+  EXPECT_FALSE(v4l2WriteComplete(-1, len));
+}
+
 }  // namespace
 }  // namespace vipee

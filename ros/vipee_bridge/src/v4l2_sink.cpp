@@ -9,6 +9,16 @@
 
 namespace vipee {
 
+bool v4l2FormatAccepted(const v4l2_pix_format& got, int width, int height) {
+  return got.pixelformat == V4L2_PIX_FMT_YUYV &&
+         got.width == static_cast<__u32>(width) &&
+         got.height == static_cast<__u32>(height);
+}
+
+bool v4l2WriteComplete(ssize_t written, size_t len) {
+  return written == static_cast<ssize_t>(len);
+}
+
 V4l2Sink::V4l2Sink(const CameraConfig& config)
     : device_(config.device), width_(config.width), height_(config.height) {}
 
@@ -35,9 +45,7 @@ bool V4l2Sink::open() {
   // The driver may adjust the request; a different format would make the
   // reader see garbage, so anything but the exact request is a failure.
   if (ioctl(fd, VIDIOC_S_FMT, &f) < 0 ||
-      f.fmt.pix.pixelformat != V4L2_PIX_FMT_YUYV ||
-      f.fmt.pix.width != static_cast<__u32>(width_) ||
-      f.fmt.pix.height != static_cast<__u32>(height_)) {
+      !v4l2FormatAccepted(f.fmt.pix, width_, height_)) {
     ::close(fd);
     return false;
   }
@@ -51,7 +59,7 @@ bool V4l2Sink::write(const uint8_t* yuyv, size_t len) {
   do {
     n = ::write(fd_, yuyv, len);
   } while (n < 0 && errno == EINTR);
-  if (n != static_cast<ssize_t>(len)) {
+  if (!v4l2WriteComplete(n, len)) {
     close();
     return false;
   }
