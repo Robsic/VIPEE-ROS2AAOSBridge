@@ -223,6 +223,38 @@ TEST_F(CameraBridgeTest, SilencedTopicGoesStaleWithoutNewFramesThenLive) {
   EXPECT_EQ(2u, sinks_["front"]->Count());
 }
 
+TEST_F(CameraBridgeTest, InvalidFramesFasterThanTheTickStillGoStale) {
+  constexpr int kStaleMs = 500;  // cameras.*.stale_ms in maps/cat793f.yaml
+  auto pub = CameraPublisher("right");
+  pub->publish(Message(GrayJpeg(100)));
+  ASSERT_TRUE(SpinUntil([&] { return sinks_["right"]->Count() == 1; }));
+
+  // A non-JPEG frame every 20 ms, faster than the 50 ms tick period.
+  CompressedImage bad;
+  bad.format = "png";
+  bad.data = {1, 2, 3, 4};
+  const auto start = Clock::now();
+  auto next = start;
+  auto feed = [&] {
+    if (Clock::now() >= next) {
+      pub->publish(bad);
+      next += std::chrono::milliseconds(20);
+    }
+  };
+  EXPECT_TRUE(SpinUntil(
+      [&] {
+        feed();
+        return camera_logger_.Count("CAM right STALE") == 1;
+      },
+      kStaleMs + 200));
+  const auto end = start + std::chrono::milliseconds(kStaleMs + 300);
+  SpinUntil([&] {
+    feed();
+    return Clock::now() >= end;
+  });
+  EXPECT_EQ(1u, sinks_["right"]->Count());
+}
+
 TEST_F(CameraBridgeTest, BurstWithSlowSinkDeliversTheNewestFrame) {
   sinks_["left"]->delay_ms = 300;
   auto pub = CameraPublisher("left");
