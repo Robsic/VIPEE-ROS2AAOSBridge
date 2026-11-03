@@ -43,7 +43,12 @@ constexpr std::array<int32_t, 2> kDefaultResolution = {640, 480};
 
 // Arbitrary limit on number of graphics buffers allowed to be allocated
 // Safeguards against unreasonable resource consumption and provides a testable limit
-constexpr unsigned kMaxBuffersInFlight = 100;
+// VIPEE: 30, was 100. Each buffer is 1280x720 RGBA (~3.7 MB), so 100 is ~370 MB.
+// evsmanagerd asks for the sum of its clients' counts: CarEvsService 10
+// (kMaxNumFramesInFlight) + the probe 10 + avmd/other clients at the default
+// (1), so 30 covers every normal path. Requests above it are clamped, not
+// rejected (see setAvailableFrames_Locked).
+constexpr unsigned kMaxBuffersInFlight = 30;
 
 }  // namespace
 
@@ -549,8 +554,13 @@ bool EvsV4lCamera::setAvailableFrames_Locked(unsigned bufferCount) {
         return false;
     }
     if (bufferCount > kMaxBuffersInFlight) {
-        LOG(ERROR) << "Rejecting buffer request in excess of internal limit";
-        return false;
+        // VIPEE: CarEvsService leaks one stream client (10 buffers) per
+        // R-while-ACTIVE sequence (StreamHandler.cpp:122-205, StateMachine.java
+        // :1002-1010,1104-1117,1202-1261); rejecting made the rear view fail
+        // for good after 10 leaks. Clamp and keep the bug visible in logcat.
+        LOG(WARNING) << "Buffer request of " << bufferCount << " exceeds the limit; granting "
+                     << kMaxBuffersInFlight << " (AOSP CarEvsService client leak?)";
+        bufferCount = kMaxBuffersInFlight;
     }
 
     // Is an increase required?
