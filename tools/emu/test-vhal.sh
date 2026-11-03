@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 # Gate de integração do VHAL da ponte no emulador (T13–T16). Pré-requisito:
 # tools/jazzy/install-vendor.sh com o vipee-vehicle-service. Etapas:
-#   absent  - sem o vipee_bridge: CarService no ar e as 4 NOT_AVAILABLE (T13)
+#   absent  - sem o vipee_bridge: CarService no ar e as 4 UNAVAILABLE (T13)
 #   live    - telemetria fake do host: valores lidos; SIGSTOP no bridge leva às
-#             4 NOT_AVAILABLE pelo watchdog (≤ 300 ms); SIGCONT volta (T14)
+#             4 UNAVAILABLE pelo watchdog (≤ 300 ms); SIGCONT volta (T14)
 #   rate    - telemetria a ~66 Hz gera pelo menos a taxa assinada de eventos
 #             (T15; contrato do IVehicleHardware com VUR desligado)
 #   tools/emu/test-vhal.sh [absent|live|rate]...   # padrão: todas
@@ -20,15 +20,17 @@ PUB=vipee_test_pub
 fail() { echo "FAIL: $*" >&2; exit 1; }
 sh() { "$ADB" shell "$@" | tr -d '\r'; }
 get() { sh cmd car_service get-property-value "$1" 2>&1; }
-# O shell do car_service imprime a mesma mensagem para qualquer erro; o status
-# guardado (UNAVAILABLE ➔ NOT_AVAILABLE no get) vem do dump do VHAL.
-stored_status() {
-  sh dumpsys $VHAL | grep "prop: $(($1)), " | sed -n 's/.*status: \([A-Z_]*\).*/\1/p'
+# AD-017: sem dado o get é OK com status UNAVAILABLE e valor zero do formato,
+# nunca o último valor real. Saída do shell (HalPropValue.toString):
+# "SystemStatus: UNAVAILABLE(0x1), VendorStatus: 0, Value: ...".
+unavail_re() {
+  case $1 in
+    "$SPEED") echo 'SystemStatus: UNAVAILABLE.*Value: 0\.0 METER_PER_SEC' ;;
+    "$BRAKE") echo 'SystemStatus: UNAVAILABLE.*Value: FALSE' ;;
+    *) echo 'SystemStatus: UNAVAILABLE.*Value: GEAR_UNKNOWN\(0x0\)' ;;
+  esac
 }
-not_available() {
-  get "$1" | grep -q 'Can not get property value' &&
-    [ "$(stored_status "$1")" = UNAVAILABLE ]
-}
+unavailable() { get "$1" | grep -qE "$(unavail_re "$1")"; }
 
 boot() {
   "$ADB" wait-for-device
@@ -86,7 +88,7 @@ absent() {
   sh stop vipee_bridge
   sleep 1
   for p in $SPEED $GEAR_SEL $CUR_GEAR $BRAKE; do
-    not_available "$p" || fail "absent: $p não é NOT_AVAILABLE: $(get "$p")"
+    unavailable "$p" || fail "absent: $p não é UNAVAILABLE com zero: $(get "$p")"
   done
   echo "absent: OK"
 }
@@ -98,7 +100,7 @@ live() {
   wait_speed
   get $CUR_GEAR | grep -qE '\b32\b|0x20' || fail "live: CURRENT_GEAR != GEAR_2: $(get $CUR_GEAR)"
   get $GEAR_SEL | grep -qE '\b8\b|0x8' || fail "live: GEAR_SELECTION != DRIVE: $(get $GEAR_SEL)"
-  get $BRAKE | grep -qiE '\b0\b|false' || fail "live: PARKING_BRAKE_ON != 0: $(get $BRAKE)"
+  get $BRAKE | grep -qE 'SystemStatus: AVAILABLE.*Value: FALSE' || fail "live: PARKING_BRAKE_ON != 0: $(get $BRAKE)"
 
   # Watchdog: o init vê o processo vivo, mas parado; o VHAL tem de largar.
   sh logcat -c

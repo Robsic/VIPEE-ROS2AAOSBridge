@@ -17,6 +17,8 @@ WS="${WS:-$HOME/ros2_android_ws}"
 VHAL=android.hardware.automotive.vehicle.IVehicle/default
 SPEED=0x11600207 GEAR_SEL=0x11400400 CUR_GEAR=0x11400401 BRAKE=0x11200402
 SIM=vipee_e2e_sim
+# Status no get (HalPropValue.toString); UNAVAILABLE também é get OK (AD-017).
+OK='SystemStatus: AVAILABLE' NA='SystemStatus: UNAVAILABLE'
 STATE_DIR="$(mktemp -d)"
 BAG="${BAG:-$HOME/rosbags/rosbag2_calibration_2026_10_01}"
 POS="front rear left right"
@@ -104,10 +106,10 @@ latency() {
     else lever=78 sel='GEAR_NEUTRAL.0x1.' brake=false; fi
     state "{\"speed\": $(awk -v v=$v 'BEGIN{print v * 3.6}'), \"gear\": $g, \"lever\": $lever, \"handbrake\": $brake}"
     t=$(until_all 5 \
-      $SPEED "Value: ($v\\.0|$((v - 1))\\.99)[0-9]* METER_PER_SEC" \
-      $CUR_GEAR "Value: GEAR_$g\\(" \
-      $GEAR_SEL "Value: $sel" \
-      $BRAKE "Value: $(echo $brake | tr a-z A-Z)") ||
+      $SPEED "$OK.*Value: ($v\\.0|$((v - 1))\\.99)[0-9]* METER_PER_SEC" \
+      $CUR_GEAR "$OK.*Value: GEAR_$g\\(" \
+      $GEAR_SEL "$OK.*Value: $sel" \
+      $BRAKE "$OK.*Value: $(echo $brake | tr a-z A-Z)") ||
       fail "latência: leitura $k não apareceu: $(get $SPEED); $(get $CUR_GEAR); $(get $GEAR_SEL); $(get $BRAKE)"
     echo "  $v m/s, GEAR_$g, alavanca $lever, freio $brake em $t ms"
     [ "$t" -gt "$worst" ] && worst=$t
@@ -121,8 +123,10 @@ stale() {
   sh logcat -c
   state '{"speed": 7.2, "gear": 2, "lever": 68, "publish": false}'
   local t p
-  t=$(until_all 5 $SPEED 'Can not get' $CUR_GEAR 'Can not get' \
-    $GEAR_SEL 'Can not get' $BRAKE 'Can not get') ||
+  # AD-017: get OK com status UNAVAILABLE e valor zero, nunca o último real.
+  t=$(until_all 5 $SPEED "$NA.*Value: 0\\.0 METER_PER_SEC" \
+    $CUR_GEAR "$NA.*Value: GEAR_UNKNOWN\\(0x0\\)" \
+    $GEAR_SEL "$NA.*Value: GEAR_UNKNOWN\\(0x0\\)" $BRAKE "$NA.*Value: FALSE") ||
     fail "dado velho: alguma propriedade não ficou indisponível"
   for p in $SPEED $CUR_GEAR $GEAR_SEL $BRAKE; do
     sh logcat -d -s vipee_bridge | grep -q "0x${p#0x} UNAVAILABLE STALE" ||
