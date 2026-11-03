@@ -105,6 +105,15 @@ TEST(JpegYuyv, CompressedImageFormatNamingJpegIsAccepted) {
   expectYuyvMatchesPattern(out);
 }
 
+TEST(JpegYuyv, LargerInOneDimensionIsFrameSizeMismatch) {
+  for (const auto& jpeg :
+       {makeJpeg(kW, 800, TJSAMP_420), makeJpeg(1344, kH, TJSAMP_420)}) {
+    std::vector<uint8_t> out = {7, 7, 7};
+    EXPECT_EQ(decode("jpeg", jpeg, &out), DropReason::kFrameSizeMismatch);
+    EXPECT_EQ(out, (std::vector<uint8_t>{7, 7, 7}));
+  }
+}
+
 TEST(JpegYuyv, OtherSizeIsFrameSizeMismatchWithoutDecoding) {
   std::vector<uint8_t> out = {7, 7, 7};
   EXPECT_EQ(decode("jpeg", makeJpeg(480, 480, TJSAMP_420), &out),
