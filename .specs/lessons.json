@@ -3,7 +3,7 @@
   "promote_threshold": 2,
   "window_days": 45,
   "quarantine_threshold": 2,
-  "next_id": 15,
+  "next_id": 17,
   "lessons": [
     {
       "id": "L-001",
@@ -256,6 +256,42 @@
       ],
       "created": "2026-11-03T00:47:07Z",
       "last_seen": "2026-11-03T00:47:07Z"
+    },
+    {
+      "id": "L-015",
+      "key": "surviving_mutant::test a rejected input variant that the underlying library would otherwise accept a variant the library already refuses never reaches your own guard",
+      "text": "Test a rejected input variant that the underlying library would otherwise accept; a variant the library already refuses never reaches your own guard",
+      "signal": "surviving_mutant",
+      "scope": "decode",
+      "status": "candidate",
+      "features": [
+        "cam-evs-slice"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "X5 core/src/jpeg_yuyv.cpp:56 (decode)"
+      ],
+      "created": "2026-11-03T01:09:03Z",
+      "last_seen": "2026-11-03T01:09:03Z"
+    },
+    {
+      "id": "L-016",
+      "key": "surviving_mutant::test percentile and rank math at sample counts where floor and ceil rounding differ including n 1",
+      "text": "Test percentile and rank math at sample counts where floor and ceil rounding differ, including n = 1",
+      "signal": "surviving_mutant",
+      "scope": "stats",
+      "status": "candidate",
+      "features": [
+        "cam-evs-slice"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "X3 core/src/camera_channel.cpp:84 (stats)"
+      ],
+      "created": "2026-11-03T01:09:03Z",
+      "last_seen": "2026-11-03T01:09:03Z"
     }
   ]
 }

@@ -98,6 +98,18 @@ Seen once or not yet corroborated. Tracked, not trusted.
 - evidence: W1 ros/vipee_bridge/src/camera_bridge.cpp:16 (ros-tests)
 - last seen: 2026-11-03T00:47:07Z
 
+### L-015 - Test a rejected input variant that the underlying library would otherwise accept; a variant the library already refuses never reaches your own guard
+- signal: `surviving_mutant` · recurrence: 1 feature(s) · scope: `decode` · harmful: 0
+- features: cam-evs-slice
+- evidence: X5 core/src/jpeg_yuyv.cpp:56 (decode)
+- last seen: 2026-11-03T01:09:03Z
+
+### L-016 - Test percentile and rank math at sample counts where floor and ceil rounding differ, including n = 1
+- signal: `surviving_mutant` · recurrence: 1 feature(s) · scope: `stats` · harmful: 0
+- features: cam-evs-slice
+- evidence: X3 core/src/camera_channel.cpp:84 (stats)
+- last seen: 2026-11-03T01:09:03Z
+
 ## Quarantined (failed when applied - ignore)
 
 A confirmed lesson that recurred alongside failure. Kept for the maintainer to review.
