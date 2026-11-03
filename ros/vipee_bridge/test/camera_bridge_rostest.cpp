@@ -214,8 +214,12 @@ TEST_F(CameraBridgeTest, SilencedTopicGoesStaleWithoutNewFramesThenLive) {
   EXPECT_EQ(1u, sinks_["front"]->Count());
 
   pub->publish(Message(GrayJpeg(100)));
-  ASSERT_TRUE(
-      SpinUntil([&] { return camera_logger_.Count("CAM front LIVE") == 2; }));
+  // LIVE is logged before write(), so wait for both, then check no rewrite.
+  ASSERT_TRUE(SpinUntil([&] {
+    return camera_logger_.Count("CAM front LIVE") == 2 &&
+           sinks_["front"]->Count() == 2;
+  }));
+  SpinFor(200);
   EXPECT_EQ(2u, sinks_["front"]->Count());
 }
 
