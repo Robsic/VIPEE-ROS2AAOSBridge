@@ -26,7 +26,7 @@ flowchart LR
 
 Estado validado (emulador, AOSP `android-16.0.0_r4`, Enforcing): velocidade, marcha e freio de mão do simulador chegam ao `CarService` (feature `ct-speed-slice`), pior latência medida 48 ms com o adb incluído; fonte parada vira `UNAVAILABLE` em ~540 ms. Ainda pendente: EVS (câmeras), portas e retrovisores, build arm64 no RPi5.
 
-As decisões e suas razões estão em [`.specs/STATE.md`](.specs/STATE.md) (AD-001 a AD-014).
+As decisões e suas razões estão em [`.specs/STATE.md`](.specs/STATE.md) (AD-001 a AD-018).
 
 ## Sinais do MVP
 
@@ -37,6 +37,7 @@ As decisões e suas razões estão em [`.specs/STATE.md`](.specs/STATE.md) (AD-0
 | Portas | `DOOR_POS` | Corte do sinal do BEV |
 | Retrovisores | `MIRROR_FOLD` | Corte do sinal do BEV |
 | 4 câmeras 720p | EVS | Dashboard, AVM e calibração (CalibDroid) |
+| Gatilho de sessão de calibração | vendor `0x21402a11` (local no VHAL, sem ROS; AD-018) | Abre a sessão do CalibDroid na transição para 1 |
 
 O que o simulador publica está em [`docs/sim-contract.md`](docs/sim-contract.md) (rascunho v0.2.2, em negociação com o time do simulador), a partir das mensagens `sirv_msgs` da branch `SIRV_UE5.5_ROS2_Jazzy`.
 
