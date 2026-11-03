@@ -94,6 +94,8 @@ O dashboard AAOS precisa de velocidade, marcha e freio de mão do simulador para
 8. IF chegam `SirvVehicleControl` com dois `id` diferentes dentro do limite de dado velho THEN a ponte SHALL reportar `PARKING_BRAKE_ON` com status `UNAVAILABLE` e motivo `AMBIGUOUS_SOURCE` até passar um limite de dado velho inteiro com um só `id`.
 9. WHEN uma propriedade muda de status (`AVAILABLE`, `UNAVAILABLE`, `ERROR`) ou, com o mesmo status, de motivo THEN a ponte SHALL registrar no logcat (tag `vipee_bridge`) a propriedade, o status novo e o motivo nomeado (`STALE`, `NO_DATA`, `OUT_OF_RANGE`, `UNKNOWN_GEAR`, `AMBIGUOUS_SOURCE`, `MAP_INVALID`).
 
+> **Nota (AD-017, 2026-11-02):** no VHAL, "reportar com status `UNAVAILABLE`" quer dizer get com `StatusCode::OK` e um valor de status `UNAVAILABLE` com payload zerado (int32 0 ou float 0.0), nunca o último valor real; evento `UNAVAILABLE` ou `ERROR` também leva payload zerado. `ERROR` continua get com `INTERNAL_ERROR`. Antes o get devolvia `NOT_AVAILABLE` e o `CarEvsService` desistia da ré até o próximo boot. Apps continuam vendo `PropertyNotAvailableException`.
+
 **Independent Test**: No núcleo, com relógio fake: sem mensagens, com mensagem e avanço de 501 ms, com `NaN`, com `gear = 10`, com dois `id` alternando, com alavanca velha no mapa do CAT793F. No emulador: parar o publicador fake e ver as propriedades ficarem `UNAVAILABLE`.
 
 ---

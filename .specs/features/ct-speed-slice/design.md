@@ -110,7 +110,7 @@ struct WireRecord {      // 32 bytes
 - **Location**: `android/vhal/` (`VipeeVehicleHardware.{h,cpp}`, `VehicleService.cpp`, `Android.bp`, `vipee-vehicle-service.rc`, `vipee_properties.json`, VINTF xml), sincronizado para `$ANDROID_BUILD_TOP/device/generic/car/emulator/vipee_vhal/`.
 - **Interfaces**:
   - `getAllPropertyConfigs()` - as 4 configs do `vipee_properties.json` (`PERF_VEHICLE_SPEED` CONTINUOUS, `minSampleRate` 1, `maxSampleRate` 10; as outras ON_CHANGE; todas READ).
-  - `getValues()` - status `AVAILABLE` devolve o valor; `UNAVAILABLE` devolve `StatusCode::NOT_AVAILABLE`; `ERROR` devolve `StatusCode::INTERNAL_ERROR` (regra do `VehiclePropertyStatus.aidl`: resultado de get é sempre `AVAILABLE`, o resto vira código de erro).
+  - `getValues()` - status `AVAILABLE` devolve o valor; `UNAVAILABLE` devolve `StatusCode::OK` com o valor de status `UNAVAILABLE` e payload zerado (AD-017; antes `StatusCode::NOT_AVAILABLE`, pela regra do `VehiclePropertyStatus.aidl`, o que fazia o `CarEvsService` desistir da ré); `ERROR` devolve `StatusCode::INTERNAL_ERROR`.
   - eventos de assinatura - levam o `VehiclePropValue` com o status (`UNAVAILABLE`/`ERROR`), como pede a AIDL.
   - `setValues()` - `StatusCode::ACCESS_DENIED` (todas READ).
   - `checkHealth()` - `OK` enquanto o socket tem par vivo.
@@ -173,14 +173,14 @@ struct PropertyState {
 
 | Error Scenario | Handling | User Impact |
 | -------------- | -------- | ----------- |
-| Sem mensagem desde o início | Estado inicial `UNAVAILABLE`/`NO_DATA` | `get` devolve `NOT_AVAILABLE` |
+| Sem mensagem desde o início | Estado inicial `UNAVAILABLE`/`NO_DATA` | `get` OK com status `UNAVAILABLE` e payload zero (AD-017) |
 | Fonte parada > `stale_ms` | `tick` marca `UNAVAILABLE`/`STALE` e loga | Dashboard vê indisponível em ≤ 550 ms |
 | `speed` NaN, inf ou acima do máximo | `PERF_VEHICLE_SPEED` `ERROR`/`OUT_OF_RANGE` | `get` devolve `INTERNAL_ERROR` |
 | `gear` fora de -9..9, código de alavanca fora da tabela | `UNAVAILABLE`/`UNKNOWN_GEAR` | Indisponível, sem chute de P |
 | Dois `id` de controle dentro do `stale_ms` | `PARKING_BRAKE_ON` `UNAVAILABLE`/`AMBIGUOUS_SOURCE` | Indisponível até um `stale_ms` com um só `id` |
 | Mapa inválido | 4 `UNAVAILABLE`/`MAP_INVALID`, processo segue vivo | Indisponível até corrigir o mapa |
 | Processo ROS morre ou trava | VHAL: socket fechado ou 300 ms sem heartbeat ➔ 4 `UNAVAILABLE` | Indisponível; o init reinicia o processo |
-| VHAL reinicia | `SocketSink` reconecta e reenvia o estado atual | Breve `NOT_AVAILABLE` |
+| VHAL reinicia | `SocketSink` reconecta e reenvia o estado atual | Breve `UNAVAILABLE` (AD-017) |
 | Registro com `version` diferente | VHAL descarta e loga uma vez | Indisponível (fail-loud) |
 
 ---
