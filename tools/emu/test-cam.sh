@@ -26,8 +26,10 @@
 #   device   - mapa com a câmera front em /dev/video99: DEVICE_UNAVAILABLE uma
 #              vez, o processo segue, as outras 3 >= 8 quadros/s e o VHAL
 #              entrega a velocidade do fake_sim (CAM-14, CAM-15)
-#   install  - evs-remove devolve os MP4; evs reinstala e o probe volta a
-#              listar /dev/video10..13 (CAM-19, CAM-20; dois reboots)
+#   install  - evs-remove devolve os MP4; evs reinstala,
+#              o probe volta a listar /dev/video10..13 e o CarEvsService usa
+#              /dev/video10..13 para FRONT/REAR/LEFT/RIGHTVIEW (CAM-19,
+#              CAM-20; dois reboots)
 #   tools/emu/test-cam.sh [passo]...   # padrão: todos, na ordem acima
 # Sai com 1 na primeira falha.
 set -euo pipefail
@@ -377,10 +379,16 @@ step_install() {
   sh $PROBE --list | grep -qx 'CAMERA cam_front' || fail "evs-remove não devolveu os MP4"
   "$HERE/../jazzy/install-vendor.sh" evs
   setup
-  local list d
+  local list d t i=10
   list="$(sh $PROBE --list)"
   for d in $DEVS; do
     echo "$list" | grep -qx "CAMERA $d" || fail "install: probe não lista $d: $list"
+  done
+  # Tipo do CarEvsManager ➔ dispositivo (CAM-19).
+  for t in FRONTVIEW REARVIEW LEFTVIEW RIGHTVIEW; do
+    sh cmd car_service get-camera-id $t | grep -q "/dev/video$i for $t" ||
+      fail "install: $t não usa /dev/video$i"
+    i=$((i + 1))
   done
   avc_check
   echo "install OK"

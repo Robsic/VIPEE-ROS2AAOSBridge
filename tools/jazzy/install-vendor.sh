@@ -32,8 +32,9 @@ EVS_VINTF=/vendor/etc/vintf/manifest/manifest_vipee-evs-v4l2.xml
 EVS_RC=/vendor/etc/init/init.evs.rc
 EVS_XML=/vendor/etc/automotive/evs/evs_configuration_override.xml
 UEVENTD=/vendor/etc/ueventd.rc
-# Tipo de câmera do CarEvsService ➔ dispositivo da ponte (o set-camera-id não
-# sobrevive a reboot: reaplicado aqui e em tools/emu/test-cam.sh).
+# Tipo de câmera do CarEvsService ➔ dispositivo da ponte. O set-camera-id fica
+# só em memória e não sobrevive a reboot: aplicado depois do reboot do passo evs;
+# outro reboot pede rodar o evs de novo. tools/emu/test-cam.sh install confere.
 EVS_IDS="FRONTVIEW:/dev/video10 REARVIEW:/dev/video11 LEFTVIEW:/dev/video12 RIGHTVIEW:/dev/video13"
 
 evs_restore() {
