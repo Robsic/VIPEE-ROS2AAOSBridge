@@ -252,5 +252,24 @@ TEST_F(CameraChannelTest, StatsCountFramesDropsAndP95Latency) {
   EXPECT_EQ(empty.p95_latency_ns, 0);
 }
 
+TEST_F(CameraChannelTest, P95OfOneFrameIsItsLatency) {
+  channel_.onFrame("jpeg", good_.data(), good_.size(), kT0, kT0 + 100 * kMs);
+  const CameraStats s = channel_.takeStats();
+  EXPECT_GE(s.p95_latency_ns, 100 * kMs);
+  EXPECT_LT(s.p95_latency_ns, 200 * kMs);
+}
+
+TEST_F(CameraChannelTest, P95Of21FramesIsTheTwentiethSmallest) {
+  // Latencies 100, 200, ..., 2100 ms: ceil(0.95 * 21) = 20, so 2000 ms.
+  for (int64_t k = 1; k <= 21; ++k) {
+    const int64_t now = kT0 + k * 10 * kMs;
+    channel_.onFrame("jpeg", good_.data(), good_.size(), now - k * 100 * kMs,
+                     now);
+  }
+  const CameraStats s = channel_.takeStats();
+  EXPECT_GE(s.p95_latency_ns, 2000 * kMs);
+  EXPECT_LT(s.p95_latency_ns, 2100 * kMs);
+}
+
 }  // namespace
 }  // namespace vipee
