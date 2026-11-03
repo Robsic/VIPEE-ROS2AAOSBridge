@@ -10,6 +10,7 @@
  * Usage:
  *   vipee_evs_probe --list
  *   vipee_evs_probe [--close-after-ms <ms>] <seconds> <camera_id>...
+ *   vipee_evs_probe --carevs <sessions> <restarts> <camera_id>
  *
  * Output, one line per camera at the end of the run:
  *   PROBE <id> frames=<n> width=<w> height=<h> format=<f> max_gap_ms=<g>
@@ -22,6 +23,15 @@
  * With `--close-after-ms`, the stream stops after that many ms instead of at
  * the end of `<seconds>`; the process still waits the full `<seconds>`.
  * `--list` prints `CAMERA <id>` per camera.
+ *
+ * `--carevs` replays CarEvsService's native StreamHandler (AOSP
+ * service/jni/evs/StreamHandler.cpp) on one camera kept open across sessions:
+ * a start while the stream runs only bumps a client count and asks for
+ * count * 10 frames in flight; a stop drops the count and stops the stream
+ * only at zero. Each session does 1 + `<restarts>` starts and one stop, as
+ * CarEvsService does when a second R event re-requests the activity while
+ * the stream is ACTIVE. Prints `CAREVS <session> start=<ok|failed>
+ * clients=<n>` per session; exit 3 if any start fails.
  *
  * Exit codes: 0 success; 1 usage; 2 evsmanagerd not available; 3 a camera
  * failed to open or start; 4 a stream did not report STREAM_STOPPED within
@@ -144,8 +154,61 @@ int usage() {
   std::fprintf(stderr,
                "usage: vipee_evs_probe --list\n"
                "       vipee_evs_probe [--close-after-ms <ms>] <seconds> "
-               "<camera_id>...\n");
+               "<camera_id>...\n"
+               "       vipee_evs_probe --carevs <sessions> <restarts> "
+               "<camera_id>\n");
   return 1;
+}
+
+// CarEvsService's StreamHandler bookkeeping (kMaxNumFramesInFlight = 10).
+int runCarEvs(const std::shared_ptr<IEvsEnumerator>& evs, int sessions,
+              int restarts, const std::string& id) {
+  constexpr int kPerClient = 10;
+  std::shared_ptr<IEvsCamera> camera;
+  if (!evs->openCamera(id, Stream{}, &camera).isOk() || !camera) {
+    std::fprintf(stderr, "PROBE %s open_failed\n", id.c_str());
+    return 3;
+  }
+  camera->setMaxFramesInFlight(kPerClient);
+  auto counter = ndk::SharedRefBase::make<Counter>(camera);
+  bool running = false;
+  int clients = 0;
+  int rc = 0;
+  auto start = [&] {
+    if (!running) {
+      counter = ndk::SharedRefBase::make<Counter>(camera);
+      if (!camera->startVideoStream(counter).isOk()) return false;
+      clients = 1;
+      running = true;
+      return true;
+    }
+    if (!camera->setMaxFramesInFlight(++clients * kPerClient).isOk()) {
+      --clients;
+      return false;
+    }
+    return true;
+  };
+  for (int k = 1; k <= sessions; ++k) {
+    bool ok = true;
+    for (int r = 0; r <= restarts; ++r) ok = start() && ok;
+    std::this_thread::sleep_for(std::chrono::milliseconds(300));
+    if (running) {
+      --clients;
+      camera->setMaxFramesInFlight(std::max(clients, 1) * kPerClient);
+      if (clients == 0) {
+        camera->stopVideoStream();
+        if (counter->waitStopped(std::chrono::milliseconds(1000)))
+          running = false;
+      }
+    }
+    std::printf("CAREVS %d start=%s clients=%d\n", k, ok ? "ok" : "failed",
+                clients);
+    std::fflush(stdout);
+    if (!ok) rc = 3;
+  }
+  if (running) camera->stopVideoStream();
+  evs->closeCamera(camera);
+  return rc;
 }
 
 }  // namespace
@@ -173,6 +236,12 @@ int main(int argc, char** argv) {
     if (!evs->getCameraList(&cams).isOk()) return 2;
     for (const auto& c : cams) std::printf("CAMERA %s\n", c.id.c_str());
     return 0;
+  }
+
+  if (args[0] == "--carevs") {
+    if (args.size() != 4) return usage();
+    return runCarEvs(evs, std::atoi(args[1].c_str()),
+                     std::atoi(args[2].c_str()), args[3]);
   }
 
   int64_t close_after_ms = -1;
