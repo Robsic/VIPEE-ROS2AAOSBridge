@@ -51,6 +51,7 @@ class TestSink : public FrameSink {
     return true;
   }
   bool write(const uint8_t* yuyv, size_t len) override {
+    ++started;
     if (delay_ms > 0) {
       std::this_thread::sleep_for(std::chrono::milliseconds(delay_ms));
     }
@@ -75,6 +76,7 @@ class TestSink : public FrameSink {
   }
 
   std::atomic<int> delay_ms{0};
+  std::atomic<int> started{0};  // write() calls entered
 
  private:
   std::atomic<bool> open_{false};
@@ -240,16 +242,19 @@ TEST_F(CameraBridgeTest, StuckCameraDoesNotDelayTelemetry) {
       "/cat793f/telemetry", rclcpp::QoS(5));
   ASSERT_TRUE(
       SpinUntil([&] { return telemetry->get_subscription_count() > 0; }));
-  camera->publish(Message(GrayJpeg(100)));
-  SpinFor(200);  // the camera thread is now inside the 1.5 s write
-
+  const CompressedImage frame = Message(GrayJpeg(100));
   SirvVehicleTelemetry t;
   t.speed = 36.0f;
   t.gear = 0;
+
+  // Back to back: the speed must arrive while the 1.5 s write is running.
   const auto start = Clock::now();
+  camera->publish(frame);
   telemetry->publish(t);
-  ASSERT_TRUE(SpinUntil([&] { return HasSpeed(); }, 1000));
+  ASSERT_TRUE(SpinUntil(
+      [&] { return HasSpeed() && sinks_["front"]->started == 1; }, 1000));
   EXPECT_LT(Clock::now() - start, std::chrono::milliseconds(500));
+  EXPECT_EQ(0u, sinks_["front"]->Count());  // still inside write()
 }
 
 }  // namespace
