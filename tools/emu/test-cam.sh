@@ -189,7 +189,8 @@ step_leak() {
   echo "$out"
   [ "$(echo "$out" | grep -c '^CAREVS .* start=ok')" = 25 ] || fail "leak: nem todo start deu certo: $out"
   ! echo "$out" | grep -q 'start=failed' || fail "leak: start=failed: $out"
-  sh logcat -d | grep -q 'exceeds the limit; granting 30' ||
+  # grep -c lê tudo: com grep -q o logcat morre de SIGPIPE e o pipefail reprova.
+  [ "$(sh logcat -d | grep -c 'exceeds the limit; granting 30')" -gt 0 ] ||
     fail "leak: HAL sem o WARNING de buffers limitados"
   avc_check
   bridge_on
