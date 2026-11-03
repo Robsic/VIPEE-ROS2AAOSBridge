@@ -86,6 +86,18 @@ Seen once or not yet corroborated. Tracked, not trusted.
 - evidence: N7 ros/vipee_bridge/src/camera_bridge.cpp:44 (ros-tests)
 - last seen: 2026-11-03T00:26:35Z
 
+### L-013 - Test size-mismatch rejection with inputs larger than the expected size in each dimension, not only smaller ones
+- signal: `surviving_mutant` · recurrence: 1 feature(s) · scope: `core` · harmful: 0
+- features: cam-evs-slice
+- evidence: V5 core/src/jpeg_yuyv.cpp:52 (core)
+- last seen: 2026-11-03T00:47:07Z
+
+### L-014 - Bound the wait for a timeout-driven state change by the spec deadline, not by a generic test timeout
+- signal: `surviving_mutant` · recurrence: 1 feature(s) · scope: `ros-tests` · harmful: 0
+- features: cam-evs-slice
+- evidence: W1 ros/vipee_bridge/src/camera_bridge.cpp:16 (ros-tests)
+- last seen: 2026-11-03T00:47:07Z
+
 ## Quarantined (failed when applied - ignore)
 
 A confirmed lesson that recurred alongside failure. Kept for the maintainer to review.

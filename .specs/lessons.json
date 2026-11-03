@@ -3,7 +3,7 @@
   "promote_threshold": 2,
   "window_days": 45,
   "quarantine_threshold": 2,
-  "next_id": 13,
+  "next_id": 15,
   "lessons": [
     {
       "id": "L-001",
@@ -220,6 +220,42 @@
       ],
       "created": "2026-11-03T00:26:35Z",
       "last_seen": "2026-11-03T00:26:35Z"
+    },
+    {
+      "id": "L-013",
+      "key": "surviving_mutant::test size mismatch rejection with inputs larger than the expected size in each dimension not only smaller ones",
+      "text": "Test size-mismatch rejection with inputs larger than the expected size in each dimension, not only smaller ones",
+      "signal": "surviving_mutant",
+      "scope": "core",
+      "status": "candidate",
+      "features": [
+        "cam-evs-slice"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "V5 core/src/jpeg_yuyv.cpp:52 (core)"
+      ],
+      "created": "2026-11-03T00:47:07Z",
+      "last_seen": "2026-11-03T00:47:07Z"
+    },
+    {
+      "id": "L-014",
+      "key": "surviving_mutant::bound the wait for a timeout driven state change by the spec deadline not by a generic test timeout",
+      "text": "Bound the wait for a timeout-driven state change by the spec deadline, not by a generic test timeout",
+      "signal": "surviving_mutant",
+      "scope": "ros-tests",
+      "status": "candidate",
+      "features": [
+        "cam-evs-slice"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "W1 ros/vipee_bridge/src/camera_bridge.cpp:16 (ros-tests)"
+      ],
+      "created": "2026-11-03T00:47:07Z",
+      "last_seen": "2026-11-03T00:47:07Z"
     }
   ]
 }
