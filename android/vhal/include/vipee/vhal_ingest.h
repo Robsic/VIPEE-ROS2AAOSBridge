@@ -166,6 +166,37 @@ class VhalIngest {
   float speed_rate_hz_ = 0;
 };
 
+/// @brief How getValues answers a stored value (AD-017).
+enum class GetAnswer {
+  kValue,          ///< StatusCode::OK with the stored value and its status.
+  kInternalError,  ///< StatusCode::INTERNAL_ERROR, no value.
+};
+
+/**
+ * @brief Maps a stored VehiclePropertyStatus to the get answer (AD-017).
+ * @param status AVAILABLE 0, UNAVAILABLE 1 or ERROR 2.
+ * @return kInternalError for ERROR; kValue otherwise, so a get without data
+ *         is OK with status UNAVAILABLE (CarEvsService needs a non-null get).
+ */
+constexpr GetAnswer getAnswer(int32_t status) {
+  return status == 2 ? GetAnswer::kInternalError : GetAnswer::kValue;
+}
+
+/**
+ * @brief The record as it goes into the property store (AD-017).
+ * @param r Record to store.
+ * @return r with int_value and float_value zeroed unless status is AVAILABLE:
+ *         an UNAVAILABLE or ERROR value, in a get or an event, never carries
+ *         the last real value (e.g. an old GEAR_REVERSE).
+ */
+constexpr WireRecord storable(WireRecord r) {
+  if (r.status != 0) {
+    r.int_value = 0;
+    r.float_value = 0.0f;
+  }
+  return r;
+}
+
 }  // namespace vipee
 
 #endif  // VIPEE_VHAL_INGEST_H_

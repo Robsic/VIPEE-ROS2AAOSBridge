@@ -136,5 +136,48 @@ TEST(VhalIngest, EverySpeedSampleIsWrittenWithItsStamp) {
   EXPECT_EQ(written, 67);
 }
 
+// AD-017: a get without data answers OK with an UNAVAILABLE value; ERROR stays
+// an error get; AVAILABLE returns the value.
+TEST(VhalGet, UnavailableIsAnOkGetErrorIsAnInternalError) {
+  EXPECT_EQ(getAnswer(0), GetAnswer::kValue);
+  EXPECT_EQ(getAnswer(1), GetAnswer::kValue);
+  EXPECT_EQ(getAnswer(2), GetAnswer::kInternalError);
+}
+
+// AD-017: an UNAVAILABLE value carries a neutral zero, never the last real
+// value (CarEvsService reads the gear without looking at the status).
+TEST(VhalGet, ReverseGoingUnavailableCarriesZero) {
+  WireRecord r = update(kGearSelection, 1, 1);
+  r.int_value = 0x20;  // GEAR_REVERSE
+  WireRecord out = storable(r);
+  EXPECT_EQ(out.status, 1);
+  EXPECT_EQ(out.int_value, 0);
+  EXPECT_EQ(out.float_value, 0.0f);
+}
+
+TEST(VhalGet, UnavailableAndErrorSpeedCarryZero) {
+  for (int32_t status : {1, 2}) {
+    WireRecord r = update(kSpeed, status, 1);
+    r.float_value = 12.5f;
+    r.int_value = 3;
+    WireRecord out = storable(r);
+    EXPECT_EQ(out.status, status);
+    EXPECT_EQ(out.float_value, 0.0f) << status;
+    EXPECT_EQ(out.int_value, 0) << status;
+  }
+}
+
+TEST(VhalGet, AvailableValueIsKeptAsIs) {
+  WireRecord r = update(kGearSelection, 0, 7);
+  r.int_value = 0x20;
+  EXPECT_EQ(storable(r).int_value, 0x20);
+  r = update(kSpeed, 0, 7);
+  r.float_value = -3.5f;
+  WireRecord out = storable(r);
+  EXPECT_EQ(out.float_value, -3.5f);
+  EXPECT_EQ(out.status, 0);
+  EXPECT_EQ(out.timestamp_ns, 7);
+}
+
 }  // namespace
 }  // namespace vipee

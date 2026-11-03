@@ -160,7 +160,8 @@ void VipeeVehicleHardware::closePeer(bool marked, int64_t now) {
   markAllUnavailable(floor);
 }
 
-void VipeeVehicleHardware::writeRecord(const WireRecord& r) {
+void VipeeVehicleHardware::writeRecord(const WireRecord& in) {
+  const WireRecord r = storable(in);  // AD-017: no stale value off AVAILABLE
   auto v = r.prop_id == kPropPerfVehicleSpeed
                ? mPool->obtainFloat(r.float_value)
                : mPool->obtainInt32(r.int_value);
@@ -218,11 +219,10 @@ StatusCode VipeeVehicleHardware::getValues(
     auto read = mStore->readValue(req.prop.prop, req.prop.areaId);
     if (!read.ok()) {
       out.status = getErrorCode(read);
-    } else if ((*read)->status == VehiclePropertyStatus::UNAVAILABLE) {
-      out.status = StatusCode::NOT_AVAILABLE;
-    } else if ((*read)->status == VehiclePropertyStatus::ERROR) {
+    } else if (getAnswer(static_cast<int32_t>((*read)->status)) ==
+               GetAnswer::kInternalError) {
       out.status = StatusCode::INTERNAL_ERROR;
-    } else {
+    } else {  // AVAILABLE, or UNAVAILABLE with a zeroed payload (AD-017)
       out.status = StatusCode::OK;
       out.prop = **read;
     }

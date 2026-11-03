@@ -62,8 +62,9 @@ class VipeeVehicleHardware final : public IVehicleHardware {
   aidlvhal::StatusCode setValues(
       std::shared_ptr<const SetValuesCallback> callback,
       const std::vector<aidlvhal::SetValueRequest>& requests) override;
-  /// @note Stored status AVAILABLE returns the value; UNAVAILABLE returns
-  ///       NOT_AVAILABLE and ERROR returns INTERNAL_ERROR.
+  /// @note Stored status AVAILABLE returns the value; UNAVAILABLE returns OK
+  ///       with the UNAVAILABLE value and a zeroed payload (AD-017); ERROR
+  ///       returns INTERNAL_ERROR.
   aidlvhal::StatusCode getValues(
       std::shared_ptr<const GetValuesCallback> callback,
       const std::vector<aidlvhal::GetValueRequest>& requests) const override;
