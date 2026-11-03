@@ -8,6 +8,7 @@
 #include <optional>
 #include <sstream>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "rclcpp/rclcpp.hpp"
@@ -63,19 +64,20 @@ class BridgeNodeTest : public ::testing::Test {
   void SetUp() override { server_.Start(); }
 
   // Starts the bridge node on the given params file.
-  void StartNode(const std::string& params_file) {
+  void StartNode(const std::string& params_file, SinkFactory make_sink = {}) {
     rclcpp::NodeOptions opts;
     opts.arguments({"--ros-args", "--params-file", params_file});
     node_ = std::make_shared<BridgeNode>(opts, server_.path(), logger_,
-                                         camera_logger_);
+                                         camera_logger_, std::move(make_sink));
     test_node_ = std::make_shared<rclcpp::Node>("vipee_test_pub");
     exec_.add_node(node_);
     exec_.add_node(test_node_);
   }
 
-  // Spins both nodes and collects socket records until done() or 5 s.
-  bool SpinUntil(const std::function<bool()>& done) {
-    const auto end = std::chrono::steady_clock::now() + std::chrono::seconds(5);
+  // Spins both nodes and collects socket records until done() or timeout.
+  bool SpinUntil(const std::function<bool()>& done, int timeout_ms = 5000) {
+    const auto end = std::chrono::steady_clock::now() +
+                     std::chrono::milliseconds(timeout_ms);
     while (std::chrono::steady_clock::now() < end) {
       exec_.spin_some(std::chrono::milliseconds(20));
       for (const auto& r : server_.Drain()) records_.push_back(r);
@@ -234,6 +236,15 @@ std::string WriteTempMap(const std::string& text) {
   return path;
 }
 
+// Sink whose device never opens; a camera that used it would log
+// DEVICE_UNAVAILABLE.
+class ClosedSink : public FrameSink {
+ public:
+  bool open() override { return false; }
+  bool write(const uint8_t*, size_t) override { return false; }
+  bool isOpen() const override { return false; }
+};
+
 std::string ReadFile(const std::string& path) {
   std::ifstream in(path);
   std::stringstream out;
@@ -296,7 +307,11 @@ TEST_F(BridgeNodeTest, DuplicateEvsViewLogsCamMapInvalidAndKeepsTelemetry) {
   ASSERT_NE(std::string::npos, pos);
   text.replace(pos, 9, "FRONTVIEW");
   const std::string path = WriteTempMap(text);
-  StartNode(path);
+  int sinks_made = 0;
+  StartNode(path, [&](const CameraConfig&) -> std::unique_ptr<FrameSink> {
+    ++sinks_made;
+    return std::make_unique<ClosedSink>();
+  });
   EXPECT_EQ(MapError::kNone, node_->mapError());
   EXPECT_EQ(CameraMapError::kDuplicateView, node_->cameraMapError());
   ASSERT_EQ(1u, camera_logger_.lines.size());
@@ -312,6 +327,12 @@ TEST_F(BridgeNodeTest, DuplicateEvsViewLogsCamMapInvalidAndKeepsTelemetry) {
       SpinUntil([&] { return Last(prop::kPerfVehicleSpeed).has_value(); }));
   EXPECT_EQ(10.0f, Last(prop::kPerfVehicleSpeed)->float_value);
   EXPECT_EQ(0, Last(prop::kPerfVehicleSpeed)->status);
+
+  // No camera opens: no sink is made and no camera logs past MAP_INVALID.
+  SpinUntil([] { return false; }, 200);
+  EXPECT_EQ(0, sinks_made);
+  EXPECT_EQ(std::vector<std::string>{"CAM MAP_INVALID DUPLICATE_VIEW"},
+            camera_logger_.lines);
   unlink(path.c_str());
 }
 
