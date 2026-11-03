@@ -32,13 +32,16 @@ EVS_VINTF=/vendor/etc/vintf/manifest/manifest_vipee-evs-v4l2.xml
 EVS_RC=/vendor/etc/init/init.evs.rc
 EVS_XML=/vendor/etc/automotive/evs/evs_configuration_override.xml
 UEVENTD=/vendor/etc/ueventd.rc
-# Tipo de câmera do CarEvsService ➔ dispositivo da ponte. O set-camera-id fica
-# só em memória e não sobrevive a reboot: aplicado depois do reboot do passo evs;
-# outro reboot pede rodar o evs de novo. tools/emu/test-cam.sh install confere.
+# RRO estático com os tipos do CarEvsService ➔ /dev/video10..13, acima do
+# CarEvsServiceOverlay (mapeamento persistente; some com evs-remove).
+EVS_RRO=/product/overlay/VipeeEvsCameraOverlay.apk
+# Tipo de câmera do CarEvsService ➔ dispositivo da ponte. O mapeamento persistente
+# vem do RRO (EVS_RRO); o set-camera-id depois do reboot do passo evs só confirma
+# o mesmo valor em memória. tools/emu/test-cam.sh install confere.
 EVS_IDS="FRONTVIEW:/dev/video10 REARVIEW:/dev/video11 LEFTVIEW:/dev/video12 RIGHTVIEW:/dev/video13"
 
 evs_restore() {
-  "$ADB" shell "for f in $EVS_RC $EVS_XML $UEVENTD; do [ -f \$f.stock ] && mv \$f.stock \$f; done; rm -f $EVS_HAL $EVS_VINTF /vendor/bin/hw/android.hardware.automotive.evs-v4l2 /vendor/etc/vintf/manifest/manifest_android.hardware.automotive.evs-v4l2.xml"
+  "$ADB" shell "for f in $EVS_RC $EVS_XML $UEVENTD; do [ -f \$f.stock ] && mv \$f.stock \$f; done; rm -f $EVS_HAL $EVS_VINTF $EVS_RRO /vendor/bin/hw/android.hardware.automotive.evs-v4l2 /vendor/etc/vintf/manifest/manifest_android.hardware.automotive.evs-v4l2.xml"
 }
 
 evs_install() {
@@ -47,6 +50,7 @@ evs_install() {
   # Rótulo hal_evs_default_exec do fork vem da política da ponte (file_contexts).
   "$ADB" push "$OUT_VENDOR/etc/selinux/." /vendor/etc/selinux/ | tail -1
   "$ADB" push "$OUT_VENDOR/etc/vintf/manifest/$(basename "$EVS_VINTF")" "$EVS_VINTF"
+  "$ADB" push "$OUT_VENDOR/../product/overlay/VipeeEvsCameraOverlay.apk" "$EVS_RRO"
   "$ADB" push "$EVS_DIR/init.vipee_evs.rc" "$EVS_RC"
   "$ADB" push "$EVS_DIR/evs_configuration_v4l2.xml" "$EVS_XML"
   "$ADB" shell "cat $UEVENTD.stock > $UEVENTD"

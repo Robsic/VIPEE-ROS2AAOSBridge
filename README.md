@@ -96,18 +96,12 @@ Câmeras (AD-015, AD-016): a ponte escreve as 4 câmeras em `/dev/video10..13` (
 
 ```bash
 tools/jazzy/sepolicy-sync.sh && tools/emu/evs-sync.sh
-~/aosp-scripts/vm_m.sh vipee-evs-v4l2 vipee_evs_probe selinux_policy
+~/aosp-scripts/vm_m.sh vipee-evs-v4l2 vipee_evs_probe VipeeEvsCameraOverlay selinux_policy
 tools/jazzy/install-vendor.sh evs          # reinicia o device
 tools/jazzy/install-vendor.sh evs-remove   # devolve os MP4
 ```
 
-O `cmd car_service set-camera-id` (FRONTVIEW..RIGHTVIEW ➔ `/dev/video10..13`) não sobrevive a reboot. O `install-vendor.sh evs` o aplica; depois de outro reboot, reaplique:
-
-```bash
-for m in FRONTVIEW:10 REARVIEW:11 LEFTVIEW:12 RIGHTVIEW:13; do
-  adb shell cmd car_service set-camera-id ${m%%:*} /dev/video${m#*:}
-done
-```
+O tipo de câmera do `CarEvsService` (FRONTVIEW..RIGHTVIEW ➔ `/dev/video10..13`) vem do RRO estático `VipeeEvsCameraOverlay` (`android/evs/rro`, prioridade 10, acima do `CarEvsServiceOverlay`), que o passo `evs` instala e o `evs-remove` tira; sobrevive a reboot. Ele repete o `activityName` do REARVIEW do AVM (ordem dos patches no `../vipee-shared/SHARED.md`). Conferir: `adb shell cmd car_service get-camera-id FRONTVIEW`.
 
 Para tocar o bag de calibração (Commander) no host, use um participante DDS só, sem o `fake_sim` junto. Depois troque o veículo para `commander` e reinicie a ponte, que só disca o host na partida:
 
