@@ -30,6 +30,10 @@
 #              o probe volta a listar /dev/video10..13 e o CarEvsService usa
 #              /dev/video10..13 para FRONT/REAR/LEFT/RIGHTVIEW (CAM-19,
 #              CAM-20; dois reboots)
+#   leak     - vazamento de cliente do CarEvsService (AD-016, patch 5): o
+#              probe --carevs 25 1 repete 25 sessões com um R extra em
+#              ACTIVE; todo start tem de dar certo (a HAL limita o pedido
+#              de buffers em vez de rejeitar)
 #   tools/emu/test-cam.sh [passo]...   # padrão: todos, na ordem acima
 # Sai com 1 na primeira falha.
 set -euo pipefail
@@ -173,6 +177,23 @@ step_stall() {
   avc_check
   bridge_on
   echo "stall OK"
+}
+
+step_leak() {
+  echo "== leak"
+  local d=/dev/video10 out
+  bridge_off
+  writers_stop
+  # Sai com 3 e imprime "CAREVS <k> start=failed" se algum start falhar.
+  out="$(sh $PROBE --carevs 25 1 $d)" || fail "leak: start falhou: $out"
+  echo "$out"
+  [ "$(echo "$out" | grep -c '^CAREVS .* start=ok')" = 25 ] || fail "leak: nem todo start deu certo: $out"
+  ! echo "$out" | grep -q 'start=failed' || fail "leak: start=failed: $out"
+  sh logcat -d | grep -q 'exceeds the limit; granting 30' ||
+    fail "leak: HAL sem o WARNING de buffers limitados"
+  avc_check
+  bridge_on
+  echo "leak OK"
 }
 
 # Fonte DDS no contêiner, rede do host (CycloneDDS TCP na 7400, como o
@@ -401,7 +422,7 @@ step_install() {
 
 setup
 steps=("$@")
-[ $# -gt 0 ] || steps=(platform stall bag stale drops device install)
+[ $# -gt 0 ] || steps=(platform stall leak bag stale drops device install)
 for s in "${steps[@]}"; do
   "step_$s"
 done
