@@ -151,6 +151,16 @@ TEST(JpegYuyv, Jpeg444IsDecodeError) {
             DropReason::kDecodeError);
 }
 
+TEST(JpegYuyv, GrayscaleAndFourFortyJpegsAreDecodeErrorAndLeaveOutAlone) {
+  for (const int subsamp : {TJSAMP_GRAY, TJSAMP_440}) {
+    std::vector<uint8_t> out = {7};
+    EXPECT_EQ(decode("jpeg", makeJpeg(kW, kH, subsamp), &out),
+              DropReason::kDecodeError)
+        << "subsamp " << subsamp;
+    EXPECT_EQ(out, (std::vector<uint8_t>{7})) << "subsamp " << subsamp;
+  }
+}
+
 TEST(JpegYuyv, PackI420RepeatsChromaOnTheNextRow) {
   const uint8_t y[16] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16};
   const uint8_t u[4] = {30, 31, 32, 33};
