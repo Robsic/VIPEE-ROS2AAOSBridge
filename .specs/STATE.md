@@ -23,6 +23,15 @@
 
 ## Handoff
 
+### cam-evs-slice: concluída e validada (2026-11-02)
+
+- Execute: fases 2–3 por sub-agentes (`f91abe4`..`3b19fcc`), fase 1 inline (`28349cc`, `8a5c321`, `76cd4ea`), fase 4 por sub-agente (`62b83c1`..`cae13e3`). Verifier: ciclos 1–4 FAIL só por lacunas de teste (nenhum defeito de produção), correções `bbc8091`..`9a7e1f9`; ciclo 5 com escopo restrito por decisão do Wendell: PASS (`e911a4d`, `validate_state.py` 0). 127 testes unit, 3 ROS.
+- Medido no emulador (fase 4, Enforcing, 0 avc): bag de calibração em loop ~8,8 fps por câmera a 1280×720, p95 ≤ 11,4 ms; STALE em 600 ms; telemetria com câmeras 121 ms, dado velho 561 ms.
+- AD-016 (fork `vipee-evs-v4l2`, 4 patches) saiu da T3: a `evs-v4l2` de fábrica travava ao fechar com a ponte parada. RRO `VipeeEvsCameraOverlay` (`effc27b`) mantém FRONTVIEW..RIGHTVIEW ➔ `/dev/video10..13` depois de reboot. Contrato v0.2.3 e página pública (versão `1793663319-0eaa`).
+- Coordenação: CalibDroid deve rodar sem mudança (abre por tipo; janela de sync de 100 ms contra spread do bag de mediana 81 ms, 83% ≤ 100 ms; se der `CAPTURE_TIMEOUT`, eles alargam a janela). AVM precisa de entrada EVS no `avmd` e calibração do Commander em 1280×720 (escopo e prazo com o Wendell).
+- Aberto, decisão do Wendell: o VHAL da ponte responde get sem dado com erro `NOT_AVAILABLE`; o `CarEvsService` testa `GEAR_SELECTION` só na partida e desiste da ré até o próximo boot (lacuna (e) no SHARED.md). Proposta: get OK com status `UNAVAILABLE` (lido em `PropertyHalService.java:1200`, apps continuam vendo `PropertyNotAvailableException` por `CarPropertyManager.java:2863`); muda decisão da `ct-speed-slice`. Agravante: `stop;start` do framework derruba o Wi-Fi e com ele o DDS (STALE 22:13:33 ➔ 22:13:42).
+- Emulador ao fim: ponte + VHAL da ponte + EVS da ponte + RRO instalados; `fake_sim` com marcha P no host para o contorno do AVM.
+
 ### cam-evs-slice: Specify, Design e Tasks aprovados (2026-11-02)
 
 - Decisões do usuário: fonte = bag de calibração do CalibDroid (Commander, também alimenta o VHAL); referência 1280×720 (simulador será ajustado); FOV do CAT793F indefinido, Commander ~192°.

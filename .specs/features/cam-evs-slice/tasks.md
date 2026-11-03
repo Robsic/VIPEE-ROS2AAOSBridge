@@ -475,7 +475,7 @@ T13 → T14 → T15 → T16
 **Done when**:
 
 - [x] Textos atualizados; versão do contrato sobe (v0.2.3)
-- [ ] Página pública do contrato sincronizada só com ok do usuário (pendente: aguarda o ok)
+- [x] Página pública do contrato sincronizada só com ok do usuário (ok em 2026-11-02, versão `1793663319-0eaa`)
 
 **Tests**: none
 **Gate**: build
