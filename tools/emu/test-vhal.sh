@@ -6,7 +6,9 @@
 #             4 UNAVAILABLE pelo watchdog (≤ 300 ms); SIGCONT volta (T14)
 #   rate    - telemetria a ~66 Hz gera pelo menos a taxa assinada de eventos
 #             (T15; contrato do IVehicleHardware com VUR desligado)
-#   tools/emu/test-vhal.sh [absent|live|rate]...   # padrão: todas
+#   trigger - gatilho do CalibDroid 0x21402a11, local ao VHAL (AD-018):
+#             AVAILABLE 0 no boot, set grava, ponte muda não o derruba
+#   tools/emu/test-vhal.sh [absent|live|rate|trigger]...   # padrão: todas
 # Sai com 1 na primeira falha. Avc dos dois domínios também falha (T16).
 set -euo pipefail
 
@@ -15,6 +17,7 @@ HERE="$(cd "$(dirname "$0")" && pwd)"
 WS="${WS:-$HOME/ros2_android_ws}"  # install_sirv de test-ros.sh
 VHAL=android.hardware.automotive.vehicle.IVehicle/default
 SPEED=0x11600207 GEAR_SEL=0x11400400 CUR_GEAR=0x11400401 BRAKE=0x11200402
+TRIGGER=0x21402a11  # CalibDroid AD-010, local ao VHAL (AD-018)
 PUB=vipee_test_pub
 
 fail() { echo "FAIL: $*" >&2; exit 1; }
@@ -141,8 +144,28 @@ rate() {
   echo "rate: OK ($((n1 - n0)) eventos em 5 s, assinatura a $hz Hz)"
 }
 
+# Valor int32 do vendor sai cru no shell: "SystemStatus: AVAILABLE(0x0), ...,
+# Value: 1". Sem "set" no boot, o primeiro get tem de ver o 0 da config.
+trigger_is() {
+  get $TRIGGER | grep -qE "SystemStatus: AVAILABLE.*Value: $1(\$|[^0-9x])"
+}
+
+trigger() {
+  sh stop vipee_bridge  # a ponte muda não afeta a propriedade local
+  sleep 1               # > 300 ms do watchdog
+  trigger_is 0 || fail "trigger: não é AVAILABLE 0 com a ponte muda: $(get $TRIGGER)"
+  # CarShellCommand: set-property-value <prop> <areaId> <data>; erro sai com 0.
+  sh cmd car_service set-property-value $TRIGGER 0 1 | grep -q successfully ||
+    fail "trigger: set recusado"
+  trigger_is 1 || fail "trigger: get depois do set != 1: $(get $TRIGGER)"
+  sleep 1
+  trigger_is 1 || fail "trigger: caiu com a ponte muda: $(get $TRIGGER)"
+  sh cmd car_service set-property-value $TRIGGER 0 0 >/dev/null
+  echo "trigger: OK"
+}
+
 boot
-for step in "${@:-absent live rate}"; do
+for step in "${@:-absent live rate trigger}"; do
   for s in $step; do "$s"; done
 done
 avc_check
