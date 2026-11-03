@@ -3,7 +3,7 @@
   "promote_threshold": 2,
   "window_days": 45,
   "quarantine_threshold": 2,
-  "next_id": 11,
+  "next_id": 13,
   "lessons": [
     {
       "id": "L-001",
@@ -184,6 +184,42 @@
       ],
       "created": "2026-11-02T23:57:58Z",
       "last_seen": "2026-11-02T23:57:58Z"
+    },
+    {
+      "id": "L-011",
+      "key": "gate_fail::in a cross thread test wait on the asserted side effect itself never on a log line the worker emits before producing it",
+      "text": "In a cross-thread test, wait on the asserted side effect itself, never on a log line the worker emits before producing it.",
+      "signal": "gate_fail",
+      "scope": "ros-tests",
+      "status": "candidate",
+      "features": [
+        "cam-evs-slice"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "ros/vipee_bridge/test/camera_bridge_rostest.cpp:219 (ros-tests)"
+      ],
+      "created": "2026-11-03T00:26:35Z",
+      "last_seen": "2026-11-03T00:26:35Z"
+    },
+    {
+      "id": "L-012",
+      "key": "surviving_mutant::test a periodic watchdog while input arrives faster than its period so a loop that only checks on idle wakeups is caught",
+      "text": "Test a periodic watchdog while input arrives faster than its period, so a loop that only checks on idle wakeups is caught.",
+      "signal": "surviving_mutant",
+      "scope": "ros-tests",
+      "status": "candidate",
+      "features": [
+        "cam-evs-slice"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "N7 ros/vipee_bridge/src/camera_bridge.cpp:44 (ros-tests)"
+      ],
+      "created": "2026-11-03T00:26:35Z",
+      "last_seen": "2026-11-03T00:26:35Z"
     }
   ]
 }

@@ -74,6 +74,18 @@ Seen once or not yet corroborated. Tracked, not trusted.
 - evidence: CAM-19 tools/emu/test-cam.sh:380 (emulator-tests)
 - last seen: 2026-11-02T23:57:58Z
 
+### L-011 - In a cross-thread test, wait on the asserted side effect itself, never on a log line the worker emits before producing it.
+- signal: `gate_fail` · recurrence: 1 feature(s) · scope: `ros-tests` · harmful: 0
+- features: cam-evs-slice
+- evidence: ros/vipee_bridge/test/camera_bridge_rostest.cpp:219 (ros-tests)
+- last seen: 2026-11-03T00:26:35Z
+
+### L-012 - Test a periodic watchdog while input arrives faster than its period, so a loop that only checks on idle wakeups is caught.
+- signal: `surviving_mutant` · recurrence: 1 feature(s) · scope: `ros-tests` · harmful: 0
+- features: cam-evs-slice
+- evidence: N7 ros/vipee_bridge/src/camera_bridge.cpp:44 (ros-tests)
+- last seen: 2026-11-03T00:26:35Z
+
 ## Quarantined (failed when applied - ignore)
 
 A confirmed lesson that recurred alongside failure. Kept for the maintainer to review.
