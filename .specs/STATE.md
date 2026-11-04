@@ -25,6 +25,17 @@
 
 ## Handoff
 
+### Depois da cam-evs-slice: VHAL e EVS para AVM e CalibDroid (2026-11-03, madrugada)
+
+- AD-017 (get sem dado = OK + `UNAVAILABLE`, payload zerado; `3367195`..`cb0ebd4`) e AD-018 (gatilho do CalibDroid `0x21402a11` local no VHAL; `a6c1c14`..`eac898a`) instalados no emulador: CarEvsService assina `GEAR_SELECTION` sem dado e sobrevive a `stop;start`; `test-vhal.sh` (absent, live, rate, trigger) e `test-e2e.sh` OK (latência 98 ms, dado velho 572 ms, câmeras OK).
+- RRO `VipeeEvsCameraOverlay` (`effc27b`): tipos ➔ `/dev/video10..13` persistente. Ordem dos patches no SHARED.md.
+- Vazamento de buffers do EVS: bug do AOSP CarEvsService (`StreamHandler.cpp:124-205`, `StateMachine.java:1002-1010,1104-1117,1202-1261`): cada R com o stream ativo vaza um cliente (10 buffers); após ~10, a ré não abre. Reproduzido com `vipee_evs_probe --carevs` (`1e85b06`). Decisão do Wendell: 5º patch na HAL (`62711f1`, teto 30, limita com WARNING) + relatar ao Google (rascunho `Refs/aosp-bug-carevsservice-stream-client-leak.md`, Wendell envia). Instalado; `test-cam.sh leak` 25/25 (`b407f75`, `f6d6ba1`).
+- CalibDroid rodou sobre as câmeras da ponte: sync OK (janela 100 ms, 15 sets em 2–4 s), p95 4–13 ms; sessões terminaram `DETECTION_INSUFFICIENT` na frontal, igual ao host (limite do asset, não da ponte).
+- A investigar: (1) ~00:51 as 4 câmeras foram a `frames=0` com o bag tocando, `ros2: tcp abandoning write on blocking socket` no player do host; `stop/start vipee_bridge` recuperou. (2) Com a telemetria do bag, o Commander nunca fica em P e a restrição de UX cobre os apps: para calibração, tocar só as 4 câmeras e injetar P (documentar no README).
+- Pendente: AVM sobre o bag (entrada EVS no `avmd` + calibração Commander 1280×720, decisão do Wendell); re-bake de LUTs do AVM usando o sinal do CalibDroid (AD-019/021/034 do CalibDroid).
+- Estado do emulador ao pausar: ponte, VHAL da ponte (AD-017/018), fork EVS com patch 5 e RRO instalados; `vipee_bridge` rodando (`cat793f`), sem `fake_sim`. Tudo local, nada enviado.
+- Próximo passo: Wendell envia o relato do bug ao Google (anexar `stuck_suite_fv4_full2.txt` do scratch do verifier); investigar o travamento DDS/TCP (1) e escrever a nota do README (2), prometidos ao CalibDroid; antes de tocar o emulador, confirmar com AVM e CalibDroid que está livre.
+
 ### cam-evs-slice: concluída e validada (2026-11-02)
 
 - Execute: fases 2–3 por sub-agentes (`f91abe4`..`3b19fcc`), fase 1 inline (`28349cc`, `8a5c321`, `76cd4ea`), fase 4 por sub-agente (`62b83c1`..`cae13e3`). Verifier: ciclos 1–4 FAIL só por lacunas de teste (nenhum defeito de produção), correções `bbc8091`..`9a7e1f9`; ciclo 5 com escopo restrito por decisão do Wendell: PASS (`e911a4d`, `validate_state.py` 0). 127 testes unit, 3 ROS.
