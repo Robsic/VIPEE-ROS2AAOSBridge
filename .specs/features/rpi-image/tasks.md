@@ -172,9 +172,9 @@ T17 → T18 → T19 → T20
 
 **Done when**:
 
-- [ ] Testes RED antes do código, 1:1 com os ramos (sem variável; com variável e valor válido; vazio; inválido)
-- [ ] Gate check passes: `cmake --build --preset default && ctest --preset default -L unit`
-- [ ] Test count: suíte unit anterior + os novos, todos verdes
+- [x] Testes RED antes do código, 1:1 com os ramos (sem variável; com variável e valor válido; vazio; inválido)
+- [x] Gate check passes: `cmake --build --preset default && ctest --preset default -L unit`
+- [x] Test count: suíte unit anterior + os novos, todos verdes
 
 **Tests**: unit
 **Gate**: quick

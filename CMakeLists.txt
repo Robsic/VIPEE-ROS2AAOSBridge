@@ -14,7 +14,7 @@ include(GoogleTest)
 # Bridge core: C++17 stdlib only, no ROS and no Android.
 add_library(vipee_core core/src/vehicle_map.cpp core/src/translate.cpp
   core/src/bridge.cpp core/src/jpeg_yuyv.cpp
-  core/src/camera_channel.cpp)
+  core/src/camera_channel.cpp core/src/dds_peer.cpp)
 target_include_directories(vipee_core PUBLIC ${CMAKE_SOURCE_DIR}/core/include)
 # Static TurboJPEG: the bridge decodes /compressed JPEG to YUYV (cam-evs-slice).
 target_link_libraries(vipee_core PUBLIC libjpeg-turbo::turbojpeg-static)
@@ -45,6 +45,7 @@ add_unit_test(bridge_test core/test/bridge_test.cpp)
 add_unit_test(jpeg_yuyv_test core/test/jpeg_yuyv_test.cpp)
 add_unit_test(latest_slot_test core/test/latest_slot_test.cpp)
 add_unit_test(camera_channel_test core/test/camera_channel_test.cpp)
+add_unit_test(dds_peer_test core/test/dds_peer_test.cpp)
 add_unit_test(socket_sink_test ros/vipee_bridge/test/socket_sink_test.cpp
   vipee_socket_sink)
 add_unit_test(v4l2_sink_test ros/vipee_bridge/test/v4l2_sink_test.cpp
