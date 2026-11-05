@@ -16,7 +16,8 @@
 //      :122-205, StateMachine.java:1002-1010,1104-1117,1202-1261).
 // Synced to device/generic/car/emulator/vipee_evs_hal by tools/emu/evs-sync.sh;
 // not in PRODUCT_PACKAGES, pushed by tools/jazzy/install-vendor.sh evs. The
-// init .rc and the configuration XML live in android/evs/.
+// init .rc and the configuration XML live in android/evs/ (Raspberry Pi .rc in
+// android/rpi/).
 
 package {
     default_applicable_licenses: ["Android-Apache-2.0"],
@@ -78,4 +79,7 @@ cc_binary {
     vintf_fragments: [
         "manifest_vipee-evs-v4l2.xml",
     ],
+    // Raspberry Pi (AD-020): tira a evs-v4l2 stock da imagem. No emulador o
+    // fork não está em PRODUCT_PACKAGES, então não muda nada lá.
+    overrides: ["android.hardware.automotive.evs-v4l2"],
 }

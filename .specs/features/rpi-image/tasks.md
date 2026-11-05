@@ -363,8 +363,10 @@ T17 → T18 → T19 → T20
 
 **Done when**:
 
-- [ ] `.rc` válido (`host_init_verifier` no build do T17)
-- [ ] Sem `.ko`, o serviço da ponte e o VHAL sobem (RPI-12)
+- [x] `.rc` válido (`host_init_verifier` do AOSP local aceita o arquivo; o build do T17 roda de novo com as passwd da placa)
+- [ ] Sem `.ko`, o serviço da ponte e o VHAL sobem (RPI-12) — pendente: imagem (T17) e placa
+
+**Status**: [~] aguardando checagem na VM e na placa (`bpfmt -d` sem diferença em `android/rpi`, `android/evs`, `android/evs_hal`)
 
 **Tests**: none
 **Gate**: build

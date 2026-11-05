@@ -1,0 +1,15 @@
+// VIPEE EVS (AD-015, AD-021): configuração das 4 câmeras da ponte como
+// override da HAL. Só a imagem do Raspberry Pi instala por módulo (vipee_rpi.mk);
+// no emulador install-vendor.sh evs empurra o arquivo.
+
+package {
+    default_applicable_licenses: ["Android-Apache-2.0"],
+}
+
+prebuilt_etc {
+    name: "vipee_evs_configuration.xml",
+    vendor: true,
+    src: "evs_configuration_v4l2.xml",
+    filename: "evs_configuration_override.xml",
+    sub_dir: "automotive/evs",
+}

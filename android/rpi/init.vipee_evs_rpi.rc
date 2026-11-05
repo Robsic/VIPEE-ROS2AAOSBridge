@@ -1,0 +1,28 @@
+# VIPEE EVS na placa (AD-015, AD-016, AD-020, AD-021): carrega o v4l2loopback
+# do vendor com as 4 câmeras da ponte em /dev/video40..43 e sobe o fork
+# vipee-evs-v4l2 com o nome de serviço da HAL stock (que sai da imagem por
+# overrides), para o onrestart e o evsmanagerd do init.evs.rc do sistema
+# seguirem iguais.
+#
+# Sem o .ko (RPI-12) o modprobe falha, o init só loga e o boot segue: a ponte
+# loga DEVICE_UNAVAILABLE por câmera e a telemetria não muda.
+#
+# ueventd: o /vendor/etc/ueventd.rc do raspberry-vanilla já tem
+# `/dev/video* 0660 system camera`, que cobre 40..43 com o dono e o grupo do
+# emulador (ueventd.vipee_evs.rc); nada a acrescentar.
+
+on init
+    # Antes do late-init, onde a HAL sobe: os devices já existem na enumeração.
+    exec u:r:vendor_modprobe:s0 -- /vendor/bin/modprobe -d /vendor/lib/modules v4l2loopback devices=4 video_nr=40,41,42,43 exclusive_caps=0,0,0,0 card_label=vipee_front,vipee_rear,vipee_left,vipee_right
+
+on late-init
+    start android.hardware.automotive.evs-v4l2
+
+service android.hardware.automotive.evs-v4l2 /vendor/bin/hw/vipee-evs-v4l2
+    class early_hal
+    priority -20
+    user graphics
+    group automotive_evs camera
+    onrestart restart cardisplayproxyd
+    onrestart restart evsmanagerd
+    disabled

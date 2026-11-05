@@ -1,0 +1,14 @@
+// VIPEE na imagem do Raspberry Pi (rpi-image, AD-020): módulos fixos da camada
+// vendor/vipee/bridge, montada por tools/rpi/rpi-sync.sh. Instalados por
+// vipee_rpi.mk; não entram no emulador.
+
+package {
+    default_applicable_licenses: ["Android-Apache-2.0"],
+}
+
+prebuilt_etc {
+    name: "init.vipee_evs_rpi.rc",
+    vendor: true,
+    src: "init.vipee_evs_rpi.rc",
+    sub_dir: "init",
+}
