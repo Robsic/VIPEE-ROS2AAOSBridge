@@ -289,9 +289,9 @@ T17 → T18 → T19 → T20
 
 **Done when**:
 
-- [ ] Janela no emulador combinada; `install-vendor.sh evs` aplicado
-- [ ] `tools/emu/test-cam.sh` inteiro verde
-- [ ] SHARED.md atualizado (câmeras em `/dev/video40..43`) e AVM e CalibDroid avisados
+- [x] Janela no emulador combinada; `install-vendor.sh evs` aplicado
+- [x] `tools/emu/test-cam.sh` inteiro verde
+- [x] SHARED.md atualizado (câmeras em `/dev/video40..43`) e AVM e CalibDroid avisados
 
 **Tests**: integration
 **Gate**: full

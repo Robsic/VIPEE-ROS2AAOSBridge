@@ -32,13 +32,13 @@ EVS_VINTF=/vendor/etc/vintf/manifest/manifest_vipee-evs-v4l2.xml
 EVS_RC=/vendor/etc/init/init.evs.rc
 EVS_XML=/vendor/etc/automotive/evs/evs_configuration_override.xml
 UEVENTD=/vendor/etc/ueventd.rc
-# RRO estático com os tipos do CarEvsService ➔ /dev/video10..13, acima do
+# RRO estático com os tipos do CarEvsService ➔ /dev/video40..43, acima do
 # CarEvsServiceOverlay (mapeamento persistente; some com evs-remove).
 EVS_RRO=/product/overlay/VipeeEvsCameraOverlay.apk
 # Tipo de câmera do CarEvsService ➔ dispositivo da ponte. O mapeamento persistente
 # vem do RRO (EVS_RRO); o set-camera-id depois do reboot do passo evs só confirma
 # o mesmo valor em memória. tools/emu/test-cam.sh install confere.
-EVS_IDS="FRONTVIEW:/dev/video10 REARVIEW:/dev/video11 LEFTVIEW:/dev/video12 RIGHTVIEW:/dev/video13"
+EVS_IDS="FRONTVIEW:/dev/video40 REARVIEW:/dev/video41 LEFTVIEW:/dev/video42 RIGHTVIEW:/dev/video43"
 
 evs_restore() {
   "$ADB" shell "for f in $EVS_RC $EVS_XML $UEVENTD; do [ -f \$f.stock ] && mv \$f.stock \$f; done; rm -f $EVS_HAL $EVS_VINTF $EVS_RRO /vendor/bin/hw/android.hardware.automotive.evs-v4l2 /vendor/etc/vintf/manifest/manifest_android.hardware.automotive.evs-v4l2.xml"
@@ -115,7 +115,7 @@ fi
 "$ADB" root >/dev/null; sleep 2; "$ADB" wait-for-device
 if [ "${1:-}" = evs ]; then
   evs_camera_ids
-  "$ADB" shell ls -lZ /dev/video10 /dev/video11 /dev/video12 /dev/video13
+  "$ADB" shell ls -lZ /dev/video40 /dev/video41 /dev/video42 /dev/video43
   exit 0
 elif [ "${1:-}" = evs-remove ]; then
   exit 0

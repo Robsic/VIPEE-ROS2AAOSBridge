@@ -2,7 +2,7 @@
 # Gate de integração das câmeras no emulador (cam-evs-slice). Pré-requisito:
 # tools/jazzy/install-vendor.sh evs (v4l2loopback + evs-v4l2) e o probe
 # compilado (vm_m.sh vipee_evs_probe). Etapas:
-#   platform - escritor do spike em 1280x720 YUYV nos /dev/video10..13: o probe
+#   platform - escritor do spike em 1280x720 YUYV nos /dev/video40..43: o probe
 #              lista os 4 e recebe quadros 1280x720 a >= 8 Hz de cada; sem avc
 #              de vendor_modprobe, hal_evs_default ou vendor_vipee_ros2
 #              (CAM-19, CAM-21).
@@ -27,8 +27,8 @@
 #              vez, o processo segue, as outras 3 >= 8 quadros/s e o VHAL
 #              entrega a velocidade do fake_sim (CAM-14, CAM-15)
 #   install  - evs-remove devolve os 4 MP4 e para a evs-v4l2; evs reinstala,
-#              o probe volta a listar /dev/video10..13 e o CarEvsService usa
-#              /dev/video10..13 para FRONT/REAR/LEFT/RIGHTVIEW (CAM-19,
+#              o probe volta a listar /dev/video40..43 e o CarEvsService usa
+#              /dev/video40..43 para FRONT/REAR/LEFT/RIGHTVIEW (CAM-19,
 #              CAM-20; dois reboots)
 #   leak     - vazamento de cliente do CarEvsService (AD-016, patch 5): o
 #              probe --carevs 25 1 repete 25 sessões com um R extra em
@@ -47,7 +47,7 @@ PRIME="${PRIME:-$HOME/ros2_android_ws/spike_v4l2/prime}"
 SILENT=/data/local/tmp/v4l2_prime
 PROBE=/vendor/bin/vipee_evs_probe
 WRITER=/data/local/tmp/v4l2_spike
-DEVS="/dev/video10 /dev/video11 /dev/video12 /dev/video13"
+DEVS="/dev/video40 /dev/video41 /dev/video42 /dev/video43"
 W=1280 H=720
 WS="${WS:-$HOME/ros2_android_ws}"
 BAG="${BAG:-$HOME/rosbags/rosbag2_calibration_2026_10_01}"
@@ -148,7 +148,7 @@ check_probe() {  # <out> <id> <min> <max> <rótulo>
 
 step_stall() {
   echo "== stall"
-  local d=/dev/video10 out
+  local d=/dev/video40 out
   bridge_off
   writers_stop
   # 1. Sem escritor: abre, nenhum quadro, fecha rápido.
@@ -181,7 +181,7 @@ step_stall() {
 
 step_leak() {
   echo "== leak"
-  local d=/dev/video10 out
+  local d=/dev/video40 out
   bridge_off
   writers_stop
   # Sai com 3 e imprime "CAREVS <k> start=failed" se algum start falhar.
@@ -266,8 +266,8 @@ check_rate() {  # <out> <id> <segundos> <rótulo>
   [ "$w" = "$W" ] && [ "$h" = "$H" ] || fail "$4: $2 em ${w}x${h}, esperado ${W}x${H}"
 }
 dev_of() {  # <posição> ➔ /dev/videoN do mapa
-  case $1 in front) echo /dev/video10;; rear) echo /dev/video11;;
-    left) echo /dev/video12;; right) echo /dev/video13;; esac
+  case $1 in front) echo /dev/video40;; rear) echo /dev/video41;;
+    left) echo /dev/video42;; right) echo /dev/video43;; esac
 }
 # A ponte LIVE nas 4 (depois de bag_play ou sim com as 4 em ok).
 wait_live() {
@@ -345,10 +345,10 @@ step_drops() {
   local out
   out="$(sh $PROBE 3 $DEVS)" || fail "drops: probe falhou: $out"
   echo "$out"
-  for d in /dev/video10 /dev/video11 /dev/video12; do
+  for d in /dev/video40 /dev/video41 /dev/video42; do
     [ "$(field "$out" "$d" frames)" = 0 ] || fail "drops: $d entregou quadro inválido"
   done
-  check_rate "$out" /dev/video13 3 "drops (right ok)"
+  check_rate "$out" /dev/video43 3 "drops (right ok)"
   # Mais de 30 quadros ruins por câmera: um DROP só por motivo.
   local p want n
   for pw in front:FRAME_SIZE_MISMATCH rear:FORMAT_UNSUPPORTED left:DECODE_ERROR; do
@@ -370,7 +370,7 @@ step_device() {
   echo "== device"
   local map=/vendor/etc/vipee/maps/vipee_test_baddev.yaml pid out d
   "$ADB" remount >/dev/null 2>&1 || fail "adb remount"
-  sed 's#/dev/video10#/dev/video99#' "$HERE/../../maps/commander.yaml" |
+  sed 's#/dev/video40#/dev/video99#' "$HERE/../../maps/commander.yaml" |
     "$ADB" shell "cat > $map"
   sh restorecon "$map"
   sh logcat -c
@@ -378,9 +378,9 @@ step_device() {
   sim vipee_test_baddev "{\"speed\": 36.0, \"gear\": 2, $(cams ok ok ok ok)}"
   until_log " CAM front DEVICE_UNAVAILABLE" 30 || fail "device: sem CAM front DEVICE_UNAVAILABLE"
   pid="$(sh pidof vipee_bridge)"
-  out="$(sh $PROBE 5 /dev/video11 /dev/video12 /dev/video13)" || fail "device: probe falhou: $out"
+  out="$(sh $PROBE 5 /dev/video41 /dev/video42 /dev/video43)" || fail "device: probe falhou: $out"
   echo "$out"
-  for d in /dev/video11 /dev/video12 /dev/video13; do check_rate "$out" "$d" 5 device; done
+  for d in /dev/video41 /dev/video42 /dev/video43; do check_rate "$out" "$d" 5 device; done
   sh cmd car_service get-property-value 0x11600207 2>&1 |
     grep -qE 'Value: (10\.0|9\.99)[0-9]* METER_PER_SEC' ||
     fail "device: VHAL sem a velocidade: $(sh cmd car_service get-property-value 0x11600207 2>&1)"
@@ -398,7 +398,7 @@ step_install() {
   stop_src
   "$HERE/../jazzy/install-vendor.sh" evs-remove
   boot
-  local list d p t i=10
+  local list d p t i=40
   list="$(sh $PROBE --list)"
   for p in $POS; do
     echo "$list" | grep -qx "CAMERA cam_$p" || fail "evs-remove não devolveu cam_$p: $list"

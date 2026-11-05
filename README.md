@@ -93,7 +93,7 @@ adb shell setprop vendor.vipee.vehicle commander
 adb shell 'stop vipee_bridge; start vipee_bridge'
 ```
 
-Câmeras (AD-015, AD-016): a ponte escreve as 4 câmeras em `/dev/video10..13` (`v4l2loopback`) e a HAL `vipee-evs-v4l2` as entrega ao EVS. O passo `evs` troca os MP4 do EVS do emulador pelas câmeras da ponte; avise AVM e CalibDroid antes, porque o emulador é compartilhado. `evs-remove` devolve os MP4. Compilar na VM antes:
+Câmeras (AD-015, AD-016): a ponte escreve as 4 câmeras em `/dev/video40..43` (`v4l2loopback`) e a HAL `vipee-evs-v4l2` as entrega ao EVS. O passo `evs` troca os MP4 do EVS do emulador pelas câmeras da ponte; avise AVM e CalibDroid antes, porque o emulador é compartilhado. `evs-remove` devolve os MP4. Compilar na VM antes:
 
 ```bash
 tools/jazzy/sepolicy-sync.sh && tools/emu/evs-sync.sh
@@ -102,7 +102,7 @@ tools/jazzy/install-vendor.sh evs          # reinicia o device
 tools/jazzy/install-vendor.sh evs-remove   # devolve os MP4
 ```
 
-O tipo de câmera do `CarEvsService` (FRONTVIEW..RIGHTVIEW ➔ `/dev/video10..13`) vem do RRO estático `VipeeEvsCameraOverlay` (`android/evs/rro`, prioridade 10, acima do `CarEvsServiceOverlay`), que o passo `evs` instala e o `evs-remove` tira; sobrevive a reboot. Ele repete o `activityName` do REARVIEW do AVM (ordem dos patches no `../vipee-shared/SHARED.md`). Conferir: `adb shell cmd car_service get-camera-id FRONTVIEW`.
+O tipo de câmera do `CarEvsService` (FRONTVIEW..RIGHTVIEW ➔ `/dev/video40..43`) vem do RRO estático `VipeeEvsCameraOverlay` (`android/evs/rro`, prioridade 10, acima do `CarEvsServiceOverlay`), que o passo `evs` instala e o `evs-remove` tira; sobrevive a reboot. Ele repete o `activityName` do REARVIEW do AVM (ordem dos patches no `../vipee-shared/SHARED.md`). Conferir: `adb shell cmd car_service get-camera-id FRONTVIEW`.
 
 Para tocar o bag de calibração (Commander) no host, use um participante DDS só, sem o `fake_sim` junto. Depois troque o veículo para `commander` e reinicie a ponte, que só disca o host na partida:
 
