@@ -1,15 +1,21 @@
+#include <unistd.h>
+
 #include <cstdlib>
 #include <cstring>
 #include <exception>
+#include <fstream>
 #include <memory>
+#include <sstream>
 #include <string>
 #include <vector>
 
 #include "rclcpp/rclcpp.hpp"
+#include "vipee/dds_peer.h"
 #include "vipee_bridge/bridge_node.h"
 
 #ifdef __ANDROID__
 #include <android/log.h>
+#include <sys/system_properties.h>
 #else
 #include <cstdio>
 #endif
@@ -104,10 +110,38 @@ void initRclcpp(int argc, char** argv) {
   rclcpp::init(static_cast<int>(args.size()), args.data());
 }
 
+#ifdef __ANDROID__
+// RPI-05/06: when the CycloneDDS XML in use has ${VIPEE_HOST}, export it from
+// persist.vendor.vipee.host before rclcpp::init. On a named error, log the
+// code and block forever: no DDS, no exit (init would restart-loop).
+void applyDdsPeer() {
+  const char* uri = std::getenv("CYCLONEDDS_URI");
+  if (uri == nullptr) return;
+  std::string path = uri;
+  if (path.rfind("file://", 0) == 0) path.erase(0, 7);
+  std::ifstream in(path);
+  std::stringstream xml;
+  xml << in.rdbuf();
+  char host[PROP_VALUE_MAX] = "";
+  __system_property_get("persist.vendor.vipee.host", host);
+  const auto d = vipee::DecideDdsPeer(
+      xml.str().find("${VIPEE_HOST}") != std::string::npos, host);
+  if (d.start) {
+    if (d.vipee_host) setenv("VIPEE_HOST", d.vipee_host->c_str(), 1);
+    return;
+  }
+  logError(vipee::DdsPeerErrorName(d.error));
+  for (;;) pause();
+}
+#endif
+
 }  // namespace
 
 int main(int argc, char** argv) {
   try {
+#ifdef __ANDROID__
+    applyDdsPeer();
+#endif
     initRclcpp(argc, argv);
     const char* path = std::getenv("VIPEE_VHAL_SOCKET");
     PlatformLogger logger;

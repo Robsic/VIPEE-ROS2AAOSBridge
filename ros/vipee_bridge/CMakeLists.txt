@@ -18,7 +18,7 @@ find_package(libjpeg-turbo CONFIG REQUIRED)
 set(CORE ${CMAKE_CURRENT_SOURCE_DIR}/../../core)
 add_library(vipee_bridge_lib STATIC
   ${CORE}/src/vehicle_map.cpp ${CORE}/src/translate.cpp ${CORE}/src/bridge.cpp
-  ${CORE}/src/jpeg_yuyv.cpp ${CORE}/src/camera_channel.cpp
+  ${CORE}/src/jpeg_yuyv.cpp ${CORE}/src/camera_channel.cpp ${CORE}/src/dds_peer.cpp
   src/socket_sink.cpp src/v4l2_sink.cpp src/camera_bridge.cpp
   src/bridge_node.cpp)
 target_include_directories(vipee_bridge_lib PUBLIC ${CORE}/include include)

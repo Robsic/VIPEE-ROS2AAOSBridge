@@ -196,8 +196,8 @@ T17 → T18 → T19 → T20
 
 **Done when**:
 
-- [ ] Build x86_64 e arm64 da ponte passam
-- [ ] Passo `peer` do T6 verde no emulador
+- [x] Build x86_64 e arm64 da ponte passam
+- [x] Passo `peer` do T6 verde no emulador
 
 **Tests**: integration
 **Gate**: full
