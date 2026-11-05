@@ -32,7 +32,12 @@ state() {  # escrita atômica: o fake_sim relê pelo mtime; câmeras sempre ok
   echo "${1%\}}, $CAMS}" > "$STATE_DIR/s.tmp" && mv "$STATE_DIR/s.tmp" "$STATE_DIR/state.json"
 }
 stop_sim() { docker rm -f "$SIM" >/dev/null 2>&1 || true; }
-trap stop_sim EXIT
+PEER_XML=/vendor/etc/vipee/cyclonedds_device.xml
+PEER_PROP=persist.vendor.vipee.host
+peer_restore() {  # XML original de volta e propriedade limpa
+  "$ADB" shell "[ -f $PEER_XML.orig ] && mv $PEER_XML.orig $PEER_XML && restorecon $PEER_XML; setprop $PEER_PROP ''" >/dev/null 2>&1 || true
+}
+trap 'stop_sim; peer_restore' EXIT
 
 start_sim() {  # $1: namespace do veículo
   stop_sim
@@ -149,12 +154,45 @@ maps() {
   echo "3. mapas: OK (CAT793F 'P' ➔ GEAR_PARK; Commander marcha 2 ➔ DRIVE)"
 }
 
+peer() {
+  # RPI-05/06: XML da placa no lugar do do emulador; o binário novo da ponte
+  # (com a leitura da propriedade) é empurrado com o rótulo do install-vendor.
+  "$ADB" root >/dev/null; "$ADB" wait-for-device
+  "$ADB" remount >/dev/null 2>&1 || fail "peer: adb remount falhou"
+  sh "[ -f $PEER_XML.orig ] || cp -p $PEER_XML $PEER_XML.orig"
+  sh stop vipee_bridge
+  "$ADB" push "$WS/bridge_build_x86_64/vipee_bridge" /vendor/bin/vipee_bridge >/dev/null
+  sh "chmod 755 /vendor/bin/vipee_bridge && chcon u:object_r:vendor_vipee_ros2_exec:s0 /vendor/bin/vipee_bridge"
+  "$ADB" push "$HERE/../jazzy/config/cyclonedds_rpi.xml" $PEER_XML >/dev/null
+  sh restorecon $PEER_XML
+  # (a) propriedade vazia: DDS_PEER_UNSET, processo vivo, mesmo PID, sem reinício
+  sh "setprop $PEER_PROP ''"
+  sh logcat -c
+  sh start vipee_bridge
+  sleep 6
+  local pid; pid=$(sh pidof vipee_bridge) || fail "peer: processo não subiu"
+  sh logcat -d -s vipee_bridge | grep -q DDS_PEER_UNSET || fail "peer: sem DDS_PEER_UNSET"
+  sleep 8
+  [ "$(sh pidof vipee_bridge)" = "$pid" ] || fail "peer: PID mudou (reinício)"
+  [ "$(sh getprop init.svc.vipee_bridge)" = running ] || fail "peer: serviço não está running"
+  echo "5a. peer: OK (DDS_PEER_UNSET, PID $pid estável)"
+  # (b) host definido: a telemetria chega pelo peer da propriedade
+  sh setprop $PEER_PROP 10.0.2.2
+  sh "stop vipee_bridge; start vipee_bridge"
+  t=$(until_get $SPEED 'Value: 0\.0 METER_PER_SEC' 90) ||
+    fail "peer: sem telemetria com $PEER_PROP=10.0.2.2: $(get $SPEED)"
+  echo "5b. peer: OK (telemetria em $t ms)"
+  peer_restore
+  vehicle cat793f
+}
+
 [ "$(sh cmd wifi status | head -1)" = "Wifi is enabled" ] ||
   fail "Wi-Fi do emulador desligado: adb shell cmd wifi set-wifi-enabled enabled"
 frames
 state '{"speed": 0.0, "gear": 2, "lever": 68}'
 start_sim cat793f
 sleep 3  # contêiner escutando a 7400 antes da partida do bridge
+if [ "${1:-}" = peer ]; then peer; echo "test-e2e peer: OK"; exit 0; fi
 vehicle cat793f
 t=$(until_get $SPEED 'Value: 0\.0 METER_PER_SEC' 90) && echo "dados em $t ms" ||
   fail "sem dados do fake_sim: $(get $SPEED)"
@@ -164,6 +202,8 @@ state '{"speed": 0.0, "gear": 2, "lever": 68}'
 maps
 vehicle cat793f
 cam_stats
+start_sim cat793f; sleep 3
+peer
 sh logcat -d -b all | grep 'avc: *denied' |
   grep -E 'scontext=u:r:(vendor_vipee_ros2|hal_vehicle_default):' &&
   fail "negações SELinux"

@@ -1,0 +1,14 @@
+<!-- Placa (Raspberry Pi): disca o host do simulador, endereço em persist.vendor.vipee.host
+     (exportado como VIPEE_HOST pela ponte antes do DDS). Sem porta de escuta. -->
+<CycloneDDS xmlns="https://cdds.io/config">
+  <Domain id="any">
+    <General><Transport>tcp</Transport><AllowMulticast>false</AllowMulticast></General>
+    <Discovery>
+      <Peers>
+        <Peer Address="${VIPEE_HOST}:7400"/>
+      </Peers>
+      <ParticipantIndex>none</ParticipantIndex>
+    </Discovery>
+    <TCP><Port>-1</Port></TCP>
+  </Domain>
+</CycloneDDS>

@@ -219,9 +219,9 @@ T17 → T18 → T19 → T20
 
 **Done when**:
 
-- [ ] Janela no emulador combinada com AVM e CalibDroid
-- [ ] `tools/emu/test-e2e.sh peer` verde e o `test-e2e.sh` completo continua verde
-- [ ] XML original de volta no emulador ao fim
+- [x] Janela no emulador combinada com AVM e CalibDroid
+- [x] `tools/emu/test-e2e.sh peer` verde e o `test-e2e.sh` completo continua verde
+- [x] XML original de volta no emulador ao fim
 
 **Tests**: integration
 **Gate**: full
