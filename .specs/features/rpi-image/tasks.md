@@ -148,9 +148,9 @@ T17 → T18 → T19 → T20
 
 **Done when**:
 
-- [ ] `ABI=arm64 ...build-bridge.sh` gera `push_arm64/lib` e `bridge_build_arm64/vipee_bridge`
-- [ ] Nenhuma `NEEDED` versionada de fora do install Android nas duas ABIs
-- [ ] Build x86_64 sem mudança de saída
+- [x] `ABI=arm64 ...build-bridge.sh` gera `push_arm64/lib` e `bridge_build_arm64/vipee_bridge`
+- [x] Nenhuma `NEEDED` versionada de fora do install Android nas duas ABIs
+- [x] Build x86_64 sem mudança de saída
 
 **Tests**: none
 **Gate**: build
