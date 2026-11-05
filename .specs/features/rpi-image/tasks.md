@@ -462,8 +462,10 @@ T17 → T18 → T19 → T20
 
 **Done when**:
 
-- [ ] `modinfo` do `.ko` de cada placa com `vermagic` igual ao do kernel que vai na imagem
-- [ ] Builds de kernel avisados aos outros projetos (um `m`/bazel por vez)
+- [x] `modinfo` do `.ko` de cada placa com `vermagic` igual ao do kernel que vai na imagem (2026-11-05: `6.12.93-gb07e73ed17bf-v8 SMP preempt mod_unload modversions aarch64` nas duas; CRCs de modversions iguais em 56 de 82 símbolos, os 56 que algum módulo pré-compilado também importa, 0 diferentes; kernel pré-compilado reaproveitado, sem recompilar o kernel inteiro)
+- [x] Builds de kernel avisados aos outros projetos (um `m`/bazel por vez)
+
+**Status**: [x] concluída. Desvios: `ddk_module` com `deps` em `//common:all_headers_aarch64` (o `kernel_build` da placa não declara `ddk_module_headers`); `repo` no PATH para o `--config=stamp`; `.ko` sem assinatura (kernel com `MODULE_SIG` sem `MODULE_SIG_FORCE`; carga confirmada só na placa, T18/handoff)
 
 **Tests**: integration
 **Gate**: full
