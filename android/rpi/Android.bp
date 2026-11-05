@@ -12,3 +12,23 @@ prebuilt_etc {
     src: "init.vipee_evs_rpi.rc",
     sub_dir: "init",
 }
+
+// Os arquivos abaixo não ficam nesta pasta do repositório: o rpi-sync.sh copia
+// maps/ e tools/jazzy/config/cyclonedds_rpi.xml para a raiz de vendor/vipee/bridge.
+
+prebuilt_etc {
+    name: "vipee_maps",
+    vendor: true,
+    srcs: ["maps/*.yaml"],
+    sub_dir: "vipee/maps",
+}
+
+// Instalado com o nome do XML do emulador: o vipee_bridge.rc (CYCLONEDDS_URI)
+// é o mesmo nos dois alvos.
+prebuilt_etc {
+    name: "vipee_cyclonedds_rpi.xml",
+    vendor: true,
+    src: "cyclonedds_rpi.xml",
+    filename: "cyclonedds_device.xml",
+    sub_dir: "vipee",
+}

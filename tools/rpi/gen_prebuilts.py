@@ -8,7 +8,8 @@ dependência não está no diretório nem na lista SYSTEM_LIBS.
 
 Uso:
   gen_prebuilts.py --lib-dir push_arm64/lib --binary bridge_build_arm64/vipee_bridge \
-      --init-rc vipee_bridge.rc [--readelf llvm-readelf] [--out ros_prebuilts.bp]
+      --init-rc vipee_bridge.rc [--readelf llvm-readelf] [--out ros_prebuilts.bp] \
+      [--module-prefix vipee_ros_]
 """
 import argparse
 import glob
@@ -50,8 +51,16 @@ def _mod(so):
     return so[:-3]  # libfoo.so -> libfoo
 
 
-def generate(libs, binary, init_rc, needed_of, src_prefix="lib/"):
-    """libs: {nome.so: caminho}; binary: caminho do vipee_bridge; devolve o texto do .bp."""
+def generate(libs, binary, init_rc, needed_of, src_prefix="lib/", module_prefix=""):
+    """libs: {nome.so: caminho}; binary: caminho do vipee_bridge; devolve o texto do .bp.
+
+    module_prefix vai no nome de cada módulo de lib (evita colisão com módulos
+    do AOSP, ex.: libyaml); o arquivo instalado mantém o nome (stem). O binário
+    leva required com todas as libs, porque rmw e typesupport vêm por dlopen.
+    """
+    def mod(so):
+        return module_prefix + _mod(so)
+
     def resolve(owner, path):
         deps = needed_of(path)
         for n in deps:
@@ -62,14 +71,19 @@ def generate(libs, binary, init_rc, needed_of, src_prefix="lib/"):
     parts = []
     for name in sorted(libs):
         resolve(name, libs[name])
-        parts.append(f'cc_prebuilt_library_shared {{\n    name: "{_mod(name)}",\n'
+        parts.append(f'cc_prebuilt_library_shared {{\n    name: "{mod(name)}",\n'
+                     f'    stem: "{_mod(name)}",\n'
                      f'    srcs: ["{src_prefix}{name}"],\n    vendor: true,\n'
+                     '    compile_multilib: "64",\n'
                      '    check_elf_files: false,\n}\n')
     deps = resolve(os.path.basename(binary), binary)
-    shared = "".join(f'        "{_mod(n)}",\n' for n in sorted(deps))
+    shared = "".join(f'        "{mod(n)}",\n' for n in sorted(deps))
+    required = "".join(f'        "{mod(n)}",\n' for n in sorted(libs))
     parts.append('cc_prebuilt_binary {\n    name: "vipee_bridge",\n'
                  '    srcs: ["vipee_bridge"],\n    vendor: true,\n'
-                 f'    init_rc: ["{init_rc}"],\n    shared_libs: [\n{shared}    ],\n}}\n')
+                 '    compile_multilib: "64",\n'
+                 f'    init_rc: ["{init_rc}"],\n    shared_libs: [\n{shared}    ],\n'
+                 f'    required: [\n{required}    ],\n}}\n')
     return "// Gerado por tools/rpi/gen_prebuilts.py; não editar.\n\n" + "\n".join(parts)
 
 
@@ -80,10 +94,12 @@ def main(argv=None):
     ap.add_argument("--init-rc", required=True)
     ap.add_argument("--readelf", default=shutil.which("llvm-readelf") or NDK_READELF)
     ap.add_argument("--out", default="-")
+    ap.add_argument("--module-prefix", default="vipee_ros_")
     a = ap.parse_args(argv)
     libs = {os.path.basename(p): p for p in glob.glob(os.path.join(a.lib_dir, "*.so"))}
     try:
-        bp = generate(libs, a.binary, a.init_rc, readelf_needed(a.readelf))
+        bp = generate(libs, a.binary, a.init_rc, readelf_needed(a.readelf),
+                      module_prefix=a.module_prefix)
     except PrebuiltsError as e:
         print(f"ERRO: {e}", file=sys.stderr)
         return 1

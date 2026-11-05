@@ -411,8 +411,10 @@ T17 → T18 → T19 → T20
 
 **Done when**:
 
-- [ ] Toda peça que o `install-vendor.sh` empurra no emulador tem módulo correspondente
-- [ ] Revisão cruzada com o `check-image.sh` do T18
+- [x] Toda peça que o `install-vendor.sh` empurra no emulador tem módulo correspondente (lista no cabeçalho do `vipee_rpi.mk`; libs ROS por `required` do `vipee_bridge`, com prefixo `vipee_ros_` no nome do módulo porque `libyaml` colide com o módulo do AOSP)
+- [ ] Revisão cruzada com o `check-image.sh` do T18 — pendente: T18
+
+**Status**: [~] aguardando T18 e o build na VM (`unittest` 9/9, `ruff` OK, `bpfmt -d` sem diferença; `BoardConfigVipee.mk` avaliado com `make` num BoardConfig de teste: permissive removido, `.ko` só quando existe)
 
 **Tests**: none
 **Gate**: build

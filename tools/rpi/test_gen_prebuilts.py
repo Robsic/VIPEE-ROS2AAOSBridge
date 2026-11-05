@@ -74,6 +74,27 @@ class Gen(unittest.TestCase):
             NEEDED["libb.so"].pop()
         self.assertEqual(str(cm.exception), "NEEDED_UNRESOLVED libb.so libfoo.so.1")
 
+    def test_module_prefix_renames_modules_but_keeps_installed_name(self):
+        # libyaml.so colide com o módulo libyaml do AOSP: o nome do módulo
+        # ganha o prefixo e o arquivo instalado (stem) continua o mesmo.
+        bp = self.gen(module_prefix="vipee_ros_")
+        self.assertIn('name: "vipee_ros_liba",\n    stem: "liba",', bp)
+        self.assertNotIn('name: "liba"', bp)
+        binary = bp[bp.index("cc_prebuilt_binary {"):]
+        self.assertIn('name: "vipee_bridge"', binary)
+        self.assertIn('shared_libs: [\n        "vipee_ros_liba",\n'
+                      '        "vipee_ros_libc++_shared",\n    ],', binary)
+
+    def test_binary_requires_every_lib(self):
+        # rmw e typesupport são abertos por dlopen: instalar o binário tem de
+        # instalar todas as libs, não só as NEEDED dele (libb não é).
+        binary = self.gen()[self.gen().index("cc_prebuilt_binary {"):]
+        self.assertIn('required: [\n        "liba",\n        "libb",\n'
+                      '        "libc++_shared",\n    ],', binary)
+
+    def test_all_modules_are_64_bit_only(self):
+        self.assertEqual(self.gen().count('compile_multilib: "64"'), 4)
+
     def test_parse_readelf_output(self):
         out = (" 0x0000000000000001 (NEEDED)  Shared library: [libb.so]\n"
                " 0x000000000000000e (SONAME)  Library soname: [liba.so]\n"
