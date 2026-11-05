@@ -338,8 +338,10 @@ T17 → T18 → T19 → T20
 
 **Done when**:
 
-- [ ] Build do alvo na árvore `aosp-rpi` passa (depois do T15; até lá, `m nothing` na árvore do emulador valida o `.bp`)
-- [ ] Alvo do emulador `vipee-vehicle-service` inalterado
+- [ ] Build do alvo na árvore `aosp-rpi` passa (depois do T15; até lá, `m nothing` na árvore do emulador valida o `.bp`) — pendente: VM
+- [x] Alvo do emulador `vipee-vehicle-service` inalterado (propriedades movidas sem mudança para o `cc_defaults`; `vhal-sync.sh` passa a copiar o `.xml` do fragmento)
+
+**Status**: [~] aguardando checagem na VM (`bpfmt -d` sem diferença; `host_init_verifier` aceita o `.rc`)
 
 **Tests**: none
 **Gate**: build

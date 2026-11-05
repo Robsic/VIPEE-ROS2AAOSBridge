@@ -3,13 +3,16 @@
 // device/generic/car/emulator/vipee_vhal by tools/emu/vhal-sync.sh.
 // Not in PRODUCT_PACKAGES: on the emulator the binary and .rc are pushed over
 // the V4-emulator-service ones (tools/emu/install-vhal.sh).
+// Raspberry Pi (rpi-image, AD-020): vipee-vehicle-service-rpi goes into the
+// image through vendor/vipee/bridge/vipee_rpi.mk and replaces the board's
+// V4-default-service (same IVehicle/default instance).
 
 package {
     default_applicable_licenses: ["Android-Apache-2.0"],
 }
 
-cc_binary {
-    name: "vipee-vehicle-service",
+cc_defaults {
+    name: "vipee-vehicle-service-defaults",
     vendor: true,
     defaults: [
         "VehicleHalDefaults",
@@ -35,6 +38,20 @@ cc_binary {
         "libcutils",
         "libjsoncpp",
     ],
+}
+
+cc_binary {
+    name: "vipee-vehicle-service",
+    defaults: ["vipee-vehicle-service-defaults"],
+}
+
+cc_binary {
+    name: "vipee-vehicle-service-rpi",
+    defaults: ["vipee-vehicle-service-defaults"],
+    init_rc: ["vipee-vehicle-service-rpi.rc"],
+    vintf_fragments: ["vipee-vehicle-service-rpi.xml"],
+    required: ["vipee_properties.json"],
+    overrides: ["android.hardware.automotive.vehicle@V4-default-service"],
 }
 
 prebuilt_etc {

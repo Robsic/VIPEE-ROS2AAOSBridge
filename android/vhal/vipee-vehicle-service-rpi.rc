@@ -1,0 +1,8 @@
+# VIPEE VHAL na placa (AD-013, AD-020): substitui o V4-default-service do
+# raspberry-vanilla (overrides no Android.bp) com o mesmo nome de serviço. O
+# socket é criado aqui, antes de a ponte (class hal) conectar.
+service vendor.vehicle-hal-default /vendor/bin/hw/vipee-vehicle-service-rpi
+    class early_hal
+    user vehicle_network
+    group system inet
+    socket vipee_vhal seqpacket 0660 vehicle_network vehicle_network

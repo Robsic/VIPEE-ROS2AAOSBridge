@@ -10,7 +10,7 @@ DST="$AOSP/device/generic/car/emulator/vipee_vhal"
 
 rm -rf "$DST"
 mkdir -p "$DST/include/vipee"
-cp "$REPO"/android/vhal/{Android.bp,*.cpp,*.h,*.rc,*.json} "$DST/"
+cp "$REPO"/android/vhal/{Android.bp,*.cpp,*.h,*.rc,*.json,*.xml} "$DST/"
 cp "$REPO"/android/vhal/include/vipee/*.h "$REPO/core/include/vipee/wire.h" \
   "$DST/include/vipee/"
 find "$DST" -type f | sort
