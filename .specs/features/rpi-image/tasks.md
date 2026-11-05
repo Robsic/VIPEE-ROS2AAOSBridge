@@ -436,8 +436,10 @@ T17 → T18 → T19 → T20
 
 **Done when**:
 
-- [ ] Rodar duas vezes deixa a árvore igual (sem linha duplicada)
-- [ ] `lunch aosp_rpi4_car-bp4a-userdebug && m nothing` passa na VM, com aviso prévio
+- [x] Rodar duas vezes deixa a árvore igual (sem linha duplicada): `RPI_HOST= RPI_TREE=<scratch>` com cópias mínimas dos `.mk` das placas, `sha256sum` de todos os arquivos igual entre as rodadas; linha de outro após a nossa faz a nossa voltar ao fim
+- [ ] `lunch aosp_rpi4_car-bp4a-userdebug && m nothing` passa na VM, com aviso prévio — pendente: VM
+
+**Status**: [~] aguardando checagem na VM (`bash -n` e `shellcheck` sem aviso além de SC2012 info; ponte arm64 recompilada em 2026-11-05 com a checagem de `NEEDED` verde)
 
 **Tests**: none
 **Gate**: build
