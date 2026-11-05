@@ -10,7 +10,8 @@ NEEDED = {
     "liba.so": ["libb.so", "libc.so", "liblog.so"],
     "libb.so": ["libc++_shared.so", "libm.so"],
     "libc++_shared.so": ["libc.so", "libdl.so"],
-    "vipee_bridge": ["liba.so", "libc++_shared.so", "libc.so", "libdl.so"],
+    "vipee_bridge": ["liba.so", "libc++_shared.so", "liblog.so", "libc.so",
+                     "libdl.so"],
 }
 
 
@@ -83,7 +84,15 @@ class Gen(unittest.TestCase):
         binary = bp[bp.index("cc_prebuilt_binary {"):]
         self.assertIn('name: "vipee_bridge"', binary)
         self.assertIn('shared_libs: [\n        "vipee_ros_liba",\n'
-                      '        "vipee_ros_libc++_shared",\n    ],', binary)
+                      '        "vipee_ros_libc++_shared",\n        "liblog",\n    ],',
+                      binary)
+
+    def test_binary_lists_needed_system_libs_except_implicit(self):
+        # O check_elf_file do Soong exige cada NEEDED em shared_libs; libc,
+        # libm e libdl são implícitas (system_shared_libs) e não podem entrar.
+        binary = self.gen()[self.gen().index("cc_prebuilt_binary {"):]
+        self.assertIn('"liblog"', binary)
+        self.assertNotIn('"vipee_ros_liblog"', self.gen(module_prefix="vipee_ros_"))
 
     def test_binary_requires_every_lib(self):
         # rmw e typesupport são abertos por dlopen: instalar o binário tem de

@@ -25,6 +25,9 @@ import sys
 SYSTEM_LIBS = frozenset(
     ["libc.so", "libm.so", "libdl.so", "liblog.so", "libandroid.so", "libz.so"])
 
+# Ligadas implicitamente pelo Soong (system_shared_libs); não vão em shared_libs.
+IMPLICIT_LIBS = frozenset(["libc.so", "libm.so", "libdl.so"])
+
 NDK_READELF = ("/opt/android-ndk-r27/toolchains/llvm/prebuilt/linux-x86_64/bin/"
                "llvm-readelf")
 
@@ -77,7 +80,10 @@ def generate(libs, binary, init_rc, needed_of, src_prefix="lib/", module_prefix=
                      '    compile_multilib: "64",\n'
                      '    check_elf_files: false,\n}\n')
     deps = resolve(os.path.basename(binary), binary)
+    # check_elf_file exige cada NEEDED em shared_libs, inclusive as do sistema.
+    system = [n for n in needed_of(binary) if n in SYSTEM_LIBS - IMPLICIT_LIBS]
     shared = "".join(f'        "{mod(n)}",\n' for n in sorted(deps))
+    shared += "".join(f'        "{_mod(n)}",\n' for n in sorted(system))
     required = "".join(f'        "{mod(n)}",\n' for n in sorted(libs))
     parts.append('cc_prebuilt_binary {\n    name: "vipee_bridge",\n'
                  '    srcs: ["vipee_bridge"],\n    vendor: true,\n'
