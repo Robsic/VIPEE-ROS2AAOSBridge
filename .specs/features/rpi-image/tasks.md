@@ -382,8 +382,8 @@ T17 → T18 → T19 → T20
 
 **Done when**:
 
-- [ ] Testes RED antes do código: lista simples, `NEEDED` faltando, binário com `init_rc`
-- [ ] Gate check passes: `python3 -m unittest tools/rpi/test_gen_prebuilts.py && ruff check tools/rpi`
+- [x] Testes RED antes do código: lista simples, `NEEDED` faltando, binário com `init_rc`
+- [x] Gate check passes: `python3 -m unittest tools/rpi/test_gen_prebuilts.py && ruff check tools/rpi`
 
 **Tests**: unit
 **Gate**: quick
