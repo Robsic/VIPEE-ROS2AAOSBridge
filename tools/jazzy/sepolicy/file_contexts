@@ -2,3 +2,4 @@
 /vendor/bin/vipee_bridge           u:object_r:vendor_vipee_ros2_exec:s0
 /dev/socket/vipee_vhal             u:object_r:vipee_vhal_socket:s0
 /vendor/bin/hw/vipee-evs-v4l2     u:object_r:hal_evs_default_exec:s0
+/vendor/bin/hw/vipee-vehicle-service-rpi  u:object_r:hal_vehicle_default_exec:s0

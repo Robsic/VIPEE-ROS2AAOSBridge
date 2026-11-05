@@ -1,0 +1,4 @@
+# Endereço do host DDS na placa (RPI-05, AD-020): só a ponte lê; quem define é
+# o operador por `adb root` + setprop (su, permissivo no userdebug). No emulador
+# o XML não usa ${VIPEE_HOST}, então a propriedade fica sem efeito lá.
+vendor_internal_prop(vendor_vipee_prop)

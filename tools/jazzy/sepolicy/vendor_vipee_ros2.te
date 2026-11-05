@@ -24,3 +24,6 @@ unix_socket_connect(vendor_vipee_ros2, vipee_vhal, hal_vehicle_default)
 # Câmeras (AD-015): escreve YUYV nos /dev/video40..43 do v4l2loopback, que a
 # HAL evs-v4l2 (hal_evs_default) lê. ioctl inclui VIDIOC_S_FMT.
 allow vendor_vipee_ros2 video_device:chr_file rw_file_perms;
+
+# Endereço do host DDS (persist.vendor.vipee.host, RPI-05), lido na partida.
+get_prop(vendor_vipee_ros2, vendor_vipee_prop)

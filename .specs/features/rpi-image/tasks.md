@@ -313,8 +313,10 @@ T17 → T18 → T19 → T20
 
 **Done when**:
 
-- [ ] `vm_m.sh selinux_policy` da árvore do emulador passa (a política continua válida lá)
-- [ ] Nenhuma regra `permissive` nem `allow` com curinga
+- [ ] `vm_m.sh selinux_policy` da árvore do emulador passa (a política continua válida lá) — pendente: VM
+- [x] Nenhuma regra `permissive` nem `allow` com curinga
+
+**Status**: [~] aguardando checagem na VM (expansão m4 com os `te_macros` do AOSP 16 local OK; `sepolicy-sync.sh` já copia o `property_contexts` novo)
 
 **Tests**: none
 **Gate**: build
