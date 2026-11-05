@@ -266,8 +266,8 @@ T17 → T18 → T19 → T20
 
 **Done when**:
 
-- [ ] `grep -rn "video1[0-3]" android/ maps/` sem resultado
-- [ ] Build na VM (`vm_m.sh VipeeEvsCameraOverlay`) passa, com aviso prévio
+- [x] `grep -rn "video1[0-3]" android/ maps/` sem resultado
+- [x] Build na VM (`vm_m.sh VipeeEvsCameraOverlay`) passa, com aviso prévio
 
 **Tests**: none
 **Gate**: build

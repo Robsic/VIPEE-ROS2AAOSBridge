@@ -1,5 +1,5 @@
 // VIPEE ROS2AAOSBridge (cam-evs-slice): static RRO that points the CarEvsService
-// camera types at the bridge cameras (/dev/video10..13) while they are
+// camera types at the bridge cameras (/dev/video40..43) while they are
 // installed. Stacks over CarEvsServiceOverlay (higher priority) instead of
 // patching it, so the MP4 mapping (cam_*) of CalibDroid stays in the tree.
 // Synced to device/generic/car/emulator/vipee_evs_rro by tools/emu/evs-sync.sh;

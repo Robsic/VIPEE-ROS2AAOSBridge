@@ -1,25 +1,25 @@
 <?xml version='1.0' encoding='utf-8'?>
 <!-- VIPEE cam-evs-slice (AD-015): the four bridge cameras served by evs-v4l2
-     from v4l2loopback /dev/video10..13 (1280x720 YUYV in, RGBA_8888 out, px).
+     from v4l2loopback /dev/video40..43 (1280x720 YUYV in, RGBA_8888 out, px).
      Installed as /vendor/etc/automotive/evs/evs_configuration_override.xml by
      tools/jazzy/install-vendor.sh evs (the stock override is kept as .stock). -->
 <configuration><system><num_cameras value='4'/></system><camera>
-<device id='/dev/video10' position='front'>
+<device id='/dev/video40' position='front'>
  <caps><supported_controls><control name='BRIGHTNESS' min='0' max='255'/></supported_controls>
  <stream id='0' width='1280' height='720' format='RGBA_8888' framerate='10'/></caps>
  <characteristics><parameter name='LENS_INTRINSIC_CALIBRATION' type='float' size='5' value='0.0,0.0,0.0,0.0,0.0'/></characteristics>
 </device>
-<device id='/dev/video11' position='rear'>
+<device id='/dev/video41' position='rear'>
  <caps><supported_controls><control name='BRIGHTNESS' min='0' max='255'/></supported_controls>
  <stream id='0' width='1280' height='720' format='RGBA_8888' framerate='10'/></caps>
  <characteristics><parameter name='LENS_INTRINSIC_CALIBRATION' type='float' size='5' value='0.0,0.0,0.0,0.0,0.0'/></characteristics>
 </device>
-<device id='/dev/video12' position='left'>
+<device id='/dev/video42' position='left'>
  <caps><supported_controls><control name='BRIGHTNESS' min='0' max='255'/></supported_controls>
  <stream id='0' width='1280' height='720' format='RGBA_8888' framerate='10'/></caps>
  <characteristics><parameter name='LENS_INTRINSIC_CALIBRATION' type='float' size='5' value='0.0,0.0,0.0,0.0,0.0'/></characteristics>
 </device>
-<device id='/dev/video13' position='right'>
+<device id='/dev/video43' position='right'>
  <caps><supported_controls><control name='BRIGHTNESS' min='0' max='255'/></supported_controls>
  <stream id='0' width='1280' height='720' format='RGBA_8888' framerate='10'/></caps>
  <characteristics><parameter name='LENS_INTRINSIC_CALIBRATION' type='float' size='5' value='0.0,0.0,0.0,0.0,0.0'/></characteristics>

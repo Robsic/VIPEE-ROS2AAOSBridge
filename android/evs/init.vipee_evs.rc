@@ -1,6 +1,6 @@
 # VIPEE cam-evs-slice (AD-015): replaces /vendor/etc/init/init.evs.rc on the
 # emulator (tools/jazzy/install-vendor.sh evs; the stock file stays as .stock).
-# The cameras come from v4l2loopback /dev/video10..13, fed by vipee_bridge, and
+# The cameras come from v4l2loopback /dev/video40..43, fed by vipee_bridge, and
 # are served by vipee-evs-v4l2, our fork of the AOSP evs-v4l2 HAL (AD-016,
 # IEvsEnumerator/hw/1), through evsmanagerd.
 
@@ -8,7 +8,7 @@ on early-boot
     # First stage loads v4l2loopback with one device; reload it with four fixed
     # numbers so the EVS camera ids (device paths) are stable.
     exec u:r:vendor_modprobe:s0 -- /vendor/bin/modprobe -r -d /vendor/lib/modules v4l2loopback
-    exec u:r:vendor_modprobe:s0 -- /vendor/bin/modprobe -d /vendor/lib/modules v4l2loopback devices=4 video_nr=10,11,12,13 exclusive_caps=0,0,0,0 card_label=vipee_front,vipee_rear,vipee_left,vipee_right
+    exec u:r:vendor_modprobe:s0 -- /vendor/bin/modprobe -d /vendor/lib/modules v4l2loopback devices=4 video_nr=40,41,42,43 exclusive_caps=0,0,0,0 card_label=vipee_front,vipee_rear,vipee_left,vipee_right
 
 on late-init
     start cardisplayproxyd

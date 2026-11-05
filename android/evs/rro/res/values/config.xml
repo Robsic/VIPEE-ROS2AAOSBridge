@@ -4,9 +4,9 @@
          served by vipee-evs-v4l2. The REARVIEW activityName is the AVM's (from its
          CarEvsServiceOverlay patch); keep it in sync with VIPEE-UndistortDemo. -->
     <string-array name="config_carEvsService" translatable="false">
-        <item>serviceType=FRONTVIEW,cameraId=/dev/video10</item>
-        <item>serviceType=REARVIEW,cameraId=/dev/video11,activityName=com.vipee.avm.rearview/.RearViewActivity</item>
-        <item>serviceType=LEFTVIEW,cameraId=/dev/video12</item>
-        <item>serviceType=RIGHTVIEW,cameraId=/dev/video13</item>
+        <item>serviceType=FRONTVIEW,cameraId=/dev/video40</item>
+        <item>serviceType=REARVIEW,cameraId=/dev/video41,activityName=com.vipee.avm.rearview/.RearViewActivity</item>
+        <item>serviceType=LEFTVIEW,cameraId=/dev/video42</item>
+        <item>serviceType=RIGHTVIEW,cameraId=/dev/video43</item>
     </string-array>
 </resources>
