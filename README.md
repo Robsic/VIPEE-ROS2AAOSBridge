@@ -120,6 +120,19 @@ adb shell setprop vendor.vipee.vehicle commander
 adb shell 'stop vipee_bridge; start vipee_bridge'
 ```
 
+Para calibrar (CalibDroid), toque **só as 4 câmeras**: a telemetria do Commander nunca fica em P, e fora de P a restrição de UX cobre o app e congela a sessão. Sem telemetria, a ponte deixa marcha e velocidade `UNAVAILABLE`; injete o veículo parado no CarService e mantenha assim até o fim (inclusive o re-bake das LUTs do AVM). O `inject-vhal-event` entrega o evento aos apps sem gravar no VHAL:
+
+```bash
+# bag: mesmo comando acima, com --topics só /sirv/sensor/fisheye/{front,rear,left,right}/image/compressed
+adb shell setprop vendor.vipee.vehicle commander
+adb shell 'stop vipee_bridge; start vipee_bridge'
+adb shell cmd car_service inject-vhal-event 0x11400400 4   # GEAR_SELECTION = P
+adb shell cmd car_service inject-vhal-event 0x11200402 1   # PARKING_BRAKE_ON
+adb shell cmd car_service inject-vhal-event 0x11600207 0   # PERF_VEHICLE_SPEED = 0 m/s
+adb shell cmd car_service set-property-value 0x21402a11 0 0 && \
+  adb shell cmd car_service set-property-value 0x21402a11 0 1   # gatilho do CalibDroid (AD-018)
+```
+
 Teste das câmeras no emulador (sobe a própria fonte DDS; pare o bag antes). Sem argumentos roda todos os passos: `platform`, `stall`, `bag`, `stale`, `drops`, `device` e `install` (dois reboots):
 
 ```bash
