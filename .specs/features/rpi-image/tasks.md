@@ -124,9 +124,9 @@ T17 → T18 → T19 → T20
 
 **Done when**:
 
-- [ ] `ABI=arm64 tools/jazzy/run.sh /bridge/tools/jazzy/build-android.sh` termina e gera `install_android_arm64`
-- [ ] Sem `ABI`, os caminhos e o resultado são os de antes (diff do script mostra só a parametrização)
-- [ ] `file` de uma lib mostra `ARM aarch64`
+- [x] `ABI=arm64 tools/jazzy/run.sh /bridge/tools/jazzy/build-android.sh` termina e gera `install_android_arm64`
+- [x] Sem `ABI`, os caminhos e o resultado são os de antes (diff do script mostra só a parametrização)
+- [x] `file` de uma lib mostra `ARM aarch64`
 
 **Tests**: none
 **Gate**: build

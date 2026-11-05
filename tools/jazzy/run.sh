@@ -3,6 +3,7 @@
 # ROS para Android montado em /ws e o repositório em /bridge.
 #   tools/jazzy/run.sh                 # shell interativo
 #   tools/jazzy/run.sh colcon build …  # comando direto
+# ABI (x86_64 padrão | arm64) é repassada ao contêiner se definida.
 # WS: diretório do workspace no host (padrão ~/ros2_android_ws), fora do repo.
 set -euo pipefail
 
@@ -24,6 +25,6 @@ SIRV_MSGS_HOST="${SIRV_MSGS_HOST:-$REPO/../SIRV-Simulator/sirv_ros_pkgs/sirv_msg
 SIRV=(); [ -d "$SIRV_MSGS_HOST" ] && SIRV=(-v "$(cd "$SIRV_MSGS_HOST" && pwd):/sirv_src/sirv_msgs:ro")
 TTY=(-i); [ -t 0 ] && TTY=(-it)
 exec docker run --rm "${TTY[@]}" --network host --entrypoint '' \
-  --user "$(id -u):$(id -g)" -e HOME=/ws \
+  --user "$(id -u):$(id -g)" -e HOME=/ws ${ABI:+-e ABI} \
   -v "$WS:/ws" -v "$REPO:/bridge" "${SIRV[@]}" \
   "$IMAGE" "${@:-bash}"

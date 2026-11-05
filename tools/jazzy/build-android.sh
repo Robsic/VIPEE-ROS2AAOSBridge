@@ -1,14 +1,18 @@
 #!/usr/bin/env bash
 # Cross-compila o núcleo do ROS 2 Jazzy (até rclcpp + mensagens) para Android
-# x86_64, seguindo Refs/handoff-ros2-jazzy-aaos.md §4.2. Rodar no contêiner:
+# (ABI abaixo), seguindo Refs/handoff-ros2-jazzy-aaos.md §4.2. Rodar no contêiner:
 #   tools/jazzy/run.sh /bridge/tools/jazzy/build-android.sh
 # Pré-requisito: fetch-src.sh. O patch P1 do libyaml_vendor é aplicado aqui.
 set -euo pipefail
 
+# ABI=x86_64 (emulador, padrão) | arm64 (RPi4/RPi5): escolhe toolchain e diretórios *_<abi>.
+ABI="${ABI:-x86_64}"
+case "$ABI" in x86_64|arm64) ;; *) echo "ERRO: ABI=$ABI desconhecida (x86_64|arm64)" >&2; exit 1 ;; esac
+
 ROS2_SRC=/ws/ros2_src
 # Mensagens do simulador (sirv_msgs): run.sh monta SIRV_MSGS_HOST em /sirv_src/sirv_msgs.
 SIRV_BASE="${SIRV_MSGS_BASE:-/sirv_src}"
-TC="--toolchain /bridge/tools/jazzy/android_x86_64.toolchain.cmake"
+TC="--toolchain /bridge/tools/jazzy/android_${ABI}.toolchain.cmake"
 EH="--event-handlers console_cohesion+"
 
 # P1 (handoff §4.4): libyaml 0.2.5 pede CMake 3.0 e quebra o toolchain do NDK.
@@ -51,7 +55,7 @@ CORE_ARGS="-DBUILD_TESTING=OFF -DENABLE_SSL=OFF -DENABLE_SECURITY=OFF -DENABLE_S
 -DBUILD_DDSPERF=OFF -DBUILD_EXAMPLES=OFF -DBUILD_DOCS=OFF -DRCL_LOGGING_IMPLEMENTATION=rcl_logging_noop \
 -DCMAKE_BUILD_TYPE=Release -DCMAKE_SHARED_LINKER_FLAGS=-Wl,-z,max-page-size=16384 \
 -DCMAKE_EXE_LINKER_FLAGS=-Wl,-z,max-page-size=16384"
-OUT="--base-paths src --build-base build_android_x86_64 --install-base install_android_x86_64"
+OUT="--base-paths src --build-base build_android_${ABI} --install-base install_android_${ABI}"
 
 # --packages-ignore em vez do --packages-skip do handoff: com skip, o colcon exige
 # as dependências de teste (performance_test_fixture etc.) já instaladas.
@@ -62,18 +66,18 @@ colcon build $OUT --packages-up-to libyaml_vendor --packages-ignore $SKIP \
 colcon build $OUT --packages-up-to rclcpp std_msgs geometry_msgs sensor_msgs --packages-ignore $SKIP \
   --cmake-args $TC $CORE_ARGS $EH
 # 3) mensagens do simulador: sirv_msgs (puxa diagnostic_msgs). Sem Python/Rust (SKIP).
-colcon build --base-paths src "$SIRV_BASE" --build-base build_android_x86_64 \
-  --install-base install_android_x86_64 --packages-up-to sirv_msgs \
+colcon build --base-paths src "$SIRV_BASE" --build-base build_android_${ABI} \
+  --install-base install_android_${ABI} --packages-up-to sirv_msgs \
   --packages-ignore $SKIP --cmake-args $TC $CORE_ARGS $EH
 # 4) libjpeg-turbo estática (decodificação das câmeras), páginas de 16 KB, no
 #    prefixo libjpeg_turbo do install Android (sem .so; só libturbojpeg.a).
 JT=/ws/third_party/libjpeg-turbo
-JI=/ws/ros2_src/install_android_x86_64/libjpeg_turbo
-cmake -S "$JT" -B /ws/third_party/build_jpeg_android_x86_64 $TC \
+JI=/ws/ros2_src/install_android_${ABI}/libjpeg_turbo
+cmake -S "$JT" -B /ws/third_party/build_jpeg_android_${ABI} $TC \
   -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX="$JI" \
   -DENABLE_SHARED=OFF -DENABLE_STATIC=ON -DWITH_TURBOJPEG=ON -DWITH_JAVA=OFF \
   -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
   -DCMAKE_EXE_LINKER_FLAGS=-Wl,-z,max-page-size=16384 \
   -DCMAKE_SHARED_LINKER_FLAGS=-Wl,-z,max-page-size=16384
-cmake --build /ws/third_party/build_jpeg_android_x86_64 -j"$(nproc)"
-cmake --install /ws/third_party/build_jpeg_android_x86_64
+cmake --build /ws/third_party/build_jpeg_android_${ABI} -j"$(nproc)"
+cmake --install /ws/third_party/build_jpeg_android_${ABI}
