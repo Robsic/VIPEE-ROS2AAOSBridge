@@ -316,7 +316,7 @@ T17 → T18 → T19 → T20
 - [ ] `vm_m.sh selinux_policy` da árvore do emulador passa (a política continua válida lá) — pendente: VM
 - [x] Nenhuma regra `permissive` nem `allow` com curinga
 
-**Status**: [~] aguardando checagem na VM (expansão m4 com os `te_macros` do AOSP 16 local OK; `sepolicy-sync.sh` já copia o `property_contexts` novo)
+**Status**: [x] checado na VM em 2026-11-05: `vm_m.sh selinux_policy vipee-vehicle-service vipee-vehicle-service-rpi` em `~/aosp` OK; em `~/aosp-rpi`, `m nothing` + `m vipee-vehicle-service-rpi vipee-evs-v4l2 vipee_bridge selinux_policy` OK para `aosp_rpi4_car` e `aosp_rpi5_car` (`vendor_vipee_prop` no `vendor_property_contexts`; antes: expansão m4 com os `te_macros` do AOSP 16 local OK; `sepolicy-sync.sh` já copia o `property_contexts` novo)
 
 **Tests**: none
 **Gate**: build
@@ -341,7 +341,7 @@ T17 → T18 → T19 → T20
 - [ ] Build do alvo na árvore `aosp-rpi` passa (depois do T15; até lá, `m nothing` na árvore do emulador valida o `.bp`) — pendente: VM
 - [x] Alvo do emulador `vipee-vehicle-service` inalterado (propriedades movidas sem mudança para o `cc_defaults`; `vhal-sync.sh` passa a copiar o `.xml` do fragmento)
 
-**Status**: [~] aguardando checagem na VM (`bpfmt -d` sem diferença; `host_init_verifier` aceita o `.rc`)
+**Status**: [x] checado na VM em 2026-11-05: `vm_m.sh selinux_policy vipee-vehicle-service vipee-vehicle-service-rpi` em `~/aosp` OK; em `~/aosp-rpi`, `m nothing` + `m vipee-vehicle-service-rpi vipee-evs-v4l2 vipee_bridge selinux_policy` OK para `aosp_rpi4_car` e `aosp_rpi5_car` (binário e `.rc` em `vendor/`; antes: `bpfmt -d` sem diferença; `host_init_verifier` aceita o `.rc`)
 
 **Tests**: none
 **Gate**: build
@@ -366,7 +366,7 @@ T17 → T18 → T19 → T20
 - [x] `.rc` válido (`host_init_verifier` do AOSP local aceita o arquivo; o build do T17 roda de novo com as passwd da placa)
 - [ ] Sem `.ko`, o serviço da ponte e o VHAL sobem (RPI-12) — pendente: imagem (T17) e placa
 
-**Status**: [~] aguardando checagem na VM e na placa (`bpfmt -d` sem diferença em `android/rpi`, `android/evs`, `android/evs_hal`)
+**Status**: [~] build OK na VM em 2026-11-05: `vm_m.sh selinux_policy vipee-vehicle-service vipee-vehicle-service-rpi` em `~/aosp` OK; em `~/aosp-rpi`, `m nothing` + `m vipee-vehicle-service-rpi vipee-evs-v4l2 vipee_bridge selinux_policy` OK para `aosp_rpi4_car` e `aosp_rpi5_car`; falta a placa (`bpfmt -d` sem diferença em `android/rpi`, `android/evs`, `android/evs_hal`)
 
 **Tests**: none
 **Gate**: build
@@ -390,6 +390,7 @@ T17 → T18 → T19 → T20
 
 - [x] Testes RED antes do código: lista simples, `NEEDED` faltando, binário com `init_rc`
 - [x] Gate check passes: `python3 -m unittest tools/rpi/test_gen_prebuilts.py && ruff check tools/rpi`
+- [x] Correção pós-VM (2026-11-05): o `check_elf_file` do Soong recusou o binário (`DT_NEEDED "liblog.so" is not specified in shared_libs`); as libs do sistema que o binário pede, menos libc/libm/libdl (implícitas), entram em `shared_libs` (teste RED antes, 10/10)
 
 **Tests**: unit
 **Gate**: quick
@@ -439,7 +440,7 @@ T17 → T18 → T19 → T20
 - [x] Rodar duas vezes deixa a árvore igual (sem linha duplicada): `RPI_HOST= RPI_TREE=<scratch>` com cópias mínimas dos `.mk` das placas, `sha256sum` de todos os arquivos igual entre as rodadas; linha de outro após a nossa faz a nossa voltar ao fim
 - [ ] `lunch aosp_rpi4_car-bp4a-userdebug && m nothing` passa na VM, com aviso prévio — pendente: VM
 
-**Status**: [~] aguardando checagem na VM (`bash -n` e `shellcheck` sem aviso além de SC2012 info; ponte arm64 recompilada em 2026-11-05 com a checagem de `NEEDED` verde)
+**Status**: [x] checado na VM em 2026-11-05: `vm_m.sh selinux_policy vipee-vehicle-service vipee-vehicle-service-rpi` em `~/aosp` OK; em `~/aosp-rpi`, `m nothing` + `m vipee-vehicle-service-rpi vipee-evs-v4l2 vipee_bridge selinux_policy` OK para `aosp_rpi4_car` e `aosp_rpi5_car` (anexos idempotentes nos `.mk` das duas placas; antes: `bash -n` e `shellcheck` sem aviso além de SC2012 info; ponte arm64 recompilada em 2026-11-05 com a checagem de `NEEDED` verde)
 
 **Tests**: none
 **Gate**: build
