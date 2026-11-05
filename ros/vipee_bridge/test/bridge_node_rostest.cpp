@@ -257,10 +257,10 @@ TEST_F(BridgeNodeTest, BothRealMapsLoadFourCamerasWithTheFileValues) {
     const char* name;
     EvsView view;
     int device;
-  } kExpected[] = {{"front", EvsView::kFront, 10},
-                   {"left", EvsView::kLeft, 12},
-                   {"rear", EvsView::kRear, 11},
-                   {"right", EvsView::kRight, 13}};
+  } kExpected[] = {{"front", EvsView::kFront, 40},
+                   {"left", EvsView::kLeft, 42},
+                   {"rear", EvsView::kRear, 41},
+                   {"right", EvsView::kRight, 43}};
   for (const char* vehicle : {"commander", "cat793f"}) {
     TestServer server;
     server.Start();

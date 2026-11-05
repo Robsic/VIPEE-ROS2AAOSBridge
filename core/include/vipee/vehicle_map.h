@@ -61,7 +61,7 @@ struct CameraConfig {
   std::string name;  ///< Position key, e.g. "front"; used in the CAM logs.
   EvsView view = EvsView::kUnknown;  ///< EVS type; unique within the map.
   std::string topic;     ///< sensor_msgs/CompressedImage topic (JPEG).
-  std::string device;    ///< v4l2loopback output, e.g. /dev/video10; unique.
+  std::string device;    ///< v4l2loopback output, e.g. /dev/video40; unique.
   int width = 0;         ///< Frame width in px, > 0; other sizes are dropped.
   int height = 0;        ///< Frame height in px, > 0.
   int64_t stale_ms = 0;  ///< ms without a valid frame before STALE, > 0.

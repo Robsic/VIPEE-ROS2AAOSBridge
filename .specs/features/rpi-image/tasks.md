@@ -243,8 +243,8 @@ T17 → T18 → T19 → T20
 
 **Done when**:
 
-- [ ] Teste ROS de mapas (`test-ros.sh`) verde
-- [ ] Comentário do `vehicle_map.h` atualizado
+- [x] Teste ROS de mapas (`test-ros.sh`) verde
+- [x] Comentário do `vehicle_map.h` atualizado
 
 **Tests**: none
 **Gate**: build

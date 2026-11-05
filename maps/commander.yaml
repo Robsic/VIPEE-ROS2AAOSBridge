@@ -20,28 +20,28 @@ vipee_bridge:
       front:
         evs: FRONTVIEW
         topic: /sirv/sensor/fisheye/front/image/compressed
-        device: /dev/video10
+        device: /dev/video40
         width: 1280  # px
         height: 720  # px
         stale_ms: 500
       rear:
         evs: REARVIEW
         topic: /sirv/sensor/fisheye/rear/image/compressed
-        device: /dev/video11
+        device: /dev/video41
         width: 1280
         height: 720
         stale_ms: 500
       left:
         evs: LEFTVIEW
         topic: /sirv/sensor/fisheye/left/image/compressed
-        device: /dev/video12
+        device: /dev/video42
         width: 1280
         height: 720
         stale_ms: 500
       right:
         evs: RIGHTVIEW
         topic: /sirv/sensor/fisheye/right/image/compressed
-        device: /dev/video13
+        device: /dev/video43
         width: 1280
         height: 720
         stale_ms: 500
