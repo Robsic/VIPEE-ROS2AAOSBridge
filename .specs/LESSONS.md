@@ -110,6 +110,30 @@ Seen once or not yet corroborated. Tracked, not trusted.
 - evidence: X3 core/src/camera_channel.cpp:84 (stats)
 - last seen: 2026-11-03T01:09:03Z
 
+### L-017 - Commit the RED fixtures of a static gate script as an automated test, so weakening the gate fails a suite
+- signal: `surviving_mutant` · recurrence: 1 feature(s) · scope: `tools` · harmful: 0
+- features: rpi-image
+- evidence: tools/rpi/check-image.sh:82 (C1-C3) (tools)
+- last seen: 2026-11-06T20:44:23Z
+
+### L-018 - Before a handoff reuses an emulator test script on real hardware, check every step the script runs for pushes or property writes to the device
+- signal: `ac_gap` · recurrence: 1 feature(s) · scope: `handoff` · harmful: 0
+- features: rpi-image
+- evidence: Refs/handoff-rpi-image.md:133 (RPI-09, G1) (handoff)
+- last seen: 2026-11-06T20:44:23Z
+
+### L-019 - Assert every clause of a compound acceptance criterion, not only the log code
+- signal: `ac_gap` · recurrence: 1 feature(s) · scope: `e2e` · harmful: 0
+- features: rpi-image
+- evidence: tools/emu/test-e2e.sh:170-177 (RPI-05, G3) (e2e)
+- last seen: 2026-11-06T20:44:23Z
+
+### L-020 - State the observable evidence for connection-established criteria in the spec
+- signal: `spec_precision_gap` · recurrence: 1 feature(s) · scope: `spec` · harmful: 0
+- features: rpi-image
+- evidence: spec.md RPI-06 (G5) (spec)
+- last seen: 2026-11-06T20:44:23Z
+
 ## Quarantined (failed when applied - ignore)
 
 A confirmed lesson that recurred alongside failure. Kept for the maintainer to review.

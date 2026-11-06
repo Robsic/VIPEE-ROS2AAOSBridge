@@ -3,7 +3,7 @@
   "promote_threshold": 2,
   "window_days": 45,
   "quarantine_threshold": 2,
-  "next_id": 17,
+  "next_id": 21,
   "lessons": [
     {
       "id": "L-001",
@@ -292,6 +292,78 @@
       ],
       "created": "2026-11-03T01:09:03Z",
       "last_seen": "2026-11-03T01:09:03Z"
+    },
+    {
+      "id": "L-017",
+      "key": "surviving_mutant::commit the red fixtures of a static gate script as an automated test so weakening the gate fails a suite",
+      "text": "Commit the RED fixtures of a static gate script as an automated test, so weakening the gate fails a suite",
+      "signal": "surviving_mutant",
+      "scope": "tools",
+      "status": "candidate",
+      "features": [
+        "rpi-image"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "tools/rpi/check-image.sh:82 (C1-C3) (tools)"
+      ],
+      "created": "2026-11-06T20:44:23Z",
+      "last_seen": "2026-11-06T20:44:23Z"
+    },
+    {
+      "id": "L-018",
+      "key": "ac_gap::before a handoff reuses an emulator test script on real hardware check every step the script runs for pushes or property writes to the device",
+      "text": "Before a handoff reuses an emulator test script on real hardware, check every step the script runs for pushes or property writes to the device",
+      "signal": "ac_gap",
+      "scope": "handoff",
+      "status": "candidate",
+      "features": [
+        "rpi-image"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "Refs/handoff-rpi-image.md:133 (RPI-09, G1) (handoff)"
+      ],
+      "created": "2026-11-06T20:44:23Z",
+      "last_seen": "2026-11-06T20:44:23Z"
+    },
+    {
+      "id": "L-019",
+      "key": "ac_gap::assert every clause of a compound acceptance criterion not only the log code",
+      "text": "Assert every clause of a compound acceptance criterion, not only the log code",
+      "signal": "ac_gap",
+      "scope": "e2e",
+      "status": "candidate",
+      "features": [
+        "rpi-image"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "tools/emu/test-e2e.sh:170-177 (RPI-05, G3) (e2e)"
+      ],
+      "created": "2026-11-06T20:44:23Z",
+      "last_seen": "2026-11-06T20:44:23Z"
+    },
+    {
+      "id": "L-020",
+      "key": "spec_precision_gap::state the observable evidence for connection established criteria in the spec",
+      "text": "State the observable evidence for connection-established criteria in the spec",
+      "signal": "spec_precision_gap",
+      "scope": "spec",
+      "status": "candidate",
+      "features": [
+        "rpi-image"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "spec.md RPI-06 (G5) (spec)"
+      ],
+      "created": "2026-11-06T20:44:23Z",
+      "last_seen": "2026-11-06T20:44:23Z"
     }
   ]
 }

@@ -121,16 +121,28 @@ $ADB shell 'stop vipee_bridge; start vipee_bridge'
 $ADB logcat -d -s vipee_bridge | grep -E "DDS_PEER|ERR" | tail -3
 # (sem DDS_PEER_UNSET nem DDS_PEER_INVALID depois do restart)
 $ADB shell cmd car_service get-property-value 0x11600207   # PERF_VEHICLE_SPEED
-# ... SystemStatus: AVAILABLE ... floatValues: [5.0] ...
+# ... SystemStatus: AVAILABLE ... Value: 5.0 METER_PER_SEC ...
 $ADB shell cmd car_service get-property-value 0x11400400   # GEAR_SELECTION
-# ... SystemStatus: AVAILABLE ... int32Values: [8] ...   (DRIVE)
+# ... SystemStatus: AVAILABLE ... Value: GEAR_DRIVE(0x8) ...
 $ADB shell cmd car_service get-property-value 0x11200402   # PARKING_BRAKE_ON
-# ... SystemStatus: AVAILABLE ... int32Values: [0] ...
+# ... SystemStatus: AVAILABLE ... Value: FALSE ...
 ```
 
 A propriedade é `persist`: sobrevive a reboot. Dado velho: pare o simulador (`docker stop vipee_rpi_sim`) e repita o `get-property-value`; em menos de 1 s as três ficam `SystemStatus: UNAVAILABLE` e o logcat da ponte mostra `STALE`.
 
-Latência (RPI-09): `tools/emu/test-e2e.sh` mede publicação ➔ `CarService` via adb; com `ADB="$ADB -s <IP_DA_PLACA>:5555"` e o `fake_sim` acima parado, ele roda contra a placa. O número inclui o adb por rede (limite superior). Anote no `validation.md` da feature.
+Latência (RPI-09), com o `fake_sim` acima no ar: troque a velocidade e meça até o `CarService` da placa mostrar o valor novo. **Não rode o `tools/emu/test-e2e.sh` contra a placa**: o passo `peer` dele remonta o `/vendor`, troca a ponte pelo binário x86_64 do emulador e limpa o `persist.vendor.vipee.host`, e a placa só volta regravando o cartão.
+
+```bash
+for mps in 10 15 20 5; do
+  t0=$(date +%s%3N)
+  echo "{\"speed\": $((mps * 36 / 10)).0, \"gear\": 2, \"lever\": 68, \"handbrake\": false}" > /tmp/vipee_state/s.tmp && mv /tmp/vipee_state/s.tmp /tmp/vipee_state/state.json
+  $ADB shell "until cmd car_service get-property-value 0x11600207 | grep -q 'Value: $mps\.0 METER_PER_SEC'; do :; done"
+  echo "$mps m/s: $(( $(date +%s%3N) - t0 )) ms"
+done
+# 10 m/s: <n> ms   (uma linha por valor; inclui o adb, limite superior da latência real)
+```
+
+Anote os números no `validation.md` da feature.
 
 ## 7. Câmeras: bag ➔ EVS
 
@@ -172,10 +184,11 @@ Itens deduzidos do build, não vistos na placa. Confirme ou corrija ao testar.
 | Sintoma | Causa provável | Correção |
 | --- | --- | --- |
 | `DDS_PEER_UNSET` no logcat da ponte | `persist.vendor.vipee.host` vazio | Seção 6: `setprop` e restart da ponte |
-| `DDS_PEER_INVALID` | Endereço com porta, espaço ou nome que não resolve | Use o IP puro do PC, sem `:7400` |
+| `DDS_PEER_INVALID` | Endereço com caractere fora de letras, dígitos, `.` e `-` (porta, espaço) | Use o IP do PC na LAN, sem `:7400` |
 | Propriedades `UNAVAILABLE` com o `fake_sim` no ar | Porta 7400 fechada no Windows ou IP do WSL mudou | Seção 5: refaça o `portproxy add`; de outro PC, `Test-NetConnection <IP_DO_PC> -Port 7400` |
 | Câmeras e telemetria param (`STATS frames=0`) e o player do host loga `tcp abandoning write` | Escrita do host bloqueada > 2 s (placa ou rede lenta): o Cyclone do host larga a conexão e não consegue discar a placa de volta (visto no emulador em 2026-11-05; correção pendente, ver STATE) | `adb shell 'stop vipee_bridge; start vipee_bridge'`; prefira Ethernet |
 | Sem `/dev/video40..43`; ponte loga `DEVICE_UNAVAILABLE` por câmera | `v4l2loopback.ko` não carregou | `adb shell dmesg | grep -i v4l2loopback`. `disagrees about version of symbol` ou `invalid module format` = módulo fora de sincronia com o kernel: refaça `tools/rpi/build-kernel-module.sh` e a imagem. A telemetria segue funcionando |
+| `/dev/video0..3` em vez de `/dev/video40..43`; ponte loga `DEVICE_UNAVAILABLE` | Algo carregou o `v4l2loopback` pela lista `/vendor/lib/modules/modules.load` antes do `on init` da imagem, com os parâmetros padrão (nenhum `.rc` do vendor faz isso; o ramdisk da placa não foi conferido) | `adb shell 'rmmod v4l2loopback; /vendor/bin/modprobe -d /vendor/lib/modules v4l2loopback devices=4 video_nr=40,41,42,43 exclusive_caps=0,0,0,0'` e restart da ponte; anote para corrigir a imagem |
 | Câmeras sem quadros, `STATS frames=0` | Bag não está tocando, veículo não é `commander` ou ponte não reiniciou | Seção 7 na ordem |
 | App de câmera vê imagem errada ou nenhuma | RRO de câmeras ausente ou codec ocupando o número | `cmd car_service get-camera-id FRONTVIEW` deve dar `/dev/video40`; os codecs da RPi4 usam `/dev/video10..31` (AD-021) |
 | App não recebe quadros de uma câmera; `evsmanagerd` loga `Skipping new frame as we hold 10 of 10` | Cliente EVS que não devolve buffers (vazamento do `CarEvsService`, `Refs/aosp-bug-carevsservice-stream-client-leak.md`) | `adb shell setprop ctl.restart android.hardware.automotive.evs-v4l2` (reinicia também `cardisplayproxyd` e `evsmanagerd`); avise quem usa o EVS |
