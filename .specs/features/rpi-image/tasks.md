@@ -512,8 +512,10 @@ T17 → T18 → T19 → T20
 
 **Done when**:
 
-- [ ] `tools/rpi/check-image.sh rpi4` verde na imagem do T17
-- [ ] Falha comprovada: com um arquivo da ponte removido de uma cópia, o script reprova (RED)
+- [x] `tools/rpi/check-image.sh rpi4` verde na imagem do T17 (2026-11-06, no `.img.xz` e em `--parts`; vendor com 118 MB livres dos 384 MB, 197 libs em `/vendor/lib64`, `v4l2loopback.ko` presente; `cmdline.txt` = `console=ttyS0,115200 androidboot.hardware=rpi4 androidboot.verifiedbootstate=orange`)
+- [x] Falha comprovada: com um arquivo da ponte removido de uma cópia, o script reprova (RED): cópia do vendor sem `/bin/vipee_bridge` ➔ `FAIL MISSING /vendor/bin/vipee_bridge`, rc=1; cópia do boot com `androidboot.selinux=permissive` no `cmdline.txt` ➔ `FAIL PERMISSIVE`, rc=1; original de novo ➔ OK
+
+**Status**: [x] concluída. Desvio: sem `mtools` no WSL, o `cmdline.txt` é lido dos bytes do FAT (linha com `androidboot.hardware=`); o rótulo SELinux sai do formato `security.selinux (N) = "..."` do `debugfs ea_get`.
 
 **Tests**: integration
 **Gate**: full
