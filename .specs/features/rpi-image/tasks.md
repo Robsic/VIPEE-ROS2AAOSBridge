@@ -487,8 +487,10 @@ T17 → T18 → T19 → T20
 
 **Done when**:
 
-- [ ] `RaspberryVanillaAOSP16-<data>-rpi4_car.img.xz` existe na VM e no WSL
-- [ ] Aviso a AVM e CalibDroid antes do `m`
+- [x] `RaspberryVanillaAOSP16-<data>-rpi4_car.img.xz` existe na VM e no WSL (2026-11-06: `~/rpi_images/RaspberryVanillaAOSP16-20261106-rpi4_car.img.xz`, 662 MB)
+- [x] Aviso a AVM e CalibDroid antes do `m`
+
+**Status**: [x] concluída. Desvio: `m -j16` (variável `JOBS`); a primeira tentativa, com 32 jobs, morreu por OOM a 79% (VM de 61 GB sem swap, fase de dex).
 
 **Tests**: none
 **Gate**: build
