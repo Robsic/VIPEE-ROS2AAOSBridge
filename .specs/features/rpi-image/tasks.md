@@ -413,9 +413,9 @@ T17 → T18 → T19 → T20
 **Done when**:
 
 - [x] Toda peça que o `install-vendor.sh` empurra no emulador tem módulo correspondente (lista no cabeçalho do `vipee_rpi.mk`; libs ROS por `required` do `vipee_bridge`, com prefixo `vipee_ros_` no nome do módulo porque `libyaml` colide com o módulo do AOSP)
-- [ ] Revisão cruzada com o `check-image.sh` do T18 — pendente: T18
+- [x] Revisão cruzada com o `check-image.sh` do T18 (verde na imagem rpi4 de 2026-11-06: permissive removido do `cmdline.txt`, `.ko` no vendor)
 
-**Status**: [~] aguardando T18 e o build na VM (`unittest` 9/9, `ruff` OK, `bpfmt -d` sem diferença; `BoardConfigVipee.mk` avaliado com `make` num BoardConfig de teste: permissive removido, `.ko` só quando existe)
+**Status**: [x] concluída (imagem rpi4 de 2026-11-06 e T18 verdes; antes: `unittest` 9/9, `ruff` OK, `bpfmt -d` sem diferença; `BoardConfigVipee.mk` avaliado com `make` num BoardConfig de teste: permissive removido, `.ko` só quando existe)
 
 **Tests**: none
 **Gate**: build
@@ -438,7 +438,7 @@ T17 → T18 → T19 → T20
 **Done when**:
 
 - [x] Rodar duas vezes deixa a árvore igual (sem linha duplicada): `RPI_HOST= RPI_TREE=<scratch>` com cópias mínimas dos `.mk` das placas, `sha256sum` de todos os arquivos igual entre as rodadas; linha de outro após a nossa faz a nossa voltar ao fim
-- [ ] `lunch aosp_rpi4_car-bp4a-userdebug && m nothing` passa na VM, com aviso prévio — pendente: VM
+- [x] `lunch aosp_rpi4_car-bp4a-userdebug && m nothing` passa na VM, com aviso prévio
 
 **Status**: [x] checado na VM em 2026-11-05: `vm_m.sh selinux_policy vipee-vehicle-service vipee-vehicle-service-rpi` em `~/aosp` OK; em `~/aosp-rpi`, `m nothing` + `m vipee-vehicle-service-rpi vipee-evs-v4l2 vipee_bridge selinux_policy` OK para `aosp_rpi4_car` e `aosp_rpi5_car` (anexos idempotentes nos `.mk` das duas placas; antes: `bash -n` e `shellcheck` sem aviso além de SC2012 info; ponte arm64 recompilada em 2026-11-05 com a checagem de `NEEDED` verde)
 
@@ -539,6 +539,8 @@ T17 → T18 → T19 → T20
 
 - [ ] Imagem da RPi5 gerada e `check-image.sh rpi5` verde
 - [ ] Se falhar, falha registrada no `STATE.md` e a RPi4 entregue mesmo assim
+
+**Status**: [ ] adiada por decisão do Wendell (2026-11-06): as placas RPi5 ainda estão em compra e cada build completo custa 2–3 h de VM, agora paga (créditos esgotados). Prontos para quando houver placa: `v4l2loopback.ko` do rpi5 (T16), camada vendor sincronizada e módulos checados em `aosp_rpi5_car` (T10, T11, T15). Rodar `tools/rpi/build-image.sh rpi5` e `tools/rpi/check-image.sh rpi5 <img>`.
 
 **Tests**: integration
 **Gate**: full

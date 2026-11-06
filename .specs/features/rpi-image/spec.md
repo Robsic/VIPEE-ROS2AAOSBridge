@@ -88,11 +88,11 @@ A ponte só roda no emulador x86_64, instalada por `adb push` (`install-vendor.s
 
 **Acceptance Criteria**:
 
-1. WHEN a placa dá boot THEN os dispositivos `/dev/video10..13` SHALL existir, criados pelo `v4l2loopback` da imagem.
+1. WHEN a placa dá boot THEN os dispositivos `/dev/video40..43` (AD-021) SHALL existir, criados pelo `v4l2loopback` da imagem.
 2. WHEN o bag de calibração toca no host com o veículo `commander` THEN um cliente EVS na RPi4 SHALL receber as 4 câmeras em 1280×720, cada uma a pelo menos 8 quadros/s.
 3. IF o módulo `v4l2loopback` não carrega THEN a ponte SHALL logar `DEVICE_UNAVAILABLE` por câmera e a telemetria SHALL continuar funcionando.
 
-**Independent Test**: `vipee_evs_probe 5 /dev/video10 /dev/video11 /dev/video12 /dev/video13` na placa com o bag tocando.
+**Independent Test**: `vipee_evs_probe 5 /dev/video40 /dev/video41 /dev/video42 /dev/video43` na placa com o bag tocando.
 
 ---
 
