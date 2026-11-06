@@ -44,7 +44,7 @@ O que o simulador publica está em [`docs/sim-contract.md`](docs/sim-contract.md
 ## Etapas de validação
 
 1. Emulador AAOS (AOSP `android-16.0.0_r4`).
-2. Mula Raspberry Pi 5 com AAOS 16 (`aosp_rpi5_car`, raspberry-vanilla; ver [`Refs/android-auto-RPi5.pdf`](Refs/android-auto-RPi5.pdf)). **Demo para o stakeholder em 2026-11-28.**
+2. Mula Raspberry Pi 5 com AAOS 16 (`aosp_rpi5_car`, raspberry-vanilla; ver [`Refs/android-auto-RPi5.pdf`](Refs/android-auto-RPi5.pdf)). **Demo para o stakeholder em 2026-11-28.** A imagem com a ponte embutida sai da mesma árvore para RPi4 e RPi5 (`tools/rpi/`); gravar, ligar e testar: [`Refs/handoff-rpi-image.md`](Refs/handoff-rpi-image.md).
 3. Veículo de engenharia (Qualcomm SA6155P).
 
 ## Dependências

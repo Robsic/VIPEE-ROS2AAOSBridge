@@ -562,8 +562,10 @@ T17 → T18 → T19 → T20
 
 **Done when**:
 
-- [ ] Cada passo de conferência tem comando e saída esperada
-- [ ] README aponta para o handoff
+- [x] Cada passo de conferência tem comando e saída esperada (seções 2, 4, 5, 6 e 7; itens não confirmados sem placa marcados como tal)
+- [x] README aponta para o handoff (Etapas de validação, item 2)
+
+**Status**: [x] concluída sem a T19 (adiada): o handoff cobre a RPi4 e diz como gerar a RPi5. Usa o bag de referência de 2026-11-05 (`--rate 3` para conferir taxa) e lista o travamento DDS de 2026-11-05 e o vazamento de buffers do EVS em Problemas conhecidos.
 
 **Tests**: none
 **Gate**: build
